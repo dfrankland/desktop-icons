@@ -26,11 +26,17 @@ const Background = imports.ui.background;
 const Layout = imports.ui.layout;
 const Main = imports.ui.main;
 const Tweener = imports.ui.tweener;
+const BoxPointer = imports.ui.boxpointer;
+const PopupMenu = imports.ui.popupMenu;
+
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
 const DESKTOP_PATH = "/home/csoriano/Desktop";
+
+//TODO: restore in disable
+Main.layoutManager._addBackgroundMenu = function (bgManager) {};
 
 const FileContainer = new Lang.Class (
 {
@@ -50,7 +56,55 @@ const FileContainer = new Lang.Class (
         this._label = new St.Label({ text: fileInfo.get_display_name() });
         this.actor.add_actor(this._label);
 
+        this.actor.reactive = true;
+        this.actor.connect('button-press-event', Lang.bind(this, this._onButtonPress));
+
+        this._createMenu();
+
         log ("New file " + this.file.get_uri());
+    },
+
+    _onOpenClicked: function()
+    {
+        log ("Open clicked");
+    },
+
+    _onCopyClicked: function()
+    {
+        log ("Open clicked");
+    },
+
+    _createMenu: function()
+    {
+        this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
+        let side = St.Side.LEFT;
+        if (Clutter.get_default_text_direction() == Clutter.TextDirection.RTL)
+        {
+            side = St.Side.RIGHT;
+        }
+        this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
+        this._menu.addAction(_("Open"), Lang.bind(this, this._onOpenClicked));
+        this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._menu.addAction(_("Copy"), Lang.bind(this, this._onCopyClicked));
+        this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._menuManager.addMenu(this._menu);
+
+        Main.layoutManager.uiGroup.add_actor(this._menu.actor);
+        this._menu.actor.hide();
+log ("creating menu");
+    },
+
+    _onButtonPress: function(actor, event)
+    {
+        let button = event.get_button();
+        if (button == 3)
+        {
+        log ("######## Button press");
+            this._menu.toggle();
+            return Clutter.EVENT_STOP;
+        }
+
+        return Clutter.EVENT_PROPAGATE;
     }
 });
 
@@ -65,6 +119,7 @@ const DesktopContainer = new Lang.Class(
         this.actor = new St.Widget({ name: "DesktopContainer",
                                      layout_manager: new Clutter.BinLayout(),
                                      opacity: 255 });
+
         this._bgManager._container.add_actor(this.actor);
 
         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
@@ -83,11 +138,12 @@ const DesktopContainer = new Lang.Class(
                                                style: "background-color: #31b0d5;",
                                                x_expand: true,
                                                y_expand: true });
-
+        this._iconsContainer.reactive = true;
         this.actor.add_actor(this._iconsContainer);
 
         this._desktopEnumerateCancellable = null;
         this._addFiles();
+        this._addDesktopBackgroundMenu();
 
         this._bgDestroyedId = bgManager.backgroundActor.connect('destroy',
                                                                 Lang.bind(this, this._backgroundDestroyed));
@@ -143,9 +199,93 @@ const DesktopContainer = new Lang.Class(
         this._bgDestroyedId = 0;
 
         this._bgManager = null;
+    },
+
+    _onNewFolderClicked: function()
+    {
+        log("New folder clicked");
+    },
+
+    _onPasteClicked: function()
+    {
+        log("Paste clicked");
+    },
+
+    _onSelectAllClicked: function()
+    {
+        log("Select All clicked");
+    },
+
+    _onPropertiesClicked: function()
+    {
+        log("Properties clicked");
+    },
+
+    _createDesktopBackgroundMenu: function()
+    {
+        let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
+                                           0, St.Side.TOP);
+        menu.addAction(_("New Folder"), Lang.bind(this, this._onNewFolderClicked));
+        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        menu.addAction(_("Paste"), Lang.bind(this, this._onPasteClicked));
+        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        menu.addAction(_("Select All"), Lang.bind(this, this._onSelectAllClicked));
+        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        menu.addAction(_("Properties"), Lang.bind(this, this._onPropertiesClicked));
+
+        menu.actor.add_style_class_name('background-menu');
+
+        Main.layoutManager.uiGroup.add_actor(menu.actor);
+        menu.actor.hide();
+
+        return menu;
+    },
+
+    _openMenu: function(x, y)
+    {
+        Main.layoutManager.setDummyCursorGeometry(x, y, 0, 0);
+        this._iconsContainer._desktopBackgroundMenu.open(BoxPointer.PopupAnimation.NONE);
+    },
+
+    _addDesktopBackgroundMenu: function()
+    {
+        this._iconsContainer._desktopBackgroundMenu = this._createDesktopBackgroundMenu();
+        this._iconsContainer._desktopBackgroundManager = new PopupMenu.PopupMenuManager({ actor: this._iconsContainer });
+        this._iconsContainer._desktopBackgroundManager.addMenu(this._iconsContainer._desktopBackgroundMenu);
+
+        let clickAction = new Clutter.ClickAction();
+        clickAction.connect('long-press', Lang.bind(this, function(action, actor, state) {
+            if (state == Clutter.LongPressState.QUERY)
+                return ((action.get_button() == 0 ||
+                         action.get_button() == 1) &&
+                        !this._iconsContainer._desktopBackgroundMenu.isOpen);
+            if (state == Clutter.LongPressState.ACTIVATE) {
+                let [x, y] = action.get_coords();
+                this._openMenu(x, y);
+                this._iconsContainer._desktopBackgroundManager.ignoreRelease();
+            }
+            return true;
+        }));
+        clickAction.connect('clicked', Lang.bind(this, function(action) {
+            if (action.get_button() == 3) {
+                let [x, y] = action.get_coords();
+                this._openMenu(x, y);
+            }
+        }));
+        this._iconsContainer.add_action(clickAction);
+
+        let grabOpBeginId = global.display.connect('grab-op-begin', function () {
+            clickAction.release();
+        });
+
+        this._iconsContainer.connect('destroy', Lang.bind (this, function() {
+            this._iconsContainer._desktopBackgroundMenu.destroy();
+            this._iconsContainer._desktopBackgroundMenu = null;
+            this._iconsContainer._desktopBackgroundManager = null;
+            global.display.disconnect(grabOpBeginId);
+        }));
     }
 });
-
 
 let monitorsChangedId = 0;
 let startupPreparedId = 0;
@@ -172,6 +312,14 @@ function destroyDesktopIcons()
     desktopContainers = [];
 }
 
+function destroyBackgroundMenu()
+{
+    forEachBackgroundManager(function(bgManager)
+    {
+        bgManager.backgroundActor._backgroundMenu.destroy();
+    });
+}
+
 function init()
 {
 }
@@ -181,6 +329,8 @@ function enable()
     monitorsChangedId = Main.layoutManager.connect('monitors-changed', addDesktopIcons);
     startupPreparedId = Main.layoutManager.connect('startup-prepared', addDesktopIcons);
     addDesktopIcons();
+    //TODO: restore in disable
+    destroyBackgroundMenu();
 }
 
 function disable()
