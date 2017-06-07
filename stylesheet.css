@@ -1,9 +1,13 @@
+.file-container
+{
+    padding: 6px;
+}
 
-.helloworld-label {
-    font-size: 36px;
-    font-weight: bold;
-    color: #ffffff;
-    background-color: rgba(10,10,10,0.7);
-    border-radius: 5px;
-    padding: .5em;
+.file-container:hover
+{
+   background-color: rgba(238, 238, 238, 0.1);
+}
+.rubber-band
+{
+   background-color: rgba(0, 0, 238, 0.3);
 }
