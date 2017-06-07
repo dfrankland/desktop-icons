@@ -34,6 +34,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
 const DESKTOP_PATH = "/home/csoriano/Desktop";
+const ICON_SIZE = 96;
 
 //TODO: restore in disable
 Main.layoutManager._addBackgroundMenu = function (bgManager) {};
@@ -48,20 +49,24 @@ const FileContainer = new Lang.Class (
 
         this.file = file;
         let containerLayout = new Clutter.BoxLayout({ orientation: Clutter.Orientation.VERTICAL });
-        this.actor = new St.Widget ({ layout_manager: containerLayout });
+        this.actor = new St.Widget ({ layout_manager: containerLayout,
+                                      reactive: true,
+                                      track_hover: true,
+                                      can_focus: true,
+                                      style_class: 'file-container',
+                                      x_expand: true,
+                                      x_align: Clutter.ActorAlign.CENTER });
 
-        this._icon = new St.Icon({ gicon: info.get_icon() });
+        this._icon = new St.Icon({ gicon: info.get_icon(),
+                                   icon_size: ICON_SIZE });
         this.actor.add_actor(this._icon);
 
         this._label = new St.Label({ text: fileInfo.get_display_name() });
         this.actor.add_actor(this._label);
 
-        this.actor.reactive = true;
         this.actor.connect('button-press-event', Lang.bind(this, this._onButtonPress));
 
         this._createMenu();
-
-        log ("New file " + this.file.get_uri());
     },
 
     _onOpenClicked: function()
@@ -91,7 +96,6 @@ const FileContainer = new Lang.Class (
 
         Main.layoutManager.uiGroup.add_actor(this._menu.actor);
         this._menu.actor.hide();
-log ("creating menu");
     },
 
     _onButtonPress: function(actor, event)
@@ -99,7 +103,6 @@ log ("creating menu");
         let button = event.get_button();
         if (button == 3)
         {
-        log ("######## Button press");
             this._menu.toggle();
             return Clutter.EVENT_STOP;
         }
@@ -129,13 +132,13 @@ const DesktopContainer = new Lang.Class(
                                                         work_area: true });
         this.actor.add_constraint(constraint);
 
-        flowLayout = new Clutter.FlowLayout({ snap_to_grid: true,
-                                              homogeneous: true,
-                                              row_spacing: 40,
-                                              column_spacing: 40 });
+        let flowLayout = new Clutter.FlowLayout({ snap_to_grid: true,
+                                                  homogeneous: true,
+                                                  row_spacing: 40,
+                                                  column_spacing: 40 });
         this._iconsContainer = new St.Widget({ name: "the bin thing",
                                                layout_manager: flowLayout,
-                                               style: "background-color: #31b0d5;",
+                                               reactive: true,
                                                x_expand: true,
                                                y_expand: true });
         this._iconsContainer.reactive = true;
@@ -147,11 +150,13 @@ const DesktopContainer = new Lang.Class(
 
         this._bgDestroyedId = bgManager.backgroundActor.connect('destroy',
                                                                 Lang.bind(this, this._backgroundDestroyed));
-        log ("sizes");
-        log (this._iconsContainer.width);
-        log (this._iconsContainer.height);
-        log (this._iconsContainer.x);
-        log (this._iconsContainer.y);
+
+        this._iconsContainer.connect('button-press-event', Lang.bind(this, this._onButtonPress));
+        this._iconsContainer.connect('button-release-event', Lang.bind(this, this._onButtonRelease));
+        this._iconsContainer.connect('motion-event', Lang.bind(this, this._onMotion));
+        this._rubberBand = new St.Widget({ style_class: "rubber-band" });
+        this._rubberBand.hide();
+        Main.layoutManager.uiGroup.add_actor(this._rubberBand);
     },
 
     _addFiles: function ()
@@ -172,7 +177,7 @@ const DesktopContainer = new Lang.Class(
 
     _onDesktopEnumerateChildren: function(source, res)
     {
-        fileEnum = source.enumerate_children_finish(res);
+        let fileEnum = source.enumerate_children_finish(res);
         while ((info = fileEnum.next_file(null)))
         {
             fileContainer = new FileContainer(fileEnum.get_child(info), info);
@@ -245,6 +250,68 @@ const DesktopContainer = new Lang.Class(
     {
         Main.layoutManager.setDummyCursorGeometry(x, y, 0, 0);
         this._iconsContainer._desktopBackgroundMenu.open(BoxPointer.PopupAnimation.NONE);
+        //TODO: Why does it need ignoreRelease?
+        this._iconsContainer._desktopBackgroundManager.ignoreRelease();
+    },
+
+    _drawRubberBand: function(currentX, currentY)
+    {
+        let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
+                                                    : currentX;
+        let y = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
+                                                    : currentY;
+        let width = Math.abs(this._rubberBandInitialX - currentX);
+        let height = Math.abs(this._rubberBandInitialY - currentY);
+        this._rubberBand.set_position(x, y);
+        this._rubberBand.set_size(width, height);
+        this._rubberBand.show();
+    },
+
+    _onMotion: function(actor, event)
+    {
+        let [x, y] = event.get_coords();
+        if(this._drawingRubberBand)
+        {
+            this._drawRubberBand(x, y);
+        }
+    },
+
+    _onButtonPress: function(actor, event)
+    {
+        let button = event.get_button();
+        let [x, y] = event.get_coords();
+        if (button == 1)
+        {
+            this._rubberBandInitialX = x;
+            this._rubberBandInitialY = y;
+            this._drawingRubberBand = true;
+            this._drawRubberBand(x, y);
+
+            return Clutter.EVENT_STOP;
+        }
+
+        if (button == 3)
+        {
+            this._openMenu(x, y);
+
+            return Clutter.EVENT_STOP;
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+    },
+
+    _onButtonRelease: function(actor, event)
+    {
+        let button = event.get_button();
+        if (button == 1)
+        {
+            this._drawingRubberBand = false;
+            this._rubberBand.hide();
+
+            return Clutter.EVENT_STOP;
+        }
+
+        return Clutter.EVENT_PROPAGATE;
     },
 
     _addDesktopBackgroundMenu: function()
@@ -253,30 +320,9 @@ const DesktopContainer = new Lang.Class(
         this._iconsContainer._desktopBackgroundManager = new PopupMenu.PopupMenuManager({ actor: this._iconsContainer });
         this._iconsContainer._desktopBackgroundManager.addMenu(this._iconsContainer._desktopBackgroundMenu);
 
-        let clickAction = new Clutter.ClickAction();
-        clickAction.connect('long-press', Lang.bind(this, function(action, actor, state) {
-            if (state == Clutter.LongPressState.QUERY)
-                return ((action.get_button() == 0 ||
-                         action.get_button() == 1) &&
-                        !this._iconsContainer._desktopBackgroundMenu.isOpen);
-            if (state == Clutter.LongPressState.ACTIVATE) {
-                let [x, y] = action.get_coords();
-                this._openMenu(x, y);
-                this._iconsContainer._desktopBackgroundManager.ignoreRelease();
-            }
-            return true;
+        let grabOpBeginId = global.display.connect('grab-op-begin', Lang.bind(this, function () {
+            // this._iconsContainer._desktopBackgroundMenu.close(BoxPointer.PopupAnimation.NONE);
         }));
-        clickAction.connect('clicked', Lang.bind(this, function(action) {
-            if (action.get_button() == 3) {
-                let [x, y] = action.get_coords();
-                this._openMenu(x, y);
-            }
-        }));
-        this._iconsContainer.add_action(clickAction);
-
-        let grabOpBeginId = global.display.connect('grab-op-begin', function () {
-            clickAction.release();
-        });
 
         this._iconsContainer.connect('destroy', Lang.bind (this, function() {
             this._iconsContainer._desktopBackgroundMenu.destroy();
@@ -316,7 +362,6 @@ function destroyBackgroundMenu()
 {
     forEachBackgroundManager(function(bgManager)
     {
-        bgManager.backgroundActor._backgroundMenu.destroy();
     });
 }
 
