@@ -21,6 +21,7 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const St = imports.gi.St;
+const Pango = imports.gi.Pango;
 
 const Background = imports.ui.background;
 const Layout = imports.ui.layout;
@@ -29,12 +30,12 @@ const Tweener = imports.ui.tweener;
 const BoxPointer = imports.ui.boxpointer;
 const PopupMenu = imports.ui.popupMenu;
 
-
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
 const DESKTOP_PATH = "/home/csoriano/Desktop";
 const ICON_SIZE = 96;
+const ICON_MAX_WIDTH = 120;
 
 //TODO: restore in disable
 Main.layoutManager._addBackgroundMenu = function (bgManager) {};
@@ -48,6 +49,11 @@ const FileContainer = new Lang.Class (
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
         this.file = file;
+        this._coordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position').split(',')
+                            .map(function (x)
+                            {
+                                return Number(x);
+                            });
         let containerLayout = new Clutter.BoxLayout({ orientation: Clutter.Orientation.VERTICAL });
         this.actor = new St.Widget ({ layout_manager: containerLayout,
                                       reactive: true,
@@ -57,11 +63,20 @@ const FileContainer = new Lang.Class (
                                       x_expand: true,
                                       x_align: Clutter.ActorAlign.CENTER });
 
+        this.actor.width = ICON_MAX_WIDTH;
+
+        this.actor._delegate = this;
+
         this._icon = new St.Icon({ gicon: info.get_icon(),
                                    icon_size: ICON_SIZE });
         this.actor.add_actor(this._icon);
 
-        this._label = new St.Label({ text: fileInfo.get_display_name() });
+        this._label = new St.Label({ text: fileInfo.get_display_name(),
+                                     style_class: "name-label" });
+        let clutterText = this._label.get_clutter_text();
+        clutterText.set_line_wrap(true);
+        clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+
         this.actor.add_actor(this._label);
 
         this.actor.connect('button-press-event', Lang.bind(this, this._onButtonPress));
@@ -108,6 +123,11 @@ const FileContainer = new Lang.Class (
         }
 
         return Clutter.EVENT_PROPAGATE;
+    },
+
+    getCoordinates: function ()
+    {
+        return this._coordinates;
     }
 });
 
@@ -137,7 +157,7 @@ const DesktopContainer = new Lang.Class(
                                                   row_spacing: 40,
                                                   column_spacing: 40 });
         this._iconsContainer = new St.Widget({ name: "the bin thing",
-                                               layout_manager: flowLayout,
+                                               layout_manager: new Clutter.FixedLayout(),
                                                reactive: true,
                                                x_expand: true,
                                                y_expand: true });
@@ -157,6 +177,24 @@ const DesktopContainer = new Lang.Class(
         this._rubberBand = new St.Widget({ style_class: "rubber-band" });
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
+
+        this._layoutChildren();
+    },
+
+    _layoutChildren: function()
+    {
+        for (let i = 0; i < this._iconsContainer.get_n_children(); i++)
+        {
+            let child = this._iconsContainer.get_child_at_index(i);
+
+            if (child.visible)
+            {
+                let coordinates = child._delegate.getCoordinates();
+                log ('allocating ' + coordinates);
+                child.x = coordinates[0];
+                child.y = coordinates[1];
+            }
+        }
     },
 
     _addFiles: function ()
@@ -168,7 +206,7 @@ const DesktopContainer = new Lang.Class(
 
         this._desktopEnumerateCancellable = new Gio.Cancellable();
         let desktopDir = Gio.File.new_for_commandline_arg(DESKTOP_PATH);
-        desktopDir.enumerate_children_async('standard::name,standard::type,standard::icon,standard::display-name',
+        desktopDir.enumerate_children_async('standard::name,standard::type,standard::icon,standard::display-name,metadata::nautilus-icon-position',
                                             Gio.FileQueryInfoFlags.NONE,
                                             GLib.PRIORITY_DEFAULT,
                                             this._desktopEnumerateCancellable,
@@ -183,26 +221,37 @@ const DesktopContainer = new Lang.Class(
             fileContainer = new FileContainer(fileEnum.get_child(info), info);
             this._iconsContainer.add_actor (fileContainer.actor);
         }
+
+        this._layoutChildren();
     },
 
     _backgroundDestroyed: function()
     {
         this._bgDestroyedId = 0;
+        if (this._bgManager == null)
+        {
+            return;
+        }
 
         if (this._bgManager._backgroundSource) // background swapped
-            this._bgDestroyedId =
-                this._bgManager.backgroundActor.connect('destroy',
-                                                        Lang.bind(this, this._backgroundDestroyed));
+        {
+            this._bgDestroyedId = this._bgManager.backgroundActor.connect('destroy',
+                                                                          Lang.bind(this, this._backgroundDestroyed));
+        }
         else // bgManager destroyed
+        {
             this.actor.destroy();
+        }
     },
 
     _onDestroy: function()
     {
         if (this._bgDestroyedId)
+        {
             this._bgManager.backgroundActor.disconnect(this._bgDestroyedId);
-        this._bgDestroyedId = 0;
+        }
 
+        this._bgDestroyedId = 0;
         this._bgManager = null;
     },
 
