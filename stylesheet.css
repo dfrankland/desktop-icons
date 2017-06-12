@@ -7,7 +7,13 @@
 {
    background-color: rgba(238, 238, 238, 0.1);
 }
+
 .rubber-band
 {
    background-color: rgba(0, 0, 238, 0.3);
+}
+
+.name-label
+{
+    text-shadow: 1px 1px black;
 }
