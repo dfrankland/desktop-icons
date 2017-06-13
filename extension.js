@@ -23,6 +23,7 @@ const Lang = imports.lang;
 const St = imports.gi.St;
 const Pango = imports.gi.Pango;
 
+const Animation = imports.ui.animation;
 const Background = imports.ui.background;
 const Layout = imports.ui.layout;
 const Main = imports.ui.main;
@@ -61,6 +62,7 @@ const FileContainer = new Lang.Class (
                                       can_focus: true,
                                       style_class: 'file-container',
                                       x_expand: true,
+                                      visible: true,
                                       x_align: Clutter.ActorAlign.CENTER });
 
         this.actor.width = ICON_MAX_WIDTH;
@@ -148,24 +150,25 @@ const DesktopContainer = new Lang.Class(
         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
 
         let monitorIndex = bgManager._monitorIndex;
-        let constraint = new Layout.MonitorConstraint({ index: monitorIndex,
-                                                        work_area: true });
-        this.actor.add_constraint(constraint);
+        this._monitorConstraint = new Layout.MonitorConstraint({ index: monitorIndex,
+                                                                 work_area: true });
+        this.actor.add_constraint(this._monitorConstraint);
 
         let flowLayout = new Clutter.FlowLayout({ snap_to_grid: true,
                                                   homogeneous: true,
                                                   row_spacing: 40,
                                                   column_spacing: 40 });
+
         this._iconsContainer = new St.Widget({ name: "the bin thing",
-                                               layout_manager: new Clutter.FixedLayout(),
+                                               layout_manager: new Clutter.FlowLayout(),
                                                reactive: true,
                                                x_expand: true,
                                                y_expand: true });
+        this._iconsContainer.connect('allocation-changed', Lang.bind(this, this._scheduleLayoutChildren));
+        this._layoutChildrenId = 0;
         this._iconsContainer.reactive = true;
         this.actor.add_actor(this._iconsContainer);
 
-        this._desktopEnumerateCancellable = null;
-        this._addFiles();
         this._addDesktopBackgroundMenu();
 
         this._bgDestroyedId = bgManager.backgroundActor.connect('destroy',
@@ -178,27 +181,86 @@ const DesktopContainer = new Lang.Class(
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
 
-        this._layoutChildren();
+        this._desktopEnumerateCancellable = null;
+        this._createPlaceholders();
+        this._addFiles();
     },
 
-    _layoutChildren: function()
+    _scheduleLayoutChildren: function()
     {
+        if (this._layoutChildrenId != 0)
+        {
+            return;
+            GLib.source_remove(this._layoutChildrenId);
+        }
+
+        log ("scheduling");
+        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_DEFAULT, Lang.bind(this, this._layoutChildren));
+    },
+
+    _createPlaceholders: function()
+    {
+        let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
+        log ("work area " + workarea.width + " " + workarea.height);
+        let maxFileContainers = Math.ceil((workarea.width / ICON_SIZE) * (workarea.height / ICON_SIZE));
+
+        log ("max file containers " + maxFileContainers);
+        for (let i = 0; i < maxFileContainers; i++)
+        {
+            let placeholder = new St.Bin({ width: ICON_SIZE, height: ICON_SIZE });
+            let icon = new St.Icon({ icon_name: 'dialog-password-symbolic' });
+            placeholder.add_actor(icon);
+            this._iconsContainer.add_actor(placeholder);
+        }
+    },
+
+    _getChildAtPos: function(x, y)
+    {
+        let children = this._iconsContainer.get_children();
         for (let i = 0; i < this._iconsContainer.get_n_children(); i++)
         {
-            let child = this._iconsContainer.get_child_at_index(i);
-
+            let child = children[i];
             if (child.visible)
             {
-                let coordinates = child._delegate.getCoordinates();
-                log ('allocating ' + coordinates);
-                child.x = coordinates[0];
-                child.y = coordinates[1];
+                //log ("child calc at " + child.x + " " + child.y + " " + child.widt	 + " " + child.height + " " + x + " " + y);
+                if (child.x < x && (child.x + child.width) > x &&
+                    child.y < y && (child.y + child.height) > y)
+                {
+                    return child;
+                }
             }
         }
     },
 
-    _addFiles: function ()
+    _layoutChildren: function()
     {
+        log("layout changed start");
+        let amountOfPlaceholders = 0;
+        for (let i = 0; i < this._fileContainers.length; i++)
+        {
+            let fileContainer = this._fileContainers[i];
+            if (fileContainer.actor.visible)
+            {
+                let coordinates = fileContainer.getCoordinates();
+                let placeholder = this._getChildAtPos(coordinates[0], coordinates[1]);
+                //log ('allocating ' + coordinates);
+                if (placeholder)
+                {
+                    this._iconsContainer.replace_child(placeholder, fileContainer.actor);
+                    amountOfPlaceholders++;
+                }
+            }
+        }
+        this._layoutChildrenId = 0;
+        log ("layout changed ", amountOfPlaceholders);
+
+        return GLib.SOURCE_REMOVE;
+    },
+
+    _addFiles: function()
+    {
+        log("Add files");
+        this._fileContainers = [];
         if (this._desktopEnumerateCancellable)
         {
             this._desktopEnumerateCancellable.cancel();
@@ -219,9 +281,10 @@ const DesktopContainer = new Lang.Class(
         while ((info = fileEnum.next_file(null)))
         {
             fileContainer = new FileContainer(fileEnum.get_child(info), info);
-            this._iconsContainer.add_actor (fileContainer.actor);
+            this._fileContainers.push(fileContainer);
         }
 
+        log ("on desktop enumerate children");
         this._layoutChildren();
     },
 
