@@ -38,9 +38,6 @@ const DESKTOP_PATH = "/home/csoriano/Desktop";
 const ICON_SIZE = 96;
 const ICON_MAX_WIDTH = 120;
 
-//TODO: restore in disable
-Main.layoutManager._addBackgroundMenu = function (bgManager) {};
-
 const FileContainer = new Lang.Class (
 {
     Name: 'FileContainer',
@@ -50,11 +47,14 @@ const FileContainer = new Lang.Class (
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
         this.file = file;
-        this._coordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position').split(',')
-                            .map(function (x)
-                            {
-                                return Number(x);
-                            });
+        log('getting attribute ', fileInfo.get_attribute_as_string('metadata::nautilus-icon-position'), file.get_uri());
+            this._coordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position').split(',')
+                                .map(function (x)
+                                {
+                                    log ("NUMBER IS HERE ", x);
+                                    return Number(x);
+                                });
+
         let containerLayout = new Clutter.BoxLayout({ orientation: Clutter.Orientation.VERTICAL });
         this.actor = new St.Widget ({ layout_manager: containerLayout,
                                       reactive: true,
@@ -69,7 +69,7 @@ const FileContainer = new Lang.Class (
 
         this.actor._delegate = this;
 
-        this._icon = new St.Icon({ gicon: info.get_icon(),
+        this._icon = new St.Icon({ gicon: fileInfo.get_icon(),
                                    icon_size: ICON_SIZE });
         this.actor.add_actor(this._icon);
 
@@ -141,8 +141,16 @@ const DesktopContainer = new Lang.Class(
     {
         this._bgManager = bgManager;
 
+        let flowLayout = new Clutter.FlowLayout({ snap_to_grid: true,
+                                                  homogeneous: true,
+                                                  row_spacing: 40,
+                                                  column_spacing: 40 });
+
         this.actor = new St.Widget({ name: "DesktopContainer",
-                                     layout_manager: new Clutter.BinLayout(),
+                                     layout_manager: flowLayout,
+                                     reactive: true,
+                                     x_expand: true,
+                                     y_expand: true,
                                      opacity: 255 });
 
         this._bgManager._container.add_actor(this.actor);
@@ -154,48 +162,19 @@ const DesktopContainer = new Lang.Class(
                                                                  work_area: true });
         this.actor.add_constraint(this._monitorConstraint);
 
-        let flowLayout = new Clutter.FlowLayout({ snap_to_grid: true,
-                                                  homogeneous: true,
-                                                  row_spacing: 40,
-                                                  column_spacing: 40 });
-
-        this._iconsContainer = new St.Widget({ name: "the bin thing",
-                                               layout_manager: new Clutter.FlowLayout(),
-                                               reactive: true,
-                                               x_expand: true,
-                                               y_expand: true });
-        this._iconsContainer.connect('allocation-changed', Lang.bind(this, this._scheduleLayoutChildren));
-        this._layoutChildrenId = 0;
-        this._iconsContainer.reactive = true;
-        this.actor.add_actor(this._iconsContainer);
-
         this._addDesktopBackgroundMenu();
 
         this._bgDestroyedId = bgManager.backgroundActor.connect('destroy',
                                                                 Lang.bind(this, this._backgroundDestroyed));
 
-        this._iconsContainer.connect('button-press-event', Lang.bind(this, this._onButtonPress));
-        this._iconsContainer.connect('button-release-event', Lang.bind(this, this._onButtonRelease));
-        this._iconsContainer.connect('motion-event', Lang.bind(this, this._onMotion));
+        this.actor.connect('button-press-event', Lang.bind(this, this._onButtonPress));
+        this.actor.connect('button-release-event', Lang.bind(this, this._onButtonRelease));
+        this.actor.connect('motion-event', Lang.bind(this, this._onMotion));
         this._rubberBand = new St.Widget({ style_class: "rubber-band" });
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
 
-        this._desktopEnumerateCancellable = null;
         this._createPlaceholders();
-        this._addFiles();
-    },
-
-    _scheduleLayoutChildren: function()
-    {
-        if (this._layoutChildrenId != 0)
-        {
-            return;
-            GLib.source_remove(this._layoutChildrenId);
-        }
-
-        log ("scheduling");
-        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_DEFAULT, Lang.bind(this, this._layoutChildren));
     },
 
     _createPlaceholders: function()
@@ -210,82 +189,8 @@ const DesktopContainer = new Lang.Class(
             let placeholder = new St.Bin({ width: ICON_SIZE, height: ICON_SIZE });
             let icon = new St.Icon({ icon_name: 'dialog-password-symbolic' });
             placeholder.add_actor(icon);
-            this._iconsContainer.add_actor(placeholder);
+            this.actor.add_actor(placeholder);
         }
-    },
-
-    _getChildAtPos: function(x, y)
-    {
-        let children = this._iconsContainer.get_children();
-        for (let i = 0; i < this._iconsContainer.get_n_children(); i++)
-        {
-            let child = children[i];
-            if (child.visible)
-            {
-                //log ("child calc at " + child.x + " " + child.y + " " + child.widt	 + " " + child.height + " " + x + " " + y);
-                if (child.x < x && (child.x + child.width) > x &&
-                    child.y < y && (child.y + child.height) > y)
-                {
-                    return child;
-                }
-            }
-        }
-    },
-
-    _layoutChildren: function()
-    {
-        log("layout changed start");
-        let amountOfPlaceholders = 0;
-        for (let i = 0; i < this._fileContainers.length; i++)
-        {
-            let fileContainer = this._fileContainers[i];
-            if (fileContainer.actor.visible)
-            {
-                let coordinates = fileContainer.getCoordinates();
-                let placeholder = this._getChildAtPos(coordinates[0], coordinates[1]);
-                //log ('allocating ' + coordinates);
-                if (placeholder)
-                {
-                    this._iconsContainer.replace_child(placeholder, fileContainer.actor);
-                    amountOfPlaceholders++;
-                }
-            }
-        }
-        this._layoutChildrenId = 0;
-        log ("layout changed ", amountOfPlaceholders);
-
-        return GLib.SOURCE_REMOVE;
-    },
-
-    _addFiles: function()
-    {
-        log("Add files");
-        this._fileContainers = [];
-        if (this._desktopEnumerateCancellable)
-        {
-            this._desktopEnumerateCancellable.cancel();
-        }
-
-        this._desktopEnumerateCancellable = new Gio.Cancellable();
-        let desktopDir = Gio.File.new_for_commandline_arg(DESKTOP_PATH);
-        desktopDir.enumerate_children_async('standard::name,standard::type,standard::icon,standard::display-name,metadata::nautilus-icon-position',
-                                            Gio.FileQueryInfoFlags.NONE,
-                                            GLib.PRIORITY_DEFAULT,
-                                            this._desktopEnumerateCancellable,
-                                            Lang.bind (this, this._onDesktopEnumerateChildren));
-    },
-
-    _onDesktopEnumerateChildren: function(source, res)
-    {
-        let fileEnum = source.enumerate_children_finish(res);
-        while ((info = fileEnum.next_file(null)))
-        {
-            fileContainer = new FileContainer(fileEnum.get_child(info), info);
-            this._fileContainers.push(fileContainer);
-        }
-
-        log ("on desktop enumerate children");
-        this._layoutChildren();
     },
 
     _backgroundDestroyed: function()
@@ -361,9 +266,9 @@ const DesktopContainer = new Lang.Class(
     _openMenu: function(x, y)
     {
         Main.layoutManager.setDummyCursorGeometry(x, y, 0, 0);
-        this._iconsContainer._desktopBackgroundMenu.open(BoxPointer.PopupAnimation.NONE);
+        this.actor._desktopBackgroundMenu.open(BoxPointer.PopupAnimation.NONE);
         //TODO: Why does it need ignoreRelease?
-        this._iconsContainer._desktopBackgroundManager.ignoreRelease();
+        this.actor._desktopBackgroundManager.ignoreRelease();
     },
 
     _drawRubberBand: function(currentX, currentY)
@@ -428,26 +333,194 @@ const DesktopContainer = new Lang.Class(
 
     _addDesktopBackgroundMenu: function()
     {
-        this._iconsContainer._desktopBackgroundMenu = this._createDesktopBackgroundMenu();
-        this._iconsContainer._desktopBackgroundManager = new PopupMenu.PopupMenuManager({ actor: this._iconsContainer });
-        this._iconsContainer._desktopBackgroundManager.addMenu(this._iconsContainer._desktopBackgroundMenu);
+        this.actor._desktopBackgroundMenu = this._createDesktopBackgroundMenu();
+        this.actor._desktopBackgroundManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
+        this.actor._desktopBackgroundManager.addMenu(this.actor._desktopBackgroundMenu);
 
         let grabOpBeginId = global.display.connect('grab-op-begin', Lang.bind(this, function () {
             // this._iconsContainer._desktopBackgroundMenu.close(BoxPointer.PopupAnimation.NONE);
         }));
 
-        this._iconsContainer.connect('destroy', Lang.bind (this, function() {
-            this._iconsContainer._desktopBackgroundMenu.destroy();
-            this._iconsContainer._desktopBackgroundMenu = null;
-            this._iconsContainer._desktopBackgroundManager = null;
+        this.actor.connect('destroy', Lang.bind (this, function() {
+            this.actor._desktopBackgroundMenu.destroy();
+            this.actor._desktopBackgroundMenu = null;
+            this.actor._desktopBackgroundManager = null;
             global.display.disconnect(grabOpBeginId);
         }));
     }
 });
 
-let monitorsChangedId = 0;
-let startupPreparedId = 0;
-let desktopContainers = [];
+const DesktopManager = new Lang.Class(
+{
+    Name: 'DesktopManager',
+
+    _init: function()
+    {
+        this._layoutChildrenId = 0;
+        this._desktopEnumerateCancellable = null;
+        this._desktopContainers = [];
+
+        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', Lang.bind(this, this._addDesktopIcons));
+        this._startupPreparedId = Main.layoutManager.connect('startup-prepared', Lang.bind(this, this._addDesktopIcons));
+
+        this._addDesktopIcons();
+    },
+
+    _addDesktopIcons: function()
+    {
+        this._destroyDesktopIcons();
+        forEachBackgroundManager(Lang.bind(this, function(bgManager)
+        {
+            this._desktopContainers.push(new DesktopContainer(bgManager));
+        }));
+
+        this._addFiles();
+    },
+
+    _destroyDesktopIcons: function()
+    {
+        this._desktopContainers.forEach(function(l) { l.actor.destroy(); });
+        this._desktopContainers = [];
+    },
+
+    _addFiles: function()
+    {
+        log("Add files");
+        this._fileContainers = [];
+        if (this._desktopEnumerateCancellable)
+        {
+            this._desktopEnumerateCancellable.cancel();
+        }
+
+        this._desktopEnumerateCancellable = new Gio.Cancellable();
+        let desktopDir = Gio.File.new_for_commandline_arg(DESKTOP_PATH);
+        desktopDir.enumerate_children_async("metadata::*, standard::name,standard::type,standard::icon,standard::display-name",
+                                            Gio.FileQueryInfoFlags.NONE,
+                                            GLib.PRIORITY_DEFAULT,
+                                            this._desktopEnumerateCancellable,
+                                            Lang.bind (this, this._onDesktopEnumerateChildren));
+    },
+
+    _onDesktopEnumerateChildren: function(source, res)
+    {
+        let fileEnum;
+        try
+        {
+            fileEnum = source.enumerate_children_finish(res);
+        }
+        catch(error)
+        {
+            if(error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+            {
+                return;
+            }
+            else
+            {
+                log("Error loading Desktop files");
+                return;
+            }
+        }
+
+        let info;
+        while ((info = fileEnum.next_file(null)))
+        {
+            file = fileEnum.get_child(info);
+        log('getting attribute ' + info.get_attribute_as_string("metadata::screen"), file.get_uri());
+        log('getting attribute ' + info.get_attribute_as_string("metadata::nautilus-icon-position"), file.get_uri());
+        log('getting attribute ' + info.get_attribute_as_string("standard::display-name"), file.get_uri());
+            fileContainer = new FileContainer(file, info);
+            this._fileContainers.push(fileContainer);
+        }
+
+        this._desktopContainers.forEach(Lang.bind(this,
+            function(item, index)
+            {
+                item.actor.connect('allocation-changed', Lang.bind(this, this._scheduleLayoutChildren));
+            }));
+        this._scheduleLayoutChildren();
+    },
+
+    _getChildAtPos: function(x, y)
+    {
+        for (let x = 0; x < this._desktopContainers.length; x++)
+        {
+            let desktopContainer = this._desktopContainers[x];
+            let children = desktopContainer.actor.get_children();
+            for (let i = 0; i < children.length; i++)
+            {
+                let child = children[i];
+                let transformedPosition = child.get_transformed_position();
+                transformedPosition[0] = Math.floor(transformedPosition[0]);
+                transformedPosition[1] = Math.floor(transformedPosition[1]);
+                if (child.visible)
+                {
+                    log ("child calc at " + transformedPosition[0] + " " + transformedPosition[1] + " " + child.width + " " + child.height + " " + x + " " + y);
+                    if (transformedPosition[0] <= x && (transformedPosition[0] + child.width) > x &&
+                        transformedPosition[1] <= y && (transformedPosition[1] + child.height) > y)
+                    {
+                        return [child, desktopContainer];
+                    }
+                }
+            }
+        }
+    },
+
+    _scheduleLayoutChildren: function()
+    {
+        if (this._layoutChildrenId != 0)
+        {
+            GLib.source_remove(this._layoutChildrenId);
+        }
+
+        log ("scheduling");
+        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, Lang.bind(this, this._layoutChildren));
+    },
+
+
+    _layoutChildren: function()
+    {
+        log("layout changed start");
+        let amountOfPlaceholders = 0;
+        for (let i = 0; i < this._fileContainers.length; i++)
+        {
+            let fileContainer = this._fileContainers[i];
+            if (fileContainer.actor.visible)
+            {
+                let coordinates = fileContainer.getCoordinates();
+                let [placeholder, desktopContainer] = this._getChildAtPos(coordinates[0],
+                                                                        coordinates[1]);
+                log ("placeholder " + placeholder + ' ' + desktopContainer);
+                //log ('allocating ' + coordinates);
+                if (placeholder)
+                {
+                    desktopContainer.actor.replace_child(placeholder, fileContainer.actor);
+                    amountOfPlaceholders++;
+                }
+            }
+        }
+        log ("layout changed ", amountOfPlaceholders);
+
+        this._layoutChildrenId = 0;
+        return GLib.SOURCE_REMOVE;
+    },
+
+    destroy: function()
+    {
+        if (this._monitorsChangedId)
+        {
+            Main.layoutManager.disconnect(this._monitorsChangedId);
+        }
+        this._monitorsChangedId = 0;
+
+        if (this._startupPreparedId)
+        {
+            Main.layoutManager.disconnect(this._startupPreparedId);
+        }
+        this._startupPreparedId = 0;
+    }
+});
+
+let injections = {};
 
 function forEachBackgroundManager(func)
 {
@@ -455,54 +528,29 @@ function forEachBackgroundManager(func)
     Main.layoutManager._bgManagers.forEach(func);
 }
 
-function addDesktopIcons()
+function removeBackgroundMenu()
 {
-    destroyDesktopIcons();
-    forEachBackgroundManager(function(bgManager)
-    {
-        desktopContainers.push(new DesktopContainer(bgManager));
-    });
-}
-
-function destroyDesktopIcons()
-{
-    desktopContainers.forEach(function(l) { l.actor.destroy(); });
-    desktopContainers = [];
-}
-
-function destroyBackgroundMenu()
-{
-    forEachBackgroundManager(function(bgManager)
-    {
-    });
+    injections['_addBackgroundMenu'] = Main.layoutManager._addBackgroundMenu;
+    Main.layoutManager._addBackgroundMenu = function (bgManager) {};
 }
 
 function init()
 {
 }
 
+desktopManager = null;
+
 function enable()
 {
-    monitorsChangedId = Main.layoutManager.connect('monitors-changed', addDesktopIcons);
-    startupPreparedId = Main.layoutManager.connect('startup-prepared', addDesktopIcons);
-    addDesktopIcons();
-    //TODO: restore in disable
-    destroyBackgroundMenu();
+    removeBackgroundMenu();
+    desktopManager = new DesktopManager();
 }
 
 function disable()
 {
-    if (monitorsChangedId)
+    desktopManager.destroy();
+    for (prop in injections)
     {
-        Main.layoutManager.disconnect(monitorsChangedId);
+        Main.layoutManager[prop] = injections[prop];
     }
-    monitorsChangedId = 0;
-
-    if (startupPreparedId)
-    {
-        Main.layoutManager.disconnect(startupPreparedId);
-    }
-    startupPreparedId = 0;
-
-    destroyDesktopIcons();
 }
