@@ -47,41 +47,42 @@ const FileContainer = new Lang.Class (
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
         this.file = file;
-        log('getting attribute ', fileInfo.get_attribute_as_string('metadata::nautilus-icon-position'), file.get_uri());
-            this._coordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position').split(',')
-                                .map(function (x)
-                                {
-                                    log ("NUMBER IS HERE ", x);
-                                    return Number(x);
-                                });
+        this._coordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position').split(',')
+                            .map(function (x)
+                            {
+                                return Number(x);
+                            });
+        log('Coordinates ', this._coordinates, file.get_uri());
+
+        this.actor = new St.Bin({ visible:true });
+        this.actor.width = ICON_MAX_WIDTH;
+        this.actor.height = ICON_MAX_WIDTH;
+        this.actor._delegate = this;
 
         let containerLayout = new Clutter.BoxLayout({ orientation: Clutter.Orientation.VERTICAL });
-        this.actor = new St.Widget ({ layout_manager: containerLayout,
-                                      reactive: true,
-                                      track_hover: true,
-                                      can_focus: true,
-                                      style_class: 'file-container',
-                                      x_expand: true,
-                                      visible: true,
-                                      x_align: Clutter.ActorAlign.CENTER });
-
-        this.actor.width = ICON_MAX_WIDTH;
-
-        this.actor._delegate = this;
+        this._container = new St.Widget ({ layout_manager: containerLayout,
+                                          reactive: true,
+                                          track_hover: true,
+                                          can_focus: true,
+                                          style_class: 'file-container',
+                                          x_expand: true,
+                                          y_expand: true,
+                                          x_align: Clutter.ActorAlign.CENTER });
+        this.actor.add_actor(this._container);
 
         this._icon = new St.Icon({ gicon: fileInfo.get_icon(),
                                    icon_size: ICON_SIZE });
-        this.actor.add_actor(this._icon);
+        this._container.add_actor(this._icon);
 
         this._label = new St.Label({ text: fileInfo.get_display_name(),
                                      style_class: "name-label" });
+        this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
         clutterText.set_line_wrap(true);
         clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+        clutterText.set_ellipsize(Pango.EllipsizeMode.END);
 
-        this.actor.add_actor(this._label);
-
-        this.actor.connect('button-press-event', Lang.bind(this, this._onButtonPress));
+        this._container.connect('button-press-event', Lang.bind(this, this._onButtonPress));
 
         this._createMenu();
     },
@@ -141,13 +142,12 @@ const DesktopContainer = new Lang.Class(
     {
         this._bgManager = bgManager;
 
-        let flowLayout = new Clutter.FlowLayout({ snap_to_grid: true,
-                                                  homogeneous: true,
-                                                  row_spacing: 40,
-                                                  column_spacing: 40 });
+        this._layout = new Clutter.GridLayout({ orientation: Clutter.Orientation.VERTICAL,
+                                                column_homogeneous: true,
+                                                row_homogeneous: true });
 
         this.actor = new St.Widget({ name: "DesktopContainer",
-                                     layout_manager: flowLayout,
+                                     layout_manager: this._layout,
                                      reactive: true,
                                      x_expand: true,
                                      y_expand: true,
@@ -181,15 +181,32 @@ const DesktopContainer = new Lang.Class(
     {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
         log ("work area " + workarea.width + " " + workarea.height);
-        let maxFileContainers = Math.ceil((workarea.width / ICON_SIZE) * (workarea.height / ICON_SIZE));
+        let maxFileContainers = Math.ceil((workarea.width / ICON_MAX_WIDTH) * (workarea.height / ICON_MAX_WIDTH));
+        let maxRows = Math.ceil(workarea.height / ICON_MAX_WIDTH);
+        let maxColumns = Math.ceil(workarea.width / ICON_MAX_WIDTH);
 
         log ("max file containers " + maxFileContainers);
-        for (let i = 0; i < maxFileContainers; i++)
+/*
+        for (let i = 0; i < maxRows; i++)
         {
-            let placeholder = new St.Bin({ width: ICON_SIZE, height: ICON_SIZE });
-            let icon = new St.Icon({ icon_name: 'dialog-password-symbolic' });
-            placeholder.add_actor(icon);
-            this.actor.add_actor(placeholder);
+            this._layout.insert_row(i);
+        }
+
+        for (let j = 0; j < maxColumns; j++)
+        {
+            this._layout.insert_column(j);
+        }
+*/
+
+        for (let i = 0; i < maxColumns; i++)
+        {
+            for (let j = 0; j < maxRows; j++)
+            {
+                let placeholder = new St.Bin({ width: ICON_MAX_WIDTH, height: ICON_MAX_WIDTH });
+                let icon = new St.Icon({ icon_name: 'dialog-password-symbolic' });
+                placeholder.add_actor(icon);
+                this._layout.attach(placeholder, i, j, 1, 1);
+            }
         }
     },
 
@@ -347,6 +364,54 @@ const DesktopContainer = new Lang.Class(
             this.actor._desktopBackgroundManager = null;
             global.display.disconnect(grabOpBeginId);
         }));
+    },
+
+    findEmptyPlace: function(left, top)
+    {
+        let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
+        let maxRows = Math.ceil(workarea.height / ICON_MAX_WIDTH);
+        let maxColumns = Math.ceil(workarea.width / ICON_MAX_WIDTH);
+        let bfsQueue = [[left, top]];
+        let bfsStringQueue = [JSON.stringify([left, top])];
+        while(bfsQueue.length > 0)
+        {
+            let current = bfsQueue.pop();
+            bfsStringQueue.pop();
+            if(this._layout.get_child_at(current[0], current[1])._delegate == undefined ||
+               !(this._layout.get_child_at(current[0], current[1])._delegate instanceof FileContainer))
+            {
+                return [this._layout.get_child_at(current[0], current[1]),
+                        current[0], current[1]];
+            }
+
+            let adjacents = [];
+            if(current[0] + 1 < maxColumns)
+            {
+                adjacents.push([current[0] + 1, current[1]]);
+            }
+            if(current[1] + 1 < maxRows)
+            {
+                adjacents.push([current[0], current[1] + 1]);
+            }
+            if(current[0] - 1 >= 0)
+            {
+                adjacents.push([current[0] - 1, current[1]]);
+            }
+            if(current[1] - 1 >= 0)
+            {
+                adjacents.push([current[0], current[1] - 1]);
+            }
+            for(let i = 0; i < adjacents.length; i++)
+            {
+                if(bfsStringQueue.indexOf(JSON.stringify(adjacents[i])) < 0)
+                {
+                    bfsQueue.push(adjacents[i]);
+                    bfsStringQueue.push(JSON.stringify(adjacents[i]));
+                }
+            }
+        }
+
+        return null;
     }
 });
 
@@ -385,7 +450,6 @@ const DesktopManager = new Lang.Class(
 
     _addFiles: function()
     {
-        log("Add files");
         this._fileContainers = [];
         if (this._desktopEnumerateCancellable)
         {
@@ -425,9 +489,6 @@ const DesktopManager = new Lang.Class(
         while ((info = fileEnum.next_file(null)))
         {
             file = fileEnum.get_child(info);
-        log('getting attribute ' + info.get_attribute_as_string("metadata::screen"), file.get_uri());
-        log('getting attribute ' + info.get_attribute_as_string("metadata::nautilus-icon-position"), file.get_uri());
-        log('getting attribute ' + info.get_attribute_as_string("standard::display-name"), file.get_uri());
             fileContainer = new FileContainer(file, info);
             this._fileContainers.push(fileContainer);
         }
@@ -442,27 +503,47 @@ const DesktopManager = new Lang.Class(
 
     _getChildAtPos: function(x, y)
     {
-        for (let x = 0; x < this._desktopContainers.length; x++)
+        let minDistance = Number.POSITIVE_INFINITY;
+        let closestChild = null;
+        let closestDesktopContainer = null;
+        let left = -1;
+        let top = -1;
+        for (let k = 0; k < this._desktopContainers.length; k++)
         {
-            let desktopContainer = this._desktopContainers[x];
+            let desktopContainer = this._desktopContainers[k];
+
+            let workarea = Main.layoutManager.getWorkAreaForMonitor(desktopContainer._monitorConstraint.index);
+            let maxRows = Math.ceil(workarea.height / ICON_MAX_WIDTH);
+            let maxColumns = Math.ceil(workarea.width / ICON_MAX_WIDTH);
+            let maxFileContainers = maxRows * maxColumns;
+
             let children = desktopContainer.actor.get_children();
-            for (let i = 0; i < children.length; i++)
+            let transformedPosition = desktopContainer.actor.get_transformed_position();
+            for (let i = 0; i < maxRows; i++)
             {
-                let child = children[i];
-                let transformedPosition = child.get_transformed_position();
-                transformedPosition[0] = Math.floor(transformedPosition[0]);
-                transformedPosition[1] = Math.floor(transformedPosition[1]);
-                if (child.visible)
+                for (let j = 0; j < maxColumns; j++)
                 {
-                    log ("child calc at " + transformedPosition[0] + " " + transformedPosition[1] + " " + child.width + " " + child.height + " " + x + " " + y);
-                    if (transformedPosition[0] <= x && (transformedPosition[0] + child.width) > x &&
-                        transformedPosition[1] <= y && (transformedPosition[1] + child.height) > y)
+                    let child = children[i];
+                    let proposedPosition = [];
+                    proposedPosition[0] = Math.floor(transformedPosition[0] + j * ICON_MAX_WIDTH);
+                    proposedPosition[1] = Math.floor(transformedPosition[1] + i * ICON_MAX_WIDTH);
+                    if (child.visible)
                     {
-                        return [child, desktopContainer];
+                        let distance = distanceBetweenPoints(proposedPosition[0], proposedPosition[1], x, y);
+                        if (distance < minDistance)
+                        {
+                            closestChild = desktopContainer._layout.get_child_at(j, i);
+                            minDistance = distance;
+                            closestDesktopContainer = desktopContainer;
+                            left = j;
+                            top = i;
+                        }
                     }
                 }
             }
         }
+
+        return [closestChild, closestDesktopContainer, left, top];
     },
 
     _scheduleLayoutChildren: function()
@@ -472,14 +553,12 @@ const DesktopManager = new Lang.Class(
             GLib.source_remove(this._layoutChildrenId);
         }
 
-        log ("scheduling");
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, Lang.bind(this, this._layoutChildren));
     },
 
 
     _layoutChildren: function()
     {
-        log("layout changed start");
         let amountOfPlaceholders = 0;
         for (let i = 0; i < this._fileContainers.length; i++)
         {
@@ -487,18 +566,35 @@ const DesktopManager = new Lang.Class(
             if (fileContainer.actor.visible)
             {
                 let coordinates = fileContainer.getCoordinates();
-                let [placeholder, desktopContainer] = this._getChildAtPos(coordinates[0],
-                                                                        coordinates[1]);
-                log ("placeholder " + placeholder + ' ' + desktopContainer);
-                //log ('allocating ' + coordinates);
-                if (placeholder)
+                let result = this._getChildAtPos(coordinates[0], coordinates[1]);
+                let placeholder = result[0];
+                let desktopContainer = result[1];
+                let left = result[2];
+                let top = result[3];
+                if(placeholder._delegate != undefined && placeholder._delegate instanceof FileContainer)
                 {
-                    desktopContainer.actor.replace_child(placeholder, fileContainer.actor);
-                    amountOfPlaceholders++;
+                    result = desktopContainer.findEmptyPlace(left, top);
+                    if (result == null)
+                    {
+                        log("WARNING: No empty space in the desktop for another icon");
+                        this._layoutChildrenId = 0;
+                        return GLib.SOURCE_REMOVE;
+                    }
+                    placeholder = result[0];
+                    left = result[1];
+                    top = result[2];
+                }
+                //log ('allocating ' + coordinates);
+                amountOfPlaceholders++;
+                placeholder.destroy();
+                desktopContainer._layout.attach(fileContainer.actor, left, top, 1, 1);
+                let transformedPosition = fileContainer.actor.get_transformed_position();
+                if (left == 0 && top == 0)
+                {
+                    child = desktopContainer._layout.get_child_at(left, top);
                 }
             }
         }
-        log ("layout changed ", amountOfPlaceholders);
 
         this._layoutChildrenId = 0;
         return GLib.SOURCE_REMOVE;
@@ -519,6 +615,16 @@ const DesktopManager = new Lang.Class(
         this._startupPreparedId = 0;
     }
 });
+
+function centerOfRectangle(x, y, width, height)
+{
+    return [x + width/2, y + height/2];
+}
+
+function distanceBetweenPoints(x, y, x2, y2)
+{
+    return Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2));
+}
 
 let injections = {};
 
