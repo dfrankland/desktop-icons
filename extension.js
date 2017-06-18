@@ -35,8 +35,8 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
 const DESKTOP_PATH = "/home/csoriano/Desktop";
-const ICON_SIZE = 96;
-const ICON_MAX_WIDTH = 120;
+const ICON_SIZE = 64;
+const ICON_MAX_WIDTH = 130;
 
 const FileContainer = new Lang.Class (
 {
