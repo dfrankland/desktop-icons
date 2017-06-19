@@ -33,6 +33,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const Queue = Me.imports.queue;
 
 const DESKTOP_PATH = "/home/csoriano/Desktop";
 const ICON_SIZE = 64;
@@ -140,6 +141,7 @@ const DesktopContainer = new Lang.Class(
 
     _init: function(bgManager)
     {
+	log ("desktop container");
         this._bgManager = bgManager;
 
         this._layout = new Clutter.GridLayout({ orientation: Clutter.Orientation.VERTICAL,
@@ -371,12 +373,13 @@ const DesktopContainer = new Lang.Class(
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
         let maxRows = Math.ceil(workarea.height / ICON_MAX_WIDTH);
         let maxColumns = Math.ceil(workarea.width / ICON_MAX_WIDTH);
-        let bfsQueue = [[left, top]];
-        let bfsStringQueue = [JSON.stringify([left, top])];
-        while(bfsQueue.length > 0)
+        let bfsQueue = new Queue.Queue();
+        bfsQueue.enqueue([[left, top]]);
+        let bfsToVisit = [JSON.stringify([left, top])];
+        let iterations = 0;
+        while(bfsQueue.length > 0 && iterations < 1000)
         {
-            let current = bfsQueue.pop();
-            bfsStringQueue.pop();
+            let current = bfsQueue.dequeue();
             if(this._layout.get_child_at(current[0], current[1])._delegate == undefined ||
                !(this._layout.get_child_at(current[0], current[1])._delegate instanceof FileContainer))
             {
@@ -403,12 +406,13 @@ const DesktopContainer = new Lang.Class(
             }
             for(let i = 0; i < adjacents.length; i++)
             {
-                if(bfsStringQueue.indexOf(JSON.stringify(adjacents[i])) < 0)
+                if(bfsToVisit.indexOf(JSON.stringify(adjacents[i])) < 0)
                 {
-                    bfsQueue.push(adjacents[i]);
-                    bfsStringQueue.push(JSON.stringify(adjacents[i]));
+                    bfsQueue.enqueue(adjacents[i]);
+                    bfsToVisit.push(JSON.stringify(adjacents[i]));
                 }
             }
+            iterations++;
         }
 
         return null;
@@ -450,6 +454,8 @@ const DesktopManager = new Lang.Class(
 
     _addFiles: function()
     {
+	    log("adding files");
+
         this._fileContainers = [];
         if (this._desktopEnumerateCancellable)
         {
