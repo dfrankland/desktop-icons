@@ -5,12 +5,17 @@
 
 .file-container:hover
 {
-   background-color: rgba(238, 238, 238, 0.1);
+   background-color: rgba(238, 238, 238, 0.2);
+}
+
+.file-container:selected
+{
+   background-color: rgba(74, 144, 217, 0.6);
 }
 
 .rubber-band
 {
-   background-color: rgba(0, 0, 238, 0.3);
+   background-color: rgba(74, 144, 238, 0.4);
 }
 
 .name-label
