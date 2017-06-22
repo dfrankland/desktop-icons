@@ -62,13 +62,13 @@ const FileContainer = new Lang.Class (
 
         let containerLayout = new Clutter.BoxLayout({ orientation: Clutter.Orientation.VERTICAL });
         this._container = new St.Widget ({ layout_manager: containerLayout,
-                                          reactive: true,
-                                          track_hover: true,
-                                          can_focus: true,
-                                          style_class: 'file-container',
-                                          x_expand: true,
-                                          y_expand: true,
-                                          x_align: Clutter.ActorAlign.CENTER });
+                                           reactive: true,
+                                           track_hover: true,
+                                           can_focus: true,
+                                           style_class: 'file-container',
+                                           x_expand: true,
+                                           y_expand: true,
+                                           x_align: Clutter.ActorAlign.CENTER });
         this.actor.add_actor(this._container);
 
         this._icon = new St.Icon({ gicon: fileInfo.get_icon(),
@@ -95,7 +95,7 @@ const FileContainer = new Lang.Class (
 
     _onCopyClicked: function()
     {
-        log ("Open clicked");
+        desktopManager.fileCopyClicked();
     },
 
     _createMenu: function()
@@ -122,7 +122,13 @@ const FileContainer = new Lang.Class (
         let button = event.get_button();
         if (button == 3)
         {
+            desktopManager.fileRightClickClicked(this);
             this._menu.toggle();
+            return Clutter.EVENT_STOP;
+        }
+        if (button == 1)
+        {
+            desktopManager.fileLeftClickClicked(this);
             return Clutter.EVENT_STOP;
         }
 
@@ -141,7 +147,6 @@ const DesktopContainer = new Lang.Class(
 
     _init: function(bgManager)
     {
-	log ("desktop container");
         this._bgManager = bgManager;
 
         this._layout = new Clutter.GridLayout({ orientation: Clutter.Orientation.VERTICAL,
@@ -303,12 +308,41 @@ const DesktopContainer = new Lang.Class(
         this._rubberBand.show();
     },
 
+    _selectFromRubberband: function(currentX, currentY)
+    {
+        let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
+                                                    : currentX;
+        let y = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
+                                                    : currentY;
+        let width = Math.abs(this._rubberBandInitialX - currentX);
+        let height = Math.abs(this._rubberBandInitialY - currentY);
+        let selection = [];
+        for(let i = 0; i < this._fileContainers; i++)
+        {
+            let fileContainer = this._fileContainers[i];
+            if(fileContainer.actor.x > currentX && fileContainer.actor.x < currentX + width &&
+               fileContainer.actor.y > currentY && fileContainer.actor.y < currentY + height)
+            {
+                selection.push(fileContainer);
+            }
+        }
+
+        desktopManager.setSelection(selection);
+    },
+
+    addFileContainer: function(fileContainer, top, left)
+    {
+        this._containers.push(fileContainer);
+        this._layout.attach(fileContainer, top, left, 1, 1);
+    },
+
     _onMotion: function(actor, event)
     {
         let [x, y] = event.get_coords();
         if(this._drawingRubberBand)
         {
             this._drawRubberBand(x, y);
+            this._selectFromRubberband(x, y);
         }
     },
 
@@ -433,6 +467,8 @@ const DesktopManager = new Lang.Class(
         this._startupPreparedId = Main.layoutManager.connect('startup-prepared', Lang.bind(this, this._addDesktopIcons));
 
         this._addDesktopIcons();
+
+        this._selection = [];
     },
 
     _addDesktopIcons: function()
@@ -454,8 +490,6 @@ const DesktopManager = new Lang.Class(
 
     _addFiles: function()
     {
-	    log("adding files");
-
         this._fileContainers = [];
         if (this._desktopEnumerateCancellable)
         {
@@ -565,7 +599,6 @@ const DesktopManager = new Lang.Class(
 
     _layoutChildren: function()
     {
-        let amountOfPlaceholders = 0;
         for (let i = 0; i < this._fileContainers.length; i++)
         {
             let fileContainer = this._fileContainers[i];
@@ -590,20 +623,57 @@ const DesktopManager = new Lang.Class(
                     left = result[1];
                     top = result[2];
                 }
-                //log ('allocating ' + coordinates);
-                amountOfPlaceholders++;
                 placeholder.destroy();
-                desktopContainer._layout.attach(fileContainer.actor, left, top, 1, 1);
-                let transformedPosition = fileContainer.actor.get_transformed_position();
-                if (left == 0 && top == 0)
-                {
-                    child = desktopContainer._layout.get_child_at(left, top);
-                }
+                desktopContainer.addFileContainer(fileContainer, left, top);
             }
         }
 
         this._layoutChildrenId = 0;
         return GLib.SOURCE_REMOVE;
+    },
+
+    fileLeftClickClicked: function(fileContainer)
+    {
+        this._setSelection([fileContainer]);
+    },
+
+    fileRightClickClicked: function(fileContainer)
+    {
+        if(fileContainer == null)
+        {
+            this._setSelection([]);
+
+            return;
+        }
+
+        if(!this._selection.indexOf(fileContainer))
+        {
+            this._setSelection([fileContainer]);
+        }
+    },
+
+    _setSelection: function(selection)
+    {
+        for(let i = 0; i < this._fileContainers.length; i++)
+        {
+            let fileContainer = this._fileContainers[i];
+            if(selection.indexOf(fileContainer) >= 0)
+            {
+                fileContainer._container.add_style_pseudo_class('selected');
+                log('adding style pseudo class');
+            }
+            else
+            {
+                fileContainer._container.remove_style_pseudo_class('selected');
+            }
+        }
+
+        this._selection = selection;
+    },
+
+    fileCopyClicked: function()
+    {
+        log("Manager File copy clicked");
     },
 
     destroy: function()
