@@ -148,6 +148,7 @@ const DesktopContainer = new Lang.Class(
     _init: function(bgManager)
     {
         this._bgManager = bgManager;
+        this._fileContainers = [];
 
         this._layout = new Clutter.GridLayout({ orientation: Clutter.Orientation.VERTICAL,
                                                 column_homogeneous: true,
@@ -332,8 +333,8 @@ const DesktopContainer = new Lang.Class(
 
     addFileContainer: function(fileContainer, top, left)
     {
-        this._containers.push(fileContainer);
-        this._layout.attach(fileContainer, top, left, 1, 1);
+        this._fileContainers.push(fileContainer);
+        this._layout.attach(fileContainer.actor, top, left, 1, 1);
     },
 
     _onMotion: function(actor, event)
@@ -411,14 +412,17 @@ const DesktopContainer = new Lang.Class(
         bfsQueue.enqueue([[left, top]]);
         let bfsToVisit = [JSON.stringify([left, top])];
         let iterations = 0;
-        while(bfsQueue.length > 0 && iterations < 1000)
+        while(!bfsQueue.isEmpty() && iterations < 1000)
         {
             let current = bfsQueue.dequeue();
-            if(this._layout.get_child_at(current[0], current[1])._delegate == undefined ||
-               !(this._layout.get_child_at(current[0], current[1])._delegate instanceof FileContainer))
+            let currentChild = this._layout.get_child_at(current[0], current[1]);
+            log ("bfs " + currentChild);
+            log ("coord " + current);
+            if(currentChild._delegate == undefined ||
+               !(currentChild._delegate instanceof FileContainer))
             {
-                return [this._layout.get_child_at(current[0], current[1]),
-                        current[0], current[1]];
+                log ("returning child " + currentChild);
+                return [currentChild, current[0], current[1]];
             }
 
             let adjacents = [];
@@ -438,10 +442,13 @@ const DesktopContainer = new Lang.Class(
             {
                 adjacents.push([current[0], current[1] - 1]);
             }
+                log ("adjacents lenght " + adjacents.length);
             for(let i = 0; i < adjacents.length; i++)
             {
+                log ("checking adjacent " + adjacents[i]);
                 if(bfsToVisit.indexOf(JSON.stringify(adjacents[i])) < 0)
                 {
+                log ("adding adjacent " + adjacents[i]);
                     bfsQueue.enqueue(adjacents[i]);
                     bfsToVisit.push(JSON.stringify(adjacents[i]));
                 }
@@ -610,8 +617,10 @@ const DesktopManager = new Lang.Class(
                 let desktopContainer = result[1];
                 let left = result[2];
                 let top = result[3];
+                log ("layouting " + fileContainer.file.get_uri());
                 if(placeholder._delegate != undefined && placeholder._delegate instanceof FileContainer)
                 {
+                    log ("findign empty space " + placeholder._delegate.file.get_uri() + ' ' + left + ' ' + top);
                     result = desktopContainer.findEmptyPlace(left, top);
                     if (result == null)
                     {
