@@ -22,6 +22,9 @@ const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const St = imports.gi.St;
 const Pango = imports.gi.Pango;
+const Meta = imports.gi.Meta;
+
+const Signals = imports.signals;
 
 const Animation = imports.ui.animation;
 const Background = imports.ui.background;
@@ -30,6 +33,7 @@ const Main = imports.ui.main;
 const Tweener = imports.ui.tweener;
 const BoxPointer = imports.ui.boxpointer;
 const PopupMenu = imports.ui.popupMenu;
+const DND = imports.ui.dnd;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -38,6 +42,7 @@ const Queue = Me.imports.queue;
 const DESKTOP_PATH = "/home/csoriano/Desktop";
 const ICON_SIZE = 64;
 const ICON_MAX_WIDTH = 130;
+const DRAG_TRESHOLD = 8;
 
 const FileContainer = new Lang.Class (
 {
@@ -75,7 +80,7 @@ const FileContainer = new Lang.Class (
                                    icon_size: ICON_SIZE });
         this._container.add_actor(this._icon);
 
-        this._label = new St.Label({ text: fileInfo.get_display_name(),
+        this._label = new St.Label({ text: JSON.stringify(this._coordinates),
                                      style_class: "name-label" });
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
@@ -83,9 +88,36 @@ const FileContainer = new Lang.Class (
         clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
         clutterText.set_ellipsize(Pango.EllipsizeMode.END);
 
-        this._container.connect('button-press-event', Lang.bind(this, this._onButtonPress));
+        this._container.connect("button-press-event", Lang.bind(this, this._onButtonPress));
+        this._container.connect("motion-event", Lang.bind(this, this._onMotion));
+        this._container.connect("button-release-event", Lang.bind(this, this._onButtonRelease));
 
         this._createMenu();
+
+        this.draggable = DND.makeDraggable(this._container,
+                                            { restoreOnSuccess: true,
+                                              manualMode: true,
+                                              dragActorMaxSize: ICON_MAX_WIDTH,
+                                              dragActorOpacity: 100 });
+        this.draggable.connect('drag-begin', Lang.bind(this,
+            function () {
+                log ("drag begin")
+            }));
+        this.draggable.connect('drag-cancelled', Lang.bind(this,
+            function () {
+                this._buttonPressed = false;
+                this._onDrag = false;
+                log ("drag cancelled")
+            }));
+        this.draggable.connect('drag-end', Lang.bind(this,
+            function () {
+                this._buttonPressed = false;
+                this._onDrag = false;
+                log ("drag end")
+            }));
+
+        this._selected = false;
+        this._onDrag = false;
     },
 
     _onOpenClicked: function()
@@ -119,6 +151,7 @@ const FileContainer = new Lang.Class (
 
     _onButtonPress: function(actor, event)
     {
+        log ("on clicked")
         let button = event.get_button();
         if (button == 3)
         {
@@ -128,9 +161,43 @@ const FileContainer = new Lang.Class (
         }
         if (button == 1)
         {
-            desktopManager.fileLeftClickClicked(this);
+            desktopManager.fileLeftClickPressed(this);
+            let [x, y] = event.get_coords();
+            this._buttonPressed = true;
+            this._buttonPressInitialX = x;
+            this._buttonPressInitialY = y;
             return Clutter.EVENT_STOP;
         }
+
+        return Clutter.EVENT_PROPAGATE;
+    },
+
+    _onMotion: function(actor, event)
+    {
+        let [x, y] = event.get_coords();
+        if(this._buttonPressed)
+        {
+            let xDiff = x - this._buttonPressInitialX;
+            let yDiff = y - this._buttonPressInitialY;
+            let distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+            if(distance > DRAG_TRESHOLD && !this._onDrag)
+            {
+                this._onDrag = true;
+                let event = Clutter.get_current_event();
+                let [x, y] = event.get_coords();
+                this.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
+            }
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+    },
+
+    _onButtonRelease: function(event, actor)
+    {
+        log ("button release");
+        this._buttonPressed = false;
+        desktopManager.fileLeftClickReleased(this);
+        this._onDrag = false;
 
         return Clutter.EVENT_PROPAGATE;
     },
@@ -138,8 +205,28 @@ const FileContainer = new Lang.Class (
     getCoordinates: function ()
     {
         return this._coordinates;
+    },
+
+    getAbsoluteIconPosition: function()
+    {
+        return [this.actor.x + this._container.x, this.actor.y + this._container.y];
+    },
+
+    setSelected: function(selected)
+    {
+        if(selected)
+        {
+            this._container.add_style_pseudo_class('selected');
+        }
+        else
+        {
+            this._container.remove_style_pseudo_class('selected');
+        }
+
+        this._selected = selected;
     }
 });
+Signals.addSignalMethods(FileContainer.prototype);
 
 const DesktopContainer = new Lang.Class(
 {
@@ -194,17 +281,6 @@ const DesktopContainer = new Lang.Class(
         let maxColumns = Math.ceil(workarea.width / ICON_MAX_WIDTH);
 
         log ("max file containers " + maxFileContainers);
-/*
-        for (let i = 0; i < maxRows; i++)
-        {
-            this._layout.insert_row(i);
-        }
-
-        for (let j = 0; j < maxColumns; j++)
-        {
-            this._layout.insert_column(j);
-        }
-*/
 
         for (let i = 0; i < maxColumns; i++)
         {
@@ -318,11 +394,12 @@ const DesktopContainer = new Lang.Class(
         let width = Math.abs(this._rubberBandInitialX - currentX);
         let height = Math.abs(this._rubberBandInitialY - currentY);
         let selection = [];
-        for(let i = 0; i < this._fileContainers; i++)
+        for(let i = 0; i < this._fileContainers.length; i++)
         {
             let fileContainer = this._fileContainers[i];
-            if(fileContainer.actor.x > currentX && fileContainer.actor.x < currentX + width &&
-               fileContainer.actor.y > currentY && fileContainer.actor.y < currentY + height)
+            let position = fileContainer.getAbsoluteIconPosition();
+            if(position[0] > x && position[0] < x + width &&
+               position[1] > y && position[1] < y + height)
             {
                 selection.push(fileContainer);
             }
@@ -353,6 +430,7 @@ const DesktopContainer = new Lang.Class(
         let [x, y] = event.get_coords();
         if (button == 1)
         {
+            desktopManager.setSelection([]);
             this._rubberBandInitialX = x;
             this._rubberBandInitialY = y;
             this._drawingRubberBand = true;
@@ -409,19 +487,16 @@ const DesktopContainer = new Lang.Class(
         let maxRows = Math.ceil(workarea.height / ICON_MAX_WIDTH);
         let maxColumns = Math.ceil(workarea.width / ICON_MAX_WIDTH);
         let bfsQueue = new Queue.Queue();
-        bfsQueue.enqueue([[left, top]]);
+        bfsQueue.enqueue([left, top]);
         let bfsToVisit = [JSON.stringify([left, top])];
         let iterations = 0;
         while(!bfsQueue.isEmpty() && iterations < 1000)
         {
             let current = bfsQueue.dequeue();
             let currentChild = this._layout.get_child_at(current[0], current[1]);
-            log ("bfs " + currentChild);
-            log ("coord " + current);
             if(currentChild._delegate == undefined ||
                !(currentChild._delegate instanceof FileContainer))
             {
-                log ("returning child " + currentChild);
                 return [currentChild, current[0], current[1]];
             }
 
@@ -442,13 +517,10 @@ const DesktopContainer = new Lang.Class(
             {
                 adjacents.push([current[0], current[1] - 1]);
             }
-                log ("adjacents lenght " + adjacents.length);
             for(let i = 0; i < adjacents.length; i++)
             {
-                log ("checking adjacent " + adjacents[i]);
                 if(bfsToVisit.indexOf(JSON.stringify(adjacents[i])) < 0)
                 {
-                log ("adding adjacent " + adjacents[i]);
                     bfsQueue.enqueue(adjacents[i]);
                     bfsToVisit.push(JSON.stringify(adjacents[i]));
                 }
@@ -476,6 +548,7 @@ const DesktopManager = new Lang.Class(
         this._addDesktopIcons();
 
         this._selection = [];
+        this._onDrag = false;
     },
 
     _addDesktopIcons: function()
@@ -538,6 +611,9 @@ const DesktopManager = new Lang.Class(
             file = fileEnum.get_child(info);
             fileContainer = new FileContainer(file, info);
             this._fileContainers.push(fileContainer);
+            fileContainer.connect("drag-begin", Lang.bind(this, this._onFileContainerDrag));
+            fileContainer.connect("drag-cancelled", Lang.bind(this, this._onFileContainerDragCancelled));
+            fileContainer.connect("drag-end", Lang.bind(this, this._onFileContainerDragEnd));
         }
 
         this._desktopContainers.forEach(Lang.bind(this,
@@ -546,6 +622,35 @@ const DesktopManager = new Lang.Class(
                 item.actor.connect('allocation-changed', Lang.bind(this, this._scheduleLayoutChildren));
             }));
         this._scheduleLayoutChildren();
+    },
+
+    _onFileContainerDrag: function()
+    {
+        if(this._onDrag)
+        {
+            return;
+        }
+
+        log ("desktop manager drag begin");
+        this._onDrag = true;
+        for(let i = 0; i < this._selection.length; i++)
+        {
+            let fileContainer = this._selection[i];
+            log ("selection ", fileContainer);
+            let event = Clutter.get_current_event();
+            let [x, y] = event.get_coords();
+            fileContainer.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
+        }
+    },
+
+    _onFileContainerDragCancelled: function()
+    {
+        this._onDrag = false;
+    },
+
+    _onFileContainerDragEnd: function()
+    {
+        this._onDrag = false;
     },
 
     _getChildAtPos: function(x, y)
@@ -617,10 +722,8 @@ const DesktopManager = new Lang.Class(
                 let desktopContainer = result[1];
                 let left = result[2];
                 let top = result[3];
-                log ("layouting " + fileContainer.file.get_uri());
                 if(placeholder._delegate != undefined && placeholder._delegate instanceof FileContainer)
                 {
-                    log ("findign empty space " + placeholder._delegate.file.get_uri() + ' ' + left + ' ' + top);
                     result = desktopContainer.findEmptyPlace(left, top);
                     if (result == null)
                     {
@@ -641,40 +744,41 @@ const DesktopManager = new Lang.Class(
         return GLib.SOURCE_REMOVE;
     },
 
-    fileLeftClickClicked: function(fileContainer)
+    fileLeftClickPressed: function(fileContainer)
     {
-        this._setSelection([fileContainer]);
+        log ("selec ", this._selection + [fileContainer]);
+        this.setSelection(this._selection + [fileContainer]);
+    },
+
+    fileLeftClickReleased: function(fileContainer)
+    {
+        if(!this._onDrag)
+        {
+            this.setSelection([this._selection[this._selection.length - 1]]);
+        }
     },
 
     fileRightClickClicked: function(fileContainer)
     {
         if(fileContainer == null)
         {
-            this._setSelection([]);
+            this.setSelection([]);
 
             return;
         }
 
         if(!this._selection.indexOf(fileContainer))
         {
-            this._setSelection([fileContainer]);
+            this.setSelection([fileContainer]);
         }
     },
 
-    _setSelection: function(selection)
+    setSelection: function(selection)
     {
         for(let i = 0; i < this._fileContainers.length; i++)
         {
             let fileContainer = this._fileContainers[i];
-            if(selection.indexOf(fileContainer) >= 0)
-            {
-                fileContainer._container.add_style_pseudo_class('selected');
-                log('adding style pseudo class');
-            }
-            else
-            {
-                fileContainer._container.remove_style_pseudo_class('selected');
-            }
+            fileContainer.setSelected(selection.indexOf(fileContainer) >= 0);
         }
 
         this._selection = selection;
