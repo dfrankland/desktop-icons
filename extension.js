@@ -102,18 +102,21 @@ const FileContainer = new Lang.Class (
         this.draggable.connect('drag-begin', Lang.bind(this,
             function () {
                 log ("drag begin")
+                return Clutter.EVENT_PROPAGATE;
             }));
         this.draggable.connect('drag-cancelled', Lang.bind(this,
             function () {
                 this._buttonPressed = false;
                 this._onDrag = false;
                 log ("drag cancelled")
+                return Clutter.EVENT_PROPAGATE;
             }));
         this.draggable.connect('drag-end', Lang.bind(this,
             function () {
                 this._buttonPressed = false;
                 this._onDrag = false;
                 log ("drag end")
+                return Clutter.EVENT_PROPAGATE;
             }));
 
         this._selected = false;
@@ -185,7 +188,7 @@ const FileContainer = new Lang.Class (
                 this._onDrag = true;
                 let event = Clutter.get_current_event();
                 let [x, y] = event.get_coords();
-                this.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
+                desktopContainer.dragStart();
             }
         }
 
@@ -611,9 +614,9 @@ const DesktopManager = new Lang.Class(
             file = fileEnum.get_child(info);
             fileContainer = new FileContainer(file, info);
             this._fileContainers.push(fileContainer);
-            fileContainer.connect("drag-begin", Lang.bind(this, this._onFileContainerDrag));
-            fileContainer.connect("drag-cancelled", Lang.bind(this, this._onFileContainerDragCancelled));
-            fileContainer.connect("drag-end", Lang.bind(this, this._onFileContainerDragEnd));
+            fileContainer.draggable.connect("drag-begin", Lang.bind(this, this._onFileContainerDrag));
+            fileContainer.draggable.connect("drag-cancelled", Lang.bind(this, this._onFileContainerDragCancelled));
+            fileContainer.draggable.connect("drag-end", Lang.bind(this, this._onFileContainerDragEnd));
         }
 
         this._desktopContainers.forEach(Lang.bind(this,
@@ -633,10 +636,11 @@ const DesktopManager = new Lang.Class(
 
         log ("desktop manager drag begin");
         this._onDrag = true;
-        for(let i = 0; i < this._selection.length; i++)
+        for(let i = 0; i < this._selection.length - 1; i++)
         {
+            this.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
             let fileContainer = this._selection[i];
-            log ("selection ", fileContainer);
+            log ("Starting drag for all selection ", fileContainer);
             let event = Clutter.get_current_event();
             let [x, y] = event.get_coords();
             fileContainer.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
@@ -746,8 +750,9 @@ const DesktopManager = new Lang.Class(
 
     fileLeftClickPressed: function(fileContainer)
     {
-        log ("selec ", this._selection + [fileContainer]);
-        this.setSelection(this._selection + [fileContainer]);
+        let selection = this._selection;
+        selection.push(fileContainer);
+        this.setSelection(selection);
     },
 
     fileLeftClickReleased: function(fileContainer)
@@ -767,8 +772,9 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
-        if(!this._selection.indexOf(fileContainer))
+        if(selection.map(function (e) { return e.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
         {
+
             this.setSelection([fileContainer]);
         }
     },
@@ -778,7 +784,7 @@ const DesktopManager = new Lang.Class(
         for(let i = 0; i < this._fileContainers.length; i++)
         {
             let fileContainer = this._fileContainers[i];
-            fileContainer.setSelected(selection.indexOf(fileContainer) >= 0);
+            fileContainer.setSelected(selection.map(function(e) { return e.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) >= 0);
         }
 
         this._selection = selection;
