@@ -670,8 +670,6 @@ const DesktopManager = new Lang.Class(
 
         log ("desktop manager drag begin");
         log("what is selection ", this._selection[0].actor);
-        this.draggableContainer.x = x;
-        this.draggableContainer.y = y;
         let desktopContainer = null
         for(let i = 0; i < this._desktopContainers.length; i++)
         {
@@ -690,8 +688,10 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
+        this.draggableContainer.x = x;
+        this.draggableContainer.y = y;
         Main.layoutManager.uiGroup.add_child(this.draggableContainer);
-        //this.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
+        this.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
     },
 
     _onDragCancelled: function()
