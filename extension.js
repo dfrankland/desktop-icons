@@ -117,20 +117,17 @@ const FileContainer = new Lang.Class (
         this.draggable.connect('drag-cancelled', Lang.bind(this,
             function () {
                 this._buttonPressed = false;
-                this._onDrag = false;
                 log ("drag cancelled")
                 return Clutter.EVENT_PROPAGATE;
             }));
         this.draggable.connect('drag-end', Lang.bind(this,
             function () {
                 this._buttonPressed = false;
-                this._onDrag = false;
                 log ("drag end")
                 return Clutter.EVENT_PROPAGATE;
             }));
 
         this._selected = false;
-        this._onDrag = false;
     },
 
     _onOpenClicked: function()
@@ -193,9 +190,11 @@ const FileContainer = new Lang.Class (
             let xDiff = x - this._buttonPressInitialX;
             let yDiff = y - this._buttonPressInitialY;
             let distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
-            if(distance > DRAG_TRESHOLD && !this._onDrag)
+            if(distance > DRAG_TRESHOLD)
             {
-                this._onDrag = true;
+                // Don't need to track anymore this if we start drag, and also
+                // avoids reentrance here
+                this._buttonPressed = false
                 let event = Clutter.get_current_event();
                 let [x, y] = event.get_coords();
                 desktopManager.dragStart();
@@ -208,9 +207,7 @@ const FileContainer = new Lang.Class (
     _onButtonRelease: function(event, actor)
     {
         log ("button release");
-        this._buttonPressed = false;
         desktopManager.fileLeftClickReleased(this);
-        this._onDrag = false;
 
         return Clutter.EVENT_PROPAGATE;
     },
@@ -554,7 +551,14 @@ const DesktopManager = new Lang.Class(
         this._layoutChildrenId = 0;
         this._desktopEnumerateCancellable = null;
         this._desktopContainers = [];
-        this.draggableContainer = new St.Bin({ visible: true , width: 200, height: 200, style_class: 'dragabble' });
+        this._dragCancelled = false;
+        this.draggableContainer = new St.Widget({ layout_manager: new Clutter.FixedLayout(),
+                                                  visible: true ,
+                                                  width: 1,
+                                                  height: 1,
+                                                  x: 0,
+                                                  y: 0,
+                                                  style_class: 'dragabble' });
         this.draggable = DND.makeDraggable(this.draggableContainer,
                                             { restoreOnSuccess: true,
                                               manualMode: true,
@@ -654,23 +658,31 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
-        log ("desktop manager drag begin");
+        log ("desktop manager drag begin ", this._selection.length);
         this._onDrag = true;
-        for(let i = 0; i < this._selection.length - 1; i++)
+        this.draggableContainer.remove_all_children();
+        for(let i = 0; i < this._selection.length; i++)
         {
             let fileContainer = this._selection[i];
             log ("Starting drag for all selection ", fileContainer);
             let event = Clutter.get_current_event();
             let [x, y] = event.get_coords();
             // fileContainer.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
+            log("bef creating clone ", this._selection[i].actor.parent)
+            let clone = new Clutter.Clone({ source: this._selection[i].actor,
+                                            reactive: false });
+            clone.x = this._selection[i].actor.x;
+            clone.y = this._selection[i].actor.y;
+            log("aft creating clone")
+            this.draggableContainer.add_actor(clone);
         }
 
         let event = Clutter.get_current_event();
         let [x, y] = event.get_coords();
 
         log ("desktop manager drag begin");
-        log("what is selection ", this._selection[0].actor);
-        let desktopContainer = null
+        log("what is selection ", this._selection);
+        let desktopContainer = null;
         for(let i = 0; i < this._desktopContainers.length; i++)
         {
             let children = this._desktopContainers[i].actor.get_children();
@@ -688,8 +700,6 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
-        this.draggableContainer.x = x;
-        this.draggableContainer.y = y;
         Main.layoutManager.uiGroup.add_child(this.draggableContainer);
         this.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
     },
@@ -697,13 +707,21 @@ const DesktopManager = new Lang.Class(
     _onDragCancelled: function()
     {
         log("drag cancelled");
-        this._onDrag = false;
-        Main.layoutManager.uiGroup.remove_child(this.draggableContainer);
+        let event = Clutter.get_current_event();
+        let [x, y] = event.get_coords();
+        this._dragCancelled = true;
     },
 
     _onDragEnd: function()
     {
         log("drag end");
+        if (this._dragCancelled)
+        {
+            log("drag cancelled");
+            this._dragCancelled = false;
+            return;
+        }
+        this._dragCancelled = false;
         this._onDrag = false;
         Main.layoutManager.uiGroup.remove_child(this.draggableContainer);
     },
@@ -823,7 +841,7 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
-        if(selection.map(function (e) { return e.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
+        if(selection.map( e => { return e.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
         {
 
             this.setSelection([fileContainer]);
