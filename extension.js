@@ -171,7 +171,7 @@ const FileContainer = new Lang.Class (
         }
         if (button == 1)
         {
-            desktopManager.fileLeftClickPressed(this);
+            desktopManager.fileLeftClickPressed(this, event);
             let [x, y] = event.get_coords();
             this._buttonPressed = true;
             this._buttonPressInitialX = x;
@@ -207,6 +207,7 @@ const FileContainer = new Lang.Class (
     _onButtonRelease: function(event, actor)
     {
         log ("button release");
+        this._buttonPressed = false
         desktopManager.fileLeftClickReleased(this);
 
         return Clutter.EVENT_PROPAGATE;
@@ -715,15 +716,14 @@ const DesktopManager = new Lang.Class(
     _onDragEnd: function()
     {
         log("drag end");
-        if (this._dragCancelled)
-        {
-            log("drag cancelled");
-            this._dragCancelled = false;
-            return;
-        }
         this._dragCancelled = false;
         this._onDrag = false;
         Main.layoutManager.uiGroup.remove_child(this.draggableContainer);
+        if (this._dragCancelled)
+        {
+            log("drag cancelled");
+            return;
+        }
     },
 
     _getChildAtPos: function(x, y)
@@ -817,16 +817,43 @@ const DesktopManager = new Lang.Class(
         return GLib.SOURCE_REMOVE;
     },
 
+    _findByFile: function(fileContainer, uri)
+    {
+        return fileContainer.file.get_uri() == uri;
+    },
+
     fileLeftClickPressed: function(fileContainer)
     {
-        let selection = this._selection;
+        let event = Clutter.get_current_event();
+        let event_state = event.get_state();
+        let selection = []
+
+        // In this case we just do nothing because it could be the start of a drag.
+        let alreadySelected = this._selection.find(x => x.file.get_uri() == fileContainer.file.get_uri()) != null;
+        if(alreadySelected)
+        {
+            log ("############is selected already");
+            return;
+        }
+
+        log ("file left click pressed!");
+        if (event_state & Clutter.ModifierType.SHIFT_MASK)
+        {
+            log ("with modifier!");
+            selection = this._selection;
+        }
+
         selection.push(fileContainer);
+        log ("selection in click pressed is ", selection);
         this.setSelection(selection);
     },
 
     fileLeftClickReleased: function(fileContainer)
     {
-        if(!this._onDrag)
+        let event = Clutter.get_current_event();
+        let event_state = event.get_state();
+        log ("flieLeftClickReleased");
+        if(!this._onDrag && !(event_state & Clutter.ModifierType.SHIFT_MASK))
         {
             this.setSelection([this._selection[this._selection.length - 1]]);
         }
@@ -841,7 +868,7 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
-        if(selection.map( e => { return e.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
+        if(selection.map(function(x) { return x.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
         {
 
             this.setSelection([fileContainer]);
@@ -853,7 +880,7 @@ const DesktopManager = new Lang.Class(
         for(let i = 0; i < this._fileContainers.length; i++)
         {
             let fileContainer = this._fileContainers[i];
-            fileContainer.setSelected(selection.map(function(e) { return e.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) >= 0);
+            fileContainer.setSelected(selection.map(function(x) { return x.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) >= 0);
         }
 
         this._selection = selection;
