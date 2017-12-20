@@ -39,7 +39,6 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Queue = Me.imports.queue;
 
-const DESKTOP_PATH = "/home/csoriano/Desktop";
 const ICON_SIZE = 64;
 const ICON_MAX_WIDTH = 130;
 const DRAG_TRESHOLD = 8;
@@ -623,7 +622,8 @@ const DesktopManager = new Lang.Class(
         }
 
         this._desktopEnumerateCancellable = new Gio.Cancellable();
-        let desktopDir = Gio.File.new_for_commandline_arg(DESKTOP_PATH);
+        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP)
+        let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
         desktopDir.enumerate_children_async("metadata::*, standard::name,standard::type,standard::icon,standard::display-name",
                                             Gio.FileQueryInfoFlags.NONE,
                                             GLib.PRIORITY_DEFAULT,
