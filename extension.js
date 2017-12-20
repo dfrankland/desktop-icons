@@ -54,7 +54,7 @@ const FileContainer = new Lang.Class (
 
         this.file = file;
         let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
-        _
+
         if (savedCoordinates != null)
         {
             this._coordinates = savedCoordinates.split(',')
@@ -68,11 +68,9 @@ const FileContainer = new Lang.Class (
             this._coordinates = [0, 0]
         }
 
-        log('Coordinates ', this._coordinates, file.get_uri());
-
         this.actor = new St.Bin({ visible:true });
-        this.actor.width = ICON_MAX_WIDTH;
-        this.actor.height = ICON_MAX_WIDTH;
+        this.actor.set_height(ICON_MAX_WIDTH);
+        this.actor.set_width(ICON_MAX_WIDTH);
         this.actor._delegate = this;
 
         let containerLayout = new Clutter.BoxLayout({ orientation: Clutter.Orientation.VERTICAL });
@@ -90,7 +88,12 @@ const FileContainer = new Lang.Class (
                                    icon_size: ICON_SIZE });
         this._container.add_actor(this._icon);
 
+        /* DEBUG
+
         this._label = new St.Label({ text: JSON.stringify(this._coordinates),
+                                     style_class: "name-label" });
+        */
+        this._label = new St.Label({ text: fileInfo.get_attribute_as_string('standard::display-name'),
                                      style_class: "name-label" });
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
@@ -103,29 +106,6 @@ const FileContainer = new Lang.Class (
         this._container.connect("button-release-event", Lang.bind(this, this._onButtonRelease));
 
         this._createMenu();
-
-        this.draggable = DND.makeDraggable(this._container,
-                                            { restoreOnSuccess: true,
-                                              manualMode: true,
-                                              dragActorMaxSize: ICON_MAX_WIDTH,
-                                              dragActorOpacity: 100 });
-        this.draggable.connect('drag-begin', Lang.bind(this,
-            function () {
-                log ("drag begin")
-                return Clutter.EVENT_PROPAGATE;
-            }));
-        this.draggable.connect('drag-cancelled', Lang.bind(this,
-            function () {
-                this._buttonPressed = false;
-                log ("drag cancelled")
-                return Clutter.EVENT_PROPAGATE;
-            }));
-        this.draggable.connect('drag-end', Lang.bind(this,
-            function () {
-                this._buttonPressed = false;
-                log ("drag end")
-                return Clutter.EVENT_PROPAGATE;
-            }));
 
         this._selected = false;
     },
@@ -161,7 +141,6 @@ const FileContainer = new Lang.Class (
 
     _onButtonPress: function(actor, event)
     {
-        log ("on clicked")
         let button = event.get_button();
         if (button == 3)
         {
@@ -206,7 +185,6 @@ const FileContainer = new Lang.Class (
 
     _onButtonRelease: function(event, actor)
     {
-        log ("button release");
         this._buttonPressed = false
         desktopManager.fileLeftClickReleased(this);
 
@@ -218,9 +196,22 @@ const FileContainer = new Lang.Class (
         return this._coordinates;
     },
 
-    getAbsoluteIconPosition: function()
+    setCoordinates: function (x, y)
     {
-        return [this.actor.x + this._container.x, this.actor.y + this._container.y];
+        this._coordinates = [x, y];
+        /* DEBUG
+        this._label.set_text(JSON.stringify(this._coordinates));
+        */
+    },
+
+    getInnerIconPosition: function()
+    {
+        return this._container.get_transformed_position();
+    },
+
+    getInnerSize: function()
+    {
+       return [this._container.width, this._container.height];
     },
 
     setSelected: function(selected)
@@ -246,7 +237,6 @@ const DesktopContainer = new Lang.Class(
     _init: function(bgManager)
     {
         this._bgManager = bgManager;
-        this._fileContainers = [];
 
         this._layout = new Clutter.GridLayout({ orientation: Clutter.Orientation.VERTICAL,
                                                 column_homogeneous: true,
@@ -258,6 +248,7 @@ const DesktopContainer = new Lang.Class(
                                      x_expand: true,
                                      y_expand: true,
                                      opacity: 255 });
+        this.actor._delegate = this;
 
         this._bgManager._container.add_actor(this.actor);
 
@@ -280,26 +271,25 @@ const DesktopContainer = new Lang.Class(
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
 
+        this._fileContainers = [];
         this._createPlaceholders();
     },
 
     _createPlaceholders: function()
     {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        log ("work area " + workarea.width + " " + workarea.height);
-        let maxFileContainers = Math.ceil((workarea.width / ICON_MAX_WIDTH) * (workarea.height / ICON_MAX_WIDTH));
         let maxRows = Math.ceil(workarea.height / ICON_MAX_WIDTH);
         let maxColumns = Math.ceil(workarea.width / ICON_MAX_WIDTH);
-
-        log ("max file containers " + maxFileContainers);
 
         for (let i = 0; i < maxColumns; i++)
         {
             for (let j = 0; j < maxRows; j++)
             {
                 let placeholder = new St.Bin({ width: ICON_MAX_WIDTH, height: ICON_MAX_WIDTH });
-                let icon = new St.Icon({ icon_name: 'dialog-password-symbolic' });
+                /* DEBUG
+                let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
                 placeholder.add_actor(icon);
+                */
                 this._layout.attach(placeholder, i, j, 1, 1);
             }
         }
@@ -396,21 +386,32 @@ const DesktopContainer = new Lang.Class(
         this._rubberBand.show();
     },
 
+    /*
+     * https://silentmatt.com/rectangle-intersection/
+     */
+    _rectanglesIntersect: function(rect1X, rect1Y, rect1Width, rect1Height,
+                                   rect2X, rect2Y, rect2Width, rect2Height)
+    {
+        return rect1X < (rect2X + rect2Width) && (rect1X + rect1Width) > rect2X &&
+               rect1Y < (rect2Y + rect2Height) && (rect1Y + rect1Height) > rect2Y
+    },
+
     _selectFromRubberband: function(currentX, currentY)
     {
-        let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
+        let rubberX = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
                                                     : currentX;
-        let y = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
+        let rubberY = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
                                                     : currentY;
-        let width = Math.abs(this._rubberBandInitialX - currentX);
-        let height = Math.abs(this._rubberBandInitialY - currentY);
+        let rubberWidth = Math.abs(this._rubberBandInitialX - currentX);
+        let rubberHeight = Math.abs(this._rubberBandInitialY - currentY);
         let selection = [];
         for(let i = 0; i < this._fileContainers.length; i++)
         {
             let fileContainer = this._fileContainers[i];
-            let position = fileContainer.getAbsoluteIconPosition();
-            if(position[0] > x && position[0] < x + width &&
-               position[1] > y && position[1] < y + height)
+            let [containerX, containerY] = fileContainer.getInnerIconPosition();
+            let [containerWidth, containerHeight] = fileContainer.getInnerSize();
+            if(this._rectanglesIntersect(rubberX, rubberY, rubberWidth, rubberHeight,
+                                         containerX, containerY, containerWidth, containerHeight))
             {
                 selection.push(fileContainer);
             }
@@ -423,6 +424,28 @@ const DesktopContainer = new Lang.Class(
     {
         this._fileContainers.push(fileContainer);
         this._layout.attach(fileContainer.actor, top, left, 1, 1);
+    },
+
+    removeChildContainer: function(fileContainer)
+    {
+        let index = this._fileContainers.indexOf(fileContainer);
+        if(index > -1)
+        {
+            this._fileContainers.splice(index, 1);
+        }
+        else
+        {
+            log('Error removing children from container');
+        }
+
+        this.actor.remove_child(fileContainer.actor);
+    },
+
+    reset: function()
+    {
+        this._fileContainers = [];
+        this.actor.remove_all_children();
+        this._createPlaceholders();
     },
 
     _onMotion: function(actor, event)
@@ -540,7 +563,15 @@ const DesktopContainer = new Lang.Class(
         }
 
         return null;
+    },
+
+    acceptDrop : function(source, actor, x, y, time)
+    {
+        desktopManager.acceptDrop(source, actor, x, y, time);
+
+        return true;
     }
+
 });
 
 const DesktopManager = new Lang.Class(
@@ -553,20 +584,6 @@ const DesktopManager = new Lang.Class(
         this._desktopEnumerateCancellable = null;
         this._desktopContainers = [];
         this._dragCancelled = false;
-        this.draggableContainer = new St.Widget({ layout_manager: new Clutter.FixedLayout(),
-                                                  visible: true ,
-                                                  width: 1,
-                                                  height: 1,
-                                                  x: 0,
-                                                  y: 0,
-                                                  style_class: 'dragabble' });
-        this.draggable = DND.makeDraggable(this.draggableContainer,
-                                            { restoreOnSuccess: true,
-                                              manualMode: true,
-                                              dragActorOpacity: 100 });
-
-        this.draggable.connect("drag-cancelled", Lang.bind(this, this._onDragCancelled));
-        this.draggable.connect("drag-end", Lang.bind(this, this._onDragEnd));
 
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', Lang.bind(this, this._addDesktopIcons));
         this._startupPreparedId = Main.layoutManager.connect('startup-prepared', Lang.bind(this, this._addDesktopIcons));
@@ -575,6 +592,9 @@ const DesktopManager = new Lang.Class(
 
         this._selection = [];
         this._onDrag = false;
+        this._dragXStart = Number.POSITIVE_INFINITY;
+        this._dragYStart = Number.POSITIVE_INFINITY;
+        this._setMetadataCancellable = new Gio.Cancellable();
     },
 
     _addDesktopIcons: function()
@@ -634,14 +654,9 @@ const DesktopManager = new Lang.Class(
         let info;
         while ((info = fileEnum.next_file(null)))
         {
-            file = fileEnum.get_child(info);
-            fileContainer = new FileContainer(file, info);
+            let file = fileEnum.get_child(info);
+            let fileContainer = new FileContainer(file, info);
             this._fileContainers.push(fileContainer);
-            /* Let's do drag in the actual containers
-            fileContainer.draggable.connect("drag-begin", Lang.bind(this, this._onFileContainerDrag));
-            fileContainer.draggable.connect("drag-cancelled", Lang.bind(this, this._onFileContainerDragCancelled));
-            fileContainer.draggable.connect("drag-end", Lang.bind(this, this._onFileContainerDragEnd));
-            */
         }
 
         this._desktopContainers.forEach(Lang.bind(this,
@@ -652,6 +667,27 @@ const DesktopManager = new Lang.Class(
         this._scheduleLayoutChildren();
     },
 
+    _setupDnD: function()
+    {
+        this._draggableContainer = new St.Widget({ layout_manager: new Clutter.FixedLayout(),
+                                                  visible: true ,
+                                                  width: 1,
+                                                  height: 1,
+                                                  x: 0,
+                                                  y: 0,
+                                                  style_class: 'dragabble' });
+        this._draggableContainer._delegate = this;
+        this._draggable = DND.makeDraggable(this._draggableContainer,
+                                            { manualMode: true,
+                                              dragActorOpacity: 100 });
+
+        this._draggable.connect("drag-cancelled", Lang.bind(this, this._onDragCancelled));
+        this._draggable.connect("drag-end", Lang.bind(this, this._onDragEnd));
+
+        this._draggable['_dragActorDropped'] = Lang.bind(this, this._dragActorDropped);
+        this._draggable['_finishAnimation'] = Lang.bind(this, this._finishAnimation);
+    },
+
     dragStart: function()
     {
         if(this._onDrag)
@@ -659,30 +695,22 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
-        log ("desktop manager drag begin ", this._selection.length);
+        this._setupDnD();
+        let event = Clutter.get_current_event();
+        let [x, y] = event.get_coords();
+        [this._dragXStart, this._dragYStart] = event.get_coords();
         this._onDrag = true;
-        this.draggableContainer.remove_all_children();
+
         for(let i = 0; i < this._selection.length; i++)
         {
             let fileContainer = this._selection[i];
-            log ("Starting drag for all selection ", fileContainer);
-            let event = Clutter.get_current_event();
-            let [x, y] = event.get_coords();
-            // fileContainer.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
-            log("bef creating clone ", this._selection[i].actor.parent)
             let clone = new Clutter.Clone({ source: this._selection[i].actor,
                                             reactive: false });
-            clone.x = this._selection[i].actor.x;
-            clone.y = this._selection[i].actor.y;
-            log("aft creating clone")
-            this.draggableContainer.add_actor(clone);
+            clone.x = this._selection[i].actor.get_transformed_position()[0];
+            clone.y = this._selection[i].actor.get_transformed_position()[1];
+            this._draggableContainer.add_actor(clone);
         }
 
-        let event = Clutter.get_current_event();
-        let [x, y] = event.get_coords();
-
-        log ("desktop manager drag begin");
-        log("what is selection ", this._selection);
         let desktopContainer = null;
         for(let i = 0; i < this._desktopContainers.length; i++)
         {
@@ -701,13 +729,12 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
-        Main.layoutManager.uiGroup.add_child(this.draggableContainer);
-        this.draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
+        Main.layoutManager.uiGroup.add_child(this._draggableContainer);
+        this._draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
     },
 
     _onDragCancelled: function()
     {
-        log("drag cancelled");
         let event = Clutter.get_current_event();
         let [x, y] = event.get_coords();
         this._dragCancelled = true;
@@ -715,55 +742,253 @@ const DesktopManager = new Lang.Class(
 
     _onDragEnd: function()
     {
-        log("drag end");
-        this._dragCancelled = false;
         this._onDrag = false;
-        Main.layoutManager.uiGroup.remove_child(this.draggableContainer);
-        if (this._dragCancelled)
-        {
-            log("drag cancelled");
+    },
+
+    _finishAnimation : function () {
+        if (!this._draggable._animationInProgress)
             return;
+
+        this._draggable._animationInProgress = false;
+        if (!this._draggable._buttonDown)
+            this._draggable._dragComplete();
+
+        global.screen.set_cursor(Meta.Cursor.DEFAULT);
+    },
+
+    _dragActorDropped: function(event) {
+        let [dropX, dropY] = event.get_coords();
+        let target = this._draggable._dragActor.get_stage().get_actor_at_pos(Clutter.PickMode.ALL,
+                                                                  dropX, dropY);
+
+        // We call observers only once per motion with the innermost
+        // target actor. If necessary, the observer can walk the
+        // parent itself.
+        let dropEvent = {
+            dropActor: this._draggable._dragActor,
+            targetActor: target,
+            clutterEvent: event
+        };
+        for (let i = 0; i < DND.dragMonitors.length; i++) {
+            let dropFunc = DND.dragMonitors[i].dragDrop;
+            if (dropFunc)
+                switch (dropFunc(dropEvent)) {
+                    case DragDropResult.FAILURE:
+                    case DragDropResult.SUCCESS:
+                        return true;
+                    case DragDropResult.CONTINUE:
+                        continue;
+                }
+        }
+
+        // At this point it is too late to cancel a drag by destroying
+        // the actor, the fate of which is decided by acceptDrop and its
+        // side-effects
+        this._draggable._dragCancellable = false;
+
+        let destroyActor = false;
+        while (target) {
+            if (target._delegate && target._delegate.acceptDrop) {
+                let [r, targX, targY] = target.transform_stage_point(dropX, dropY);
+                if (target._delegate.acceptDrop(this._draggable.actor._delegate,
+                                                this._draggable._dragActor,
+                                                targX,
+                                                targY,
+                                                event.get_time())) {
+                    // If it accepted the drop without taking the actor,
+                    // handle it ourselves.
+                    if (this._draggable._dragActor.get_parent() == Main.uiGroup) {
+                        if (this._draggable._restoreOnSuccess) {
+                            this._draggable._restoreDragActor(event.get_time());
+                            return true;
+                        } else {
+                            // We need this in order to make sure drag-end is fired
+                            destroyActor = true;
+                        }
+                    }
+
+                    this._draggable._dragInProgress = false;
+                    global.screen.set_cursor(Meta.Cursor.DEFAULT);
+                    this._draggable.emit('drag-end', event.get_time(), true);
+                    if(destroyActor)
+                    {
+                        this._draggable._dragActor.destroy();
+                    }
+                    this._draggable._dragComplete();
+
+                    return true;
+                }
+            }
+            target = target.get_parent();
+        }
+
+        this._draggable._cancelDrag(event.get_time());
+
+        return true;
+    },
+
+    acceptDrop: function(source, actor, x, y, time)
+    {
+        let [xEnd, yEnd] = [x, y];
+        let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
+        this._setMetadataCancellable.cancel();
+        this._setMetadataCancellable = new Gio.Cancellable();
+        for (let k = 0; k < this._selection.length; k++)
+        {
+            let fileContainer = this._selection[k];
+            let info = new Gio.FileInfo();
+            let [fileContainerX, fileContainerY] = fileContainer.actor.get_transformed_position();
+            let fileX = Math.round(xDiff + fileContainerX);
+            let fileY = Math.round(yDiff + fileContainerY);
+            fileContainer.setCoordinates(fileX, fileY);
+            info.set_attribute_string('metadata::nautilus-icon-position',
+                                      fileX.toString().concat(',').concat(fileX.toString()));
+            let gioFile = Gio.File.new_for_uri(fileContainer.file.get_uri());
+            gioFile.set_attributes_async(info,
+                                         Gio.FileQueryInfoFlags.NONE,
+                                         GLib.PRIORITY_DEFAULT,
+                                         this._setMetadataCancellable,
+                                         Lang.bind (this, this._onSetMetadataFile));
+        }
+
+        this._layoutDrop(this._selection);
+
+        return true;
+    },
+
+    _layoutDrop: function(fileContainers)
+    {
+        // TODO: We should optimize this...
+        for(let i = 0; i < fileContainers.length; i++)
+        {
+            let fileContainer = fileContainers[i];
+            for(let j = 0; j < this._desktopContainers.length; j++)
+            {
+                let desktopContainer = this._desktopContainers[j];
+                let [found, column, row] = this._getPosOfChild(desktopContainer, fileContainer);
+                if(found)
+                {
+                    desktopContainer.removeChildContainer(fileContainer);
+                    let newPlaceholder = new St.Bin({ width: ICON_MAX_WIDTH, height: ICON_MAX_WIDTH });
+                    /* DEBUG
+                    let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
+                    newPlaceholder.add_actor(icon);
+                    */
+                    desktopContainer._layout.attach(newPlaceholder, column, row, 1, 1);
+
+                    let [containerX, containerY] = fileContainer.getCoordinates();
+                    let result = this._getClosestChildToPos(containerX, containerY);
+                    let placeholder = result[0];
+                    let dropDesktopContainer = result[1];
+                    let left = result[2];
+                    let top = result[3];
+                    if(placeholder._delegate != undefined && placeholder._delegate instanceof FileContainer)
+                    {
+                        result = dropDesktopContainer.findEmptyPlace(left, top);
+                        if (result == null)
+                        {
+                            log("WARNING: No empty space in the desktop for another icon");
+                        }
+                        placeholder = result[0];
+                        left = result[1];
+                        top = result[2];
+                    }
+                    placeholder.destroy();
+                    dropDesktopContainer.addFileContainer(fileContainer, left, top);
+
+                    break;
+                }
+            }
         }
     },
 
-    _getChildAtPos: function(x, y)
+    _onSetMetadataFile: function(source, result)
+    {
+        try
+        {
+            let [success, info] = source.set_attributes_finish(result);
+        }
+        catch(error)
+        {
+            if(error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+            {
+                return;
+            }
+            else
+            {
+                log("Error setting metadata to desktop files ", error);
+                return;
+            }
+        }
+    },
+
+    _getPosOfChild: function(desktopContainer, childToFind)
+    {
+        if (childToFind == null)
+        {
+            log("_getPosOfChild: child cannot be null");
+            return [false, -1, -1];
+        }
+
+        let children = desktopContainer.actor.get_children();
+        let transformedPosition = desktopContainer.actor.get_transformed_position();
+        let currentRow = 0;
+        let currentColumn = 0;
+        let child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
+        while (child != childToFind.actor && child != null)
+        {
+            currentColumn++;
+            child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
+            if(child == null)
+            {
+                currentColumn = 0;
+                currentRow++;
+                child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
+            }
+        }
+
+        return [child == childToFind.actor, currentColumn, currentRow];
+    },
+
+    _getClosestChildToPos: function(x, y)
     {
         let minDistance = Number.POSITIVE_INFINITY;
         let closestChild = null;
         let closestDesktopContainer = null;
-        let left = -1;
-        let top = -1;
+        let left = 0;
+        let top = 0;
         for (let k = 0; k < this._desktopContainers.length; k++)
         {
             let desktopContainer = this._desktopContainers[k];
 
             let workarea = Main.layoutManager.getWorkAreaForMonitor(desktopContainer._monitorConstraint.index);
-            let maxRows = Math.ceil(workarea.height / ICON_MAX_WIDTH);
-            let maxColumns = Math.ceil(workarea.width / ICON_MAX_WIDTH);
-            let maxFileContainers = maxRows * maxColumns;
-
             let children = desktopContainer.actor.get_children();
             let transformedPosition = desktopContainer.actor.get_transformed_position();
-            for (let i = 0; i < maxRows; i++)
+            let currentRow = 0;
+            let currentColumn = 0;
+            let child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
+            while (child != null)
             {
-                for (let j = 0; j < maxColumns; j++)
+                if (child.visible)
                 {
-                    let child = children[i];
-                    let proposedPosition = [];
-                    proposedPosition[0] = Math.floor(transformedPosition[0] + j * ICON_MAX_WIDTH);
-                    proposedPosition[1] = Math.floor(transformedPosition[1] + i * ICON_MAX_WIDTH);
-                    if (child.visible)
+                    let [proposedX, proposedY] = child.get_transformed_position();
+                    let distance = distanceBetweenPoints(proposedX, proposedY, x, y);
+                    if (distance < minDistance)
                     {
-                        let distance = distanceBetweenPoints(proposedPosition[0], proposedPosition[1], x, y);
-                        if (distance < minDistance)
-                        {
-                            closestChild = desktopContainer._layout.get_child_at(j, i);
-                            minDistance = distance;
-                            closestDesktopContainer = desktopContainer;
-                            left = j;
-                            top = i;
-                        }
+                        closestChild = child;
+                        minDistance = distance;
+                        closestDesktopContainer = desktopContainer;
+                        left = currentColumn;
+                        top = currentRow;
                     }
+                }
+                currentColumn++;
+                child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
+                if(child == null)
+                {
+                    currentColumn = 0;
+                    currentRow++;
+                    child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
                 }
             }
         }
@@ -782,6 +1007,16 @@ const DesktopManager = new Lang.Class(
     },
 
 
+    _relayoutChildren: function ()
+    {
+        for (let i = 0; i < this._desktopContainers.length; i++)
+        {
+            let desktopContainer = this._desktopContainers[i];
+            desktopContainer.reset();
+        }
+        this._layoutChildren();
+    },
+
     _layoutChildren: function()
     {
         for (let i = 0; i < this._fileContainers.length; i++)
@@ -789,8 +1024,8 @@ const DesktopManager = new Lang.Class(
             let fileContainer = this._fileContainers[i];
             if (fileContainer.actor.visible)
             {
-                let coordinates = fileContainer.getCoordinates();
-                let result = this._getChildAtPos(coordinates[0], coordinates[1]);
+                let [containerX, containerY] = fileContainer.getCoordinates();
+                let result = this._getClosestChildToPos(containerX, containerY);
                 let placeholder = result[0];
                 let desktopContainer = result[1];
                 let left = result[2];
@@ -832,19 +1067,15 @@ const DesktopManager = new Lang.Class(
         let alreadySelected = this._selection.find(x => x.file.get_uri() == fileContainer.file.get_uri()) != null;
         if(alreadySelected)
         {
-            log ("############is selected already");
             return;
         }
 
-        log ("file left click pressed!");
         if (event_state & Clutter.ModifierType.SHIFT_MASK)
         {
-            log ("with modifier!");
             selection = this._selection;
         }
 
         selection.push(fileContainer);
-        log ("selection in click pressed is ", selection);
         this.setSelection(selection);
     },
 
@@ -852,7 +1083,6 @@ const DesktopManager = new Lang.Class(
     {
         let event = Clutter.get_current_event();
         let event_state = event.get_state();
-        log ("flieLeftClickReleased");
         if(!this._onDrag && !(event_state & Clutter.ModifierType.SHIFT_MASK))
         {
             this.setSelection([this._selection[this._selection.length - 1]]);
@@ -935,7 +1165,7 @@ function init()
 {
 }
 
-desktopManager = null;
+let desktopManager = null;
 
 function enable()
 {
