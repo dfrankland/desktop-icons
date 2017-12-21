@@ -322,6 +322,7 @@ const DesktopContainer = new Lang.Class(
 
         this._bgDestroyedId = 0;
         this._bgManager = null;
+        this._rubberBand.destroy();
     },
 
     _onNewFolderClicked: function()
@@ -569,8 +570,7 @@ const DesktopContainer = new Lang.Class(
         desktopManager.acceptDrop(source, actor, x, y, time);
 
         return true;
-    }
-
+    },
 });
 
 const DesktopManager = new Lang.Class(
@@ -1134,6 +1134,8 @@ const DesktopManager = new Lang.Class(
             Main.layoutManager.disconnect(this._startupPreparedId);
         }
         this._startupPreparedId = 0;
+
+        this._desktopContainers.forEach(w => { w.actor.destroy()});
     }
 });
 
