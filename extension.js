@@ -770,6 +770,7 @@ const DesktopManager = new Lang.Class(
     _onDragEnd: function()
     {
         this._onDrag = false;
+        Main.layoutManager.uiGroup.remove_child(this._draggableContainer);
     },
 
     _finishAnimation : function () {
