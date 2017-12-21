@@ -87,13 +87,13 @@ const FileContainer = new Lang.Class (
                                    icon_size: ICON_SIZE });
         this._container.add_actor(this._icon);
 
+        this._label = new St.Label({ text: fileInfo.get_attribute_as_string('standard::display-name'),
+                                     style_class: "name-label" });
         /* DEBUG
-
         this._label = new St.Label({ text: JSON.stringify(this._coordinates),
                                      style_class: "name-label" });
         */
-        this._label = new St.Label({ text: fileInfo.get_attribute_as_string('standard::display-name'),
-                                     style_class: "name-label" });
+
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
         clutterText.set_line_wrap(true);
@@ -386,16 +386,6 @@ const DesktopContainer = new Lang.Class(
         this._rubberBand.show();
     },
 
-    /*
-     * https://silentmatt.com/rectangle-intersection/
-     */
-    _rectanglesIntersect: function(rect1X, rect1Y, rect1Width, rect1Height,
-                                   rect2X, rect2Y, rect2Width, rect2Height)
-    {
-        return rect1X < (rect2X + rect2Width) && (rect1X + rect1Width) > rect2X &&
-               rect1Y < (rect2Y + rect2Height) && (rect1Y + rect1Height) > rect2Y
-    },
-
     _selectFromRubberband: function(currentX, currentY)
     {
         let rubberX = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
@@ -410,8 +400,8 @@ const DesktopContainer = new Lang.Class(
             let fileContainer = this._fileContainers[i];
             let [containerX, containerY] = fileContainer.getInnerIconPosition();
             let [containerWidth, containerHeight] = fileContainer.getInnerSize();
-            if(this._rectanglesIntersect(rubberX, rubberY, rubberWidth, rubberHeight,
-                                         containerX, containerY, containerWidth, containerHeight))
+            if(rectanglesIntersect(rubberX, rubberY, rubberWidth, rubberHeight,
+                                   containerX, containerY, containerWidth, containerHeight))
             {
                 selection.push(fileContainer);
             }
@@ -426,7 +416,7 @@ const DesktopContainer = new Lang.Class(
         this._layout.attach(fileContainer.actor, top, left, 1, 1);
     },
 
-    removeChildContainer: function(fileContainer)
+    removeFileContainer: function(fileContainer)
     {
         let index = this._fileContainers.indexOf(fileContainer);
         if(index > -1)
@@ -571,6 +561,43 @@ const DesktopContainer = new Lang.Class(
 
         return true;
     },
+
+    getPosOfFileContainer: function(childToFind)
+    {
+        if (childToFind == null)
+        {
+            log("Error at getPosOfFileContainer: child cannot be null");
+            return [false, -1, -1];
+        }
+
+        let children = this.actor.get_children();
+        let transformedPosition = this.actor.get_transformed_position();
+        let currentRow = 0;
+        let currentColumn = 0;
+        let child = this._layout.get_child_at(currentColumn, currentRow);
+        let found = false
+        while(child != null)
+        {
+            if (child._delegate != undefined &&
+                child._delegate.file.get_uri() == childToFind.file.get_uri())
+            {
+                found = true;
+                break;
+            }
+
+            currentColumn++;
+            child = this._layout.get_child_at(currentColumn, currentRow);
+            if(child == null)
+            {
+                currentColumn = 0;
+                currentRow++;
+                child = this._layout.get_child_at(currentColumn, currentRow);
+            }
+        }
+
+        return [found, currentColumn, currentRow];
+    },
+
 });
 
 const DesktopManager = new Lang.Class(
@@ -858,47 +885,102 @@ const DesktopManager = new Lang.Class(
 
     _layoutDrop: function(fileContainers)
     {
-        // TODO: We should optimize this...
+        /* We need to delay replacements so we don't fiddle around with
+         * allocations while deciding what to replace with what, since it would
+         * screw it up.
+         */
+        let fileContainerDestinations = [];
+        let toFill = [];
+        /* TODO: We should optimize this... */
         for(let i = 0; i < fileContainers.length; i++)
         {
             let fileContainer = fileContainers[i];
             for(let j = 0; j < this._desktopContainers.length; j++)
             {
-                let desktopContainer = this._desktopContainers[j];
-                let [found, column, row] = this._getPosOfChild(desktopContainer, fileContainer);
+                let desktopContainerOrig = this._desktopContainers[j];
+                let [found, leftOrig, topOrig] = desktopContainerOrig.getPosOfFileContainer(fileContainer);
                 if(found)
                 {
-                    desktopContainer.removeChildContainer(fileContainer);
-                    let newPlaceholder = new St.Bin({ width: ICON_MAX_WIDTH, height: ICON_MAX_WIDTH });
-                    /* DEBUG
-                    let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
-                    newPlaceholder.add_actor(icon);
-                    */
-                    desktopContainer._layout.attach(newPlaceholder, column, row, 1, 1);
 
                     let [containerX, containerY] = fileContainer.getCoordinates();
-                    let result = this._getClosestChildToPos(containerX, containerY);
-                    let placeholder = result[0];
-                    let dropDesktopContainer = result[1];
-                    let left = result[2];
-                    let top = result[3];
-                    if(placeholder._delegate != undefined && placeholder._delegate instanceof FileContainer)
+                    let [placeholder, desktopContainer, left, top] = this._getClosestChildToPos(containerX, containerY);
+                    if(placeholder._delegate != undefined)
                     {
-                        result = dropDesktopContainer.findEmptyPlace(left, top);
-                        if (result == null)
+                        if (placeholder._delegate instanceof FileContainer)
                         {
-                            log("WARNING: No empty space in the desktop for another icon");
+                            /* If we are trying to drop in the same place as we were,
+                             * or in a place where we was one of the dragged items,
+                             * we simply do nothing and the effect will be that later
+                             * on we will remove the dragged items from the desktop
+                             * container and the dragged items will placed where
+                             * they need to be.
+                             *
+                             * Fortunately, the case where two dragged items end up
+                             * requiring the same place cannot happen given that
+                             * their distances are the same as when started dragging
+                             * so they can have only one place as the closest one
+                             * to them. (Except if the screen size changes while
+                             * dragging, then maybe we have a big problem, but
+                             * seriously... if that ever happens to the user, I will
+                             * send a jamon :))
+                             */
+                            if (fileContainers.filter(w => w.file.get_uri() == placeholder._delegate.file.get_uri()).length == 0)
+                            {
+                                result = dropDesktopContainer.findEmptyPlace(left, top);
+                                if (result == null)
+                                {
+                                    log("WARNING: No empty space in the desktop for another icon");
+                                    return;
+                                }
+                                placeholder = result[0];
+                                left = result[1];
+                                top = result[2];
+                                /* We can already remove the placeholder to
+                                 * have a free space ready
+                                 */
+                                placeholder.destroy();
+                                toFill.push([desktopContainerOrig, leftOrig, topOrig]);
+                            }
                         }
-                        placeholder = result[0];
-                        left = result[1];
-                        top = result[2];
                     }
-                    placeholder.destroy();
-                    dropDesktopContainer.addFileContainer(fileContainer, left, top);
-
+                    else
+                    {
+                        /* We can already remove the placeholder to
+                         * have a free space ready
+                         */
+                        placeholder.destroy();
+                        toFill.push([desktopContainerOrig, leftOrig, topOrig]);
+                    }
+                    fileContainerDestinations.push([desktopContainer, fileContainer, left, top]);
                     break;
                 }
             }
+        }
+
+        /* First remove all from the desktop containers to avoid collisions */
+        for(let i = 0; i < fileContainerDestinations.length; i++)
+        {
+            let [desktopContainer, fileContainer, left, top] = fileContainerDestinations[i];
+            desktopContainer.removeFileContainer(fileContainer);
+        }
+
+        /* Place them in the appropiate places */
+        for(let i = 0; i < fileContainerDestinations.length; i++)
+        {
+            let [desktopContainer, fileContainer, left, top] = fileContainerDestinations[i];
+            desktopContainer.addFileContainer(fileContainer, left, top);
+        }
+
+        /* Fill the empty places with placeholders */
+        for(let i = 0; i < toFill.length; i++)
+        {
+            let [desktopContainer, left, top] = toFill[i];
+            let newPlaceholder = new St.Bin({ width: ICON_MAX_WIDTH, height: ICON_MAX_WIDTH });
+            /* DEBUG
+            let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
+            newPlaceholder.add_actor(icon);
+            */
+            desktopContainer._layout.attach(newPlaceholder, left, top, 1, 1);
         }
     },
 
@@ -920,34 +1002,6 @@ const DesktopManager = new Lang.Class(
                 return;
             }
         }
-    },
-
-    _getPosOfChild: function(desktopContainer, childToFind)
-    {
-        if (childToFind == null)
-        {
-            log("_getPosOfChild: child cannot be null");
-            return [false, -1, -1];
-        }
-
-        let children = desktopContainer.actor.get_children();
-        let transformedPosition = desktopContainer.actor.get_transformed_position();
-        let currentRow = 0;
-        let currentColumn = 0;
-        let child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
-        while (child != childToFind.actor && child != null)
-        {
-            currentColumn++;
-            child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
-            if(child == null)
-            {
-                currentColumn = 0;
-                currentRow++;
-                child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
-            }
-        }
-
-        return [child == childToFind.actor, currentColumn, currentRow];
     },
 
     _getClosestChildToPos: function(x, y)
@@ -1149,6 +1203,17 @@ function distanceBetweenPoints(x, y, x2, y2)
     return Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2));
 }
 
+/*
+ * https://silentmatt.com/rectangle-intersection/
+ */
+function rectanglesIntersect(rect1X, rect1Y, rect1Width, rect1Height,
+                             rect2X, rect2Y, rect2Width, rect2Height)
+{
+    return rect1X < (rect2X + rect2Width) && (rect1X + rect1Width) > rect2X &&
+           rect1Y < (rect2Y + rect2Height) && (rect1Y + rect1Height) > rect2Y
+}
+
+
 let injections = {};
 
 function forEachBackgroundManager(func)
@@ -1178,7 +1243,7 @@ function enable()
 function disable()
 {
     desktopManager.destroy();
-    for (prop in injections)
+    for (let prop in injections)
     {
         Main.layoutManager[prop] = injections[prop];
     }
