@@ -869,7 +869,7 @@ const DesktopManager = new Lang.Class(
             let fileY = Math.round(yDiff + fileContainerY);
             fileContainer.setCoordinates(fileX, fileY);
             info.set_attribute_string('metadata::nautilus-icon-position',
-                                      fileX.toString().concat(',').concat(fileX.toString()));
+                                      fileX.toString().concat(',').concat(fileY.toString()));
             let gioFile = Gio.File.new_for_uri(fileContainer.file.get_uri());
             gioFile.set_attributes_async(info,
                                          Gio.FileQueryInfoFlags.NONE,
