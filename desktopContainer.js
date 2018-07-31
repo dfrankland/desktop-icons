@@ -36,7 +36,7 @@ var DesktopContainer = new Lang.Class(
 {
     Name: 'DesktopContainer',
 
-    _init: function (bgManager)
+    _init(bgManager)
     {
         this._bgManager = bgManager;
 
@@ -58,7 +58,7 @@ var DesktopContainer = new Lang.Class(
 
         this._bgManager._container.add_actor(this.actor);
 
-        this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
+        this.actor.connect('destroy', () => this._onDestroy());
 
         let monitorIndex = bgManager._monitorIndex;
         this._monitorConstraint = new Layout.MonitorConstraint({
@@ -70,11 +70,11 @@ var DesktopContainer = new Lang.Class(
         this._addDesktopBackgroundMenu();
 
         this._bgDestroyedId = bgManager.backgroundActor.connect('destroy',
-            Lang.bind(this, this._backgroundDestroyed));
+            () => this._backgroundDestroyed());
 
-        this.actor.connect('button-press-event', Lang.bind(this, this._onButtonPress));
-        this.actor.connect('button-release-event', Lang.bind(this, this._onButtonRelease));
-        this.actor.connect('motion-event', Lang.bind(this, this._onMotion));
+        this.actor.connect('button-press-event', (actor, event) => this._onButtonPress(actor, event));
+        this.actor.connect('button-release-event', (actor, event) => this._onButtonRelease(actor, event));
+        this.actor.connect('motion-event', (actor, event) => this._onMotion(actor, event));
         this._rubberBand = new St.Widget({ style_class: "rubber-band" });
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
@@ -83,7 +83,7 @@ var DesktopContainer = new Lang.Class(
         this._createPlaceholders();
     },
 
-    _createPlaceholders: function ()
+    _createPlaceholders()
     {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
         let maxRows = Math.ceil(workarea.height / Settings.ICON_MAX_WIDTH);
@@ -103,7 +103,7 @@ var DesktopContainer = new Lang.Class(
         }
     },
 
-    _backgroundDestroyed: function ()
+    _backgroundDestroyed()
     {
         this._bgDestroyedId = 0;
         if (this._bgManager == null)
@@ -114,7 +114,7 @@ var DesktopContainer = new Lang.Class(
         if (this._bgManager._backgroundSource) // background swapped
         {
             this._bgDestroyedId = this._bgManager.backgroundActor.connect('destroy',
-                Lang.bind(this, this._backgroundDestroyed));
+                () => this._backgroundDestroyed());
         }
         else // bgManager destroyed
         {
@@ -122,7 +122,7 @@ var DesktopContainer = new Lang.Class(
         }
     },
 
-    _onDestroy: function ()
+    _onDestroy()
     {
         if (this._bgDestroyedId)
         {
@@ -134,37 +134,37 @@ var DesktopContainer = new Lang.Class(
         this._rubberBand.destroy();
     },
 
-    _onNewFolderClicked: function ()
+    _onNewFolderClicked()
     {
         log("New folder clicked");
     },
 
-    _onPasteClicked: function ()
+    _onPasteClicked()
     {
         log("Paste clicked");
     },
 
-    _onSelectAllClicked: function ()
+    _onSelectAllClicked()
     {
         log("Select All clicked");
     },
 
-    _onPropertiesClicked: function ()
+    _onPropertiesClicked()
     {
         log("Properties clicked");
     },
 
-    _createDesktopBackgroundMenu: function ()
+    _createDesktopBackgroundMenu()
     {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
             0, St.Side.TOP);
-        menu.addAction(_("New Folder"), Lang.bind(this, this._onNewFolderClicked));
+        menu.addAction(_("New Folder"), () => this._onNewFolderClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_("Paste"), Lang.bind(this, this._onPasteClicked));
+        menu.addAction(_("Paste"), () => this._onPasteClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_("Select All"), Lang.bind(this, this._onSelectAllClicked));
+        menu.addAction(_("Select All"), () => this._onSelectAllClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_("Properties"), Lang.bind(this, this._onPropertiesClicked));
+        menu.addAction(_("Properties"), () => this._onPropertiesClicked());
 
         menu.actor.add_style_class_name('background-menu');
 
@@ -174,7 +174,7 @@ var DesktopContainer = new Lang.Class(
         return menu;
     },
 
-    _openMenu: function (x, y)
+    _openMenu(x, y)
     {
         Main.layoutManager.setDummyCursorGeometry(x, y, 0, 0);
         this.actor._desktopBackgroundMenu.open(BoxPointer.PopupAnimation.NONE);
@@ -182,7 +182,7 @@ var DesktopContainer = new Lang.Class(
         this.actor._desktopBackgroundManager.ignoreRelease();
     },
 
-    _drawRubberBand: function (currentX, currentY)
+    _drawRubberBand(currentX, currentY)
     {
         let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
             : currentX;
@@ -195,7 +195,7 @@ var DesktopContainer = new Lang.Class(
         this._rubberBand.show();
     },
 
-    _selectFromRubberband: function (currentX, currentY)
+    _selectFromRubberband(currentX, currentY)
     {
         let rubberX = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
             : currentX;
@@ -219,13 +219,13 @@ var DesktopContainer = new Lang.Class(
         Extension.desktopManager.setSelection(selection);
     },
 
-    addFileContainer: function (fileContainer, top, left)
+    addFileContainer(fileContainer, top, left)
     {
         this._fileContainers.push(fileContainer);
         this._layout.attach(fileContainer.actor, top, left, 1, 1);
     },
 
-    removeFileContainer: function (fileContainer)
+    removeFileContainer(fileContainer)
     {
         let index = this._fileContainers.indexOf(fileContainer);
         if (index > -1)
@@ -240,14 +240,14 @@ var DesktopContainer = new Lang.Class(
         this.actor.remove_child(fileContainer.actor);
     },
 
-    reset: function ()
+    reset()
     {
         this._fileContainers = [];
         this.actor.remove_all_children();
         this._createPlaceholders();
     },
 
-    _onMotion: function (actor, event)
+    _onMotion(actor, event)
     {
         let [x, y] = event.get_coords();
         if (this._drawingRubberBand)
@@ -257,7 +257,7 @@ var DesktopContainer = new Lang.Class(
         }
     },
 
-    _onButtonPress: function (actor, event)
+    _onButtonPress(actor, event)
     {
         let button = event.get_button();
         let [x, y] = event.get_coords();
@@ -282,7 +282,7 @@ var DesktopContainer = new Lang.Class(
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _onButtonRelease: function (actor, event)
+    _onButtonRelease(actor, event)
     {
         let button = event.get_button();
         if (button == 1)
@@ -296,25 +296,25 @@ var DesktopContainer = new Lang.Class(
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _addDesktopBackgroundMenu: function ()
+    _addDesktopBackgroundMenu()
     {
         this.actor._desktopBackgroundMenu = this._createDesktopBackgroundMenu();
         this.actor._desktopBackgroundManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
         this.actor._desktopBackgroundManager.addMenu(this.actor._desktopBackgroundMenu);
 
-        let grabOpBeginId = global.display.connect('grab-op-begin', Lang.bind(this, function () {
+        let grabOpBeginId = global.display.connect('grab-op-begin', () => {
             // this._iconsContainer._desktopBackgroundMenu.close(BoxPointer.PopupAnimation.NONE);
-        }));
+        });
 
-        this.actor.connect('destroy', Lang.bind(this, function () {
+        this.actor.connect('destroy', () => {
             this.actor._desktopBackgroundMenu.destroy();
             this.actor._desktopBackgroundMenu = null;
             this.actor._desktopBackgroundManager = null;
             global.display.disconnect(grabOpBeginId);
-        }));
+        });
     },
 
-    findEmptyPlace: function (left, top)
+    findEmptyPlace(left, top)
     {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
         let maxRows = Math.ceil(workarea.height / Settings.ICON_MAX_WIDTH);
@@ -364,14 +364,14 @@ var DesktopContainer = new Lang.Class(
         return null;
     },
 
-    acceptDrop: function (source, actor, x, y, time)
+    acceptDrop(source, actor, x, y, time)
     {
         Extension.desktopManager.acceptDrop(source, actor, x, y, time);
 
         return true;
     },
 
-    getPosOfFileContainer: function (childToFind)
+    getPosOfFileContainer(childToFind)
     {
         if (childToFind == null)
         {

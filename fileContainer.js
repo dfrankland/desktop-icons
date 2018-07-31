@@ -39,7 +39,7 @@ var FileContainer = new Lang.Class (
 {
     Name: 'FileContainer',
 
-    _init: function (file, fileInfo)
+    _init(file, fileInfo)
     {
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
@@ -92,26 +92,26 @@ var FileContainer = new Lang.Class (
         clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
         clutterText.set_ellipsize(Pango.EllipsizeMode.END);
 
-        this._container.connect("button-press-event", Lang.bind(this, this._onButtonPress));
-        this._container.connect("motion-event", Lang.bind(this, this._onMotion));
-        this._container.connect("button-release-event", Lang.bind(this, this._onButtonRelease));
+        this._container.connect("button-press-event", (actor, event) => this._onButtonPress(actor, event));
+        this._container.connect("motion-event", (actor, event) => this._onMotion(actor, event));
+        this._container.connect("button-release-event", (actor, event) => this._onButtonRelease(actor, event));
 
         this._createMenu();
 
         this._selected = false;
     },
 
-    _onOpenClicked: function()
+    _onOpenClicked()
     {
         log ("Open clicked");
     },
 
-    _onCopyClicked: function()
+    _onCopyClicked()
     {
         Extension.desktopManager.fileCopyClicked();
     },
 
-    _createMenu: function()
+    _createMenu()
     {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
         let side = St.Side.LEFT;
@@ -120,9 +120,9 @@ var FileContainer = new Lang.Class (
             side = St.Side.RIGHT;
         }
         this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
-        this._menu.addAction(_("Open"), Lang.bind(this, this._onOpenClicked));
+        this._menu.addAction(_("Open"), () => this._onOpenClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._menu.addAction(_("Copy"), Lang.bind(this, this._onCopyClicked));
+        this._menu.addAction(_("Copy"), () => this._onCopyClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menuManager.addMenu(this._menu);
 
@@ -130,7 +130,7 @@ var FileContainer = new Lang.Class (
         this._menu.actor.hide();
     },
 
-    _onButtonPress: function(actor, event)
+    _onButtonPress(actor, event)
     {
         let button = event.get_button();
         if (button == 3)
@@ -152,7 +152,7 @@ var FileContainer = new Lang.Class (
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _onMotion: function(actor, event)
+    _onMotion(actor, event)
     {
         let [x, y] = event.get_coords();
         if(this._buttonPressed)
@@ -174,7 +174,7 @@ var FileContainer = new Lang.Class (
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _onButtonRelease: function(event, actor)
+    _onButtonRelease(event, actor)
     {
         this._buttonPressed = false
         Extension.desktopManager.fileLeftClickReleased(this);
@@ -182,12 +182,12 @@ var FileContainer = new Lang.Class (
         return Clutter.EVENT_PROPAGATE;
     },
 
-    getCoordinates: function ()
+    getCoordinates()
     {
         return this._coordinates;
     },
 
-    setCoordinates: function (x, y)
+    setCoordinates(x, y)
     {
         this._coordinates = [x, y];
         /* DEBUG
@@ -195,17 +195,17 @@ var FileContainer = new Lang.Class (
         */
     },
 
-    getInnerIconPosition: function()
+    getInnerIconPosition()
     {
         return this._container.get_transformed_position();
     },
 
-    getInnerSize: function()
+    getInnerSize()
     {
        return [this._container.width, this._container.height];
     },
 
-    setSelected: function(selected)
+    setSelected(selected)
     {
         if(selected)
         {

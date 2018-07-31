@@ -39,15 +39,15 @@ var DesktopManager = new Lang.Class(
 {
     Name: 'DesktopManager',
 
-    _init: function ()
+    _init()
     {
         this._layoutChildrenId = 0;
         this._desktopEnumerateCancellable = null;
         this._desktopContainers = [];
         this._dragCancelled = false;
 
-        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', Lang.bind(this, this._addDesktopIcons));
-        this._startupPreparedId = Main.layoutManager.connect('startup-prepared', Lang.bind(this, this._addDesktopIcons));
+        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._addDesktopIcons());
+        this._startupPreparedId = Main.layoutManager.connect('startup-prepared', () => this._addDesktopIcons());
 
         this._addDesktopIcons();
 
@@ -58,23 +58,23 @@ var DesktopManager = new Lang.Class(
         this._setMetadataCancellable = new Gio.Cancellable();
     },
 
-    _addDesktopIcons: function ()
+    _addDesktopIcons()
     {
         this._destroyDesktopIcons();
-        forEachBackgroundManager(Lang.bind(this, function (bgManager) {
+        forEachBackgroundManager(bgManager => {
             this._desktopContainers.push(new DesktopContainer.DesktopContainer(bgManager));
-        }));
+        });
 
         this._addFiles();
     },
 
-    _destroyDesktopIcons: function ()
+    _destroyDesktopIcons()
     {
         this._desktopContainers.forEach(function (l) { l.actor.destroy(); });
         this._desktopContainers = [];
     },
 
-    _addFiles: function ()
+    _addFiles()
     {
         this._fileContainers = [];
         if (this._desktopEnumerateCancellable)
@@ -89,10 +89,10 @@ var DesktopManager = new Lang.Class(
             Gio.FileQueryInfoFlags.NONE,
             GLib.PRIORITY_DEFAULT,
             this._desktopEnumerateCancellable,
-            Lang.bind(this, this._onDesktopEnumerateChildren));
+            (source, res) => this._onDesktopEnumerateChildren(source, res));
     },
 
-    _onDesktopEnumerateChildren: function (source, res)
+    _onDesktopEnumerateChildren(source, res)
     {
         let fileEnum;
         try
@@ -120,14 +120,13 @@ var DesktopManager = new Lang.Class(
             this._fileContainers.push(fileContainer);
         }
 
-        this._desktopContainers.forEach(Lang.bind(this,
-            function (item, index) {
-                item.actor.connect('allocation-changed', Lang.bind(this, this._scheduleLayoutChildren));
-            }));
+        this._desktopContainers.forEach((item, index) => {
+                item.actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
+            });
         this._scheduleLayoutChildren();
     },
 
-    _setupDnD: function ()
+    _setupDnD()
     {
         this._draggableContainer = new St.Widget({
             layout_manager: new Clutter.FixedLayout(),
@@ -145,14 +144,14 @@ var DesktopManager = new Lang.Class(
                 dragActorOpacity: 100
             });
 
-        this._draggable.connect("drag-cancelled", Lang.bind(this, this._onDragCancelled));
-        this._draggable.connect("drag-end", Lang.bind(this, this._onDragEnd));
+        this._draggable.connect("drag-cancelled", () => this._onDragCancelled());
+        this._draggable.connect("drag-end", () => this._onDragEnd());
 
-        this._draggable['_dragActorDropped'] = Lang.bind(this, this._dragActorDropped);
-        this._draggable['_finishAnimation'] = Lang.bind(this, this._finishAnimation);
+        this._draggable['_dragActorDropped'] = event => this._dragActorDropped(event);
+        this._draggable['_finishAnimation'] = () => this._finishAnimation();
     },
 
-    dragStart: function ()
+    dragStart()
     {
         if (this._onDrag)
         {
@@ -199,20 +198,20 @@ var DesktopManager = new Lang.Class(
         this._draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
     },
 
-    _onDragCancelled: function ()
+    _onDragCancelled()
     {
         let event = Clutter.get_current_event();
         let [x, y] = event.get_coords();
         this._dragCancelled = true;
     },
 
-    _onDragEnd: function ()
+    _onDragEnd()
     {
         this._onDrag = false;
         Main.layoutManager.uiGroup.remove_child(this._draggableContainer);
     },
 
-    _finishAnimation: function ()
+    _finishAnimation()
     {
         if (!this._draggable._animationInProgress)
             return;
@@ -224,7 +223,7 @@ var DesktopManager = new Lang.Class(
         global.screen.set_cursor(Meta.Cursor.DEFAULT);
     },
 
-    _dragActorDropped: function (event)
+    _dragActorDropped(event)
     {
         let [dropX, dropY] = event.get_coords();
         let target = this._draggable._dragActor.get_stage().get_actor_at_pos(Clutter.PickMode.ALL,
@@ -304,7 +303,7 @@ var DesktopManager = new Lang.Class(
         return true;
     },
 
-    acceptDrop: function (source, actor, x, y, time)
+    acceptDrop(source, actor, x, y, time)
     {
         let [xEnd, yEnd] = [x, y];
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
@@ -325,7 +324,7 @@ var DesktopManager = new Lang.Class(
                 Gio.FileQueryInfoFlags.NONE,
                 GLib.PRIORITY_DEFAULT,
                 this._setMetadataCancellable,
-                Lang.bind(this, this._onSetMetadataFile));
+                (source, result) => this._onSetMetadataFile(source, result));
         }
 
         this._layoutDrop(this._selection);
@@ -333,7 +332,7 @@ var DesktopManager = new Lang.Class(
         return true;
     },
 
-    _layoutDrop: function (fileContainers)
+    _layoutDrop(fileContainers)
     {
         /* We need to delay replacements so we don't fiddle around with
             * allocations while deciding what to replace with what, since it would
@@ -433,7 +432,7 @@ var DesktopManager = new Lang.Class(
         }
     },
 
-    _onSetMetadataFile: function (source, result)
+    _onSetMetadataFile(source, result)
     {
         try
         {
@@ -453,7 +452,7 @@ var DesktopManager = new Lang.Class(
         }
     },
 
-    _getClosestChildToPos: function (x, y) {
+    _getClosestChildToPos(x, y) {
         let minDistance = Number.POSITIVE_INFINITY;
         let closestChild = null;
         let closestDesktopContainer = null;
@@ -498,18 +497,18 @@ var DesktopManager = new Lang.Class(
         return [closestChild, closestDesktopContainer, left, top];
     },
 
-    _scheduleLayoutChildren: function ()
+    _scheduleLayoutChildren()
     {
         if (this._layoutChildrenId != 0)
         {
             GLib.source_remove(this._layoutChildrenId);
         }
 
-        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, Lang.bind(this, this._layoutChildren));
+        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
     },
 
 
-    _relayoutChildren: function ()
+    _relayoutChildren()
     {
         for (let i = 0; i < this._desktopContainers.length; i++)
         {
@@ -519,7 +518,7 @@ var DesktopManager = new Lang.Class(
         this._layoutChildren();
     },
 
-    _layoutChildren: function ()
+    _layoutChildren()
     {
         for (let i = 0; i < this._fileContainers.length; i++)
         {
@@ -554,12 +553,12 @@ var DesktopManager = new Lang.Class(
         return GLib.SOURCE_REMOVE;
     },
 
-    _findByFile: function (fileContainer, uri)
+    _findByFile(fileContainer, uri)
     {
         return fileContainer.file.get_uri() == uri;
     },
 
-    fileLeftClickPressed: function (fileContainer)
+    fileLeftClickPressed(fileContainer)
     {
         let event = Clutter.get_current_event();
         let event_state = event.get_state();
@@ -581,7 +580,7 @@ var DesktopManager = new Lang.Class(
         this.setSelection(selection);
     },
 
-    fileLeftClickReleased: function (fileContainer)
+    fileLeftClickReleased(fileContainer)
     {
         let event = Clutter.get_current_event();
         let event_state = event.get_state();
@@ -591,7 +590,7 @@ var DesktopManager = new Lang.Class(
         }
     },
 
-    fileRightClickClicked: function (fileContainer)
+    fileRightClickClicked(fileContainer)
     {
         if (fileContainer == null)
         {
@@ -606,7 +605,7 @@ var DesktopManager = new Lang.Class(
         }
     },
 
-    setSelection: function (selection)
+    setSelection(selection)
     {
         for (let i = 0; i < this._fileContainers.length; i++)
         {
@@ -617,12 +616,12 @@ var DesktopManager = new Lang.Class(
         this._selection = selection;
     },
 
-    fileCopyClicked: function ()
+    fileCopyClicked()
     {
         log("Manager File copy clicked");
     },
 
-    destroy: function ()
+    destroy()
     {
         if (this._monitorsChangedId)
         {
@@ -636,7 +635,7 @@ var DesktopManager = new Lang.Class(
         }
         this._startupPreparedId = 0;
 
-        this._desktopContainers.forEach(w => { w.actor.destroy() });
+        this._desktopContainers.forEach(w => w.actor.destroy());
     }
 });
 
