@@ -1159,7 +1159,7 @@ const DesktopManager = new Lang.Class(
             return;
         }
 
-        if(selection.map(function(x) { return x.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
+        if(this._selection.map(function(x) { return x.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
         {
 
             this.setSelection([fileContainer]);
