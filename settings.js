@@ -17,33 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const Main = imports.ui.main;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const DesktopManager = Me.imports.desktopManager;
-
-
-let injections = {};
-
-function removeBackgroundMenu() {
-    injections['_addBackgroundMenu'] = Main.layoutManager._addBackgroundMenu;
-    Main.layoutManager._addBackgroundMenu = function (bgManager) { };
-}
-
-function init() {
-}
-
-let desktopManager = null;
-
-function enable() {
-    removeBackgroundMenu();
-    desktopManager = new DesktopManager.DesktopManager();
-}
-
-function disable() {
-    desktopManager.destroy();
-    for (let prop in injections) {
-        Main.layoutManager[prop] = injections[prop];
-    }
-}
+//FIXME: would be tweakable later on
+var ICON_SIZE = 64;
+var ICON_MAX_WIDTH = 130;
