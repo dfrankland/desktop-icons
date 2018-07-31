@@ -26,24 +26,29 @@ const DesktopManager = Me.imports.desktopManager;
 
 let injections = {};
 
-function removeBackgroundMenu() {
+function removeBackgroundMenu()
+{
     injections['_addBackgroundMenu'] = Main.layoutManager._addBackgroundMenu;
     Main.layoutManager._addBackgroundMenu = function (bgManager) { };
 }
 
-function init() {
+function init()
+{
 }
 
 let desktopManager = null;
 
-function enable() {
+function enable()
+{
     removeBackgroundMenu();
     desktopManager = new DesktopManager.DesktopManager();
 }
 
-function disable() {
+function disable()
+{
     desktopManager.destroy();
-    for (let prop in injections) {
+    for (let prop in injections)
+    {
         Main.layoutManager[prop] = injections[prop];
     }
 }
