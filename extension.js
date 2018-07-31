@@ -39,6 +39,9 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Queue = Me.imports.queue;
 
+const Clipboard = St.Clipboard.get_default();
+const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
+
 const ICON_SIZE = 64;
 const ICON_MAX_WIDTH = 130;
 const DRAG_TRESHOLD = 8;
@@ -333,6 +336,9 @@ const DesktopContainer = new Lang.Class(
     _onPasteClicked: function()
     {
         log("Paste clicked");
+         Clipboard.get_text(CLIPBOARD_TYPE, function (clipBoard, text) {
+            log (text);
+         });
     },
 
     _onSelectAllClicked: function()
@@ -1174,6 +1180,19 @@ const DesktopManager = new Lang.Class(
     fileCopyClicked: function()
     {
         log("Manager File copy clicked");
+        nautilusClipboard = "x-special/nautilus-clipboard\n";
+        nautilusClipboard += "copy\n";
+        for (let i = 0; i < this._selection.length; i++)
+        {
+            nautilusClipboard += this._selection[i].file.get_uri() ;
+            /* Skip the last element carriage return */
+            if (i < (this._selection.length - 1))
+            {
+                nautilusClipboard += "\n";
+            }
+        }
+
+        Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
     },
 
     destroy: function()
