@@ -30,6 +30,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const Extension = Me.imports.extension;
 const Settings = Me.imports.settings;
 
 const DRAG_TRESHOLD = 8;
@@ -107,7 +108,7 @@ var FileContainer = new Lang.Class (
 
     _onCopyClicked: function()
     {
-        desktopManager.fileCopyClicked();
+        Extension.desktopManager.fileCopyClicked();
     },
 
     _createMenu: function()
@@ -134,13 +135,13 @@ var FileContainer = new Lang.Class (
         let button = event.get_button();
         if (button == 3)
         {
-            desktopManager.fileRightClickClicked(this);
+            Extension.desktopManager.fileRightClickClicked(this);
             this._menu.toggle();
             return Clutter.EVENT_STOP;
         }
         if (button == 1)
         {
-            desktopManager.fileLeftClickPressed(this, event);
+            Extension.desktopManager.fileLeftClickPressed(this, event);
             let [x, y] = event.get_coords();
             this._buttonPressed = true;
             this._buttonPressInitialX = x;
@@ -166,7 +167,7 @@ var FileContainer = new Lang.Class (
                 this._buttonPressed = false
                 let event = Clutter.get_current_event();
                 let [x, y] = event.get_coords();
-                desktopManager.dragStart();
+                Extension.desktopManager.dragStart();
             }
         }
 
@@ -176,7 +177,7 @@ var FileContainer = new Lang.Class (
     _onButtonRelease: function(event, actor)
     {
         this._buttonPressed = false
-        desktopManager.fileLeftClickReleased(this);
+        Extension.desktopManager.fileLeftClickReleased(this);
 
         return Clutter.EVENT_PROPAGATE;
     },

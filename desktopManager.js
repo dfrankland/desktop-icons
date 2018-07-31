@@ -25,6 +25,7 @@ const Meta = imports.gi.Meta;
 
 const Animation = imports.ui.animation;
 const Background = imports.ui.background;
+const DND = imports.ui.dnd;
 const Main = imports.ui.main;
 
 const ExtensionUtils = imports.misc.extensionUtils;

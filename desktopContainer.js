@@ -27,6 +27,7 @@ const PopupMenu = imports.ui.popupMenu;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const Extension = Me.imports.extension;
 const FileContainer = Me.imports.fileContainer;
 const Queue = Me.imports.queue;
 const Settings = Me.imports.settings;
@@ -215,7 +216,7 @@ var DesktopContainer = new Lang.Class(
             }
         }
 
-        desktopManager.setSelection(selection);
+        Extension.desktopManager.setSelection(selection);
     },
 
     addFileContainer: function (fileContainer, top, left)
@@ -262,7 +263,7 @@ var DesktopContainer = new Lang.Class(
         let [x, y] = event.get_coords();
         if (button == 1)
         {
-            desktopManager.setSelection([]);
+            Extension.desktopManager.setSelection([]);
             this._rubberBandInitialX = x;
             this._rubberBandInitialY = y;
             this._drawingRubberBand = true;
@@ -365,7 +366,7 @@ var DesktopContainer = new Lang.Class(
 
     acceptDrop: function (source, actor, x, y, time)
     {
-        desktopManager.acceptDrop(source, actor, x, y, time);
+        Extension.desktopManager.acceptDrop(source, actor, x, y, time);
 
         return true;
     },

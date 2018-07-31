@@ -36,7 +36,7 @@ function init()
 {
 }
 
-let desktopManager = null;
+var desktopManager = null;
 
 function enable()
 {
