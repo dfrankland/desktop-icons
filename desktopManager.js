@@ -21,7 +21,10 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const St = imports.gi.St;
+const Mainloop = imports.mainloop;
 const Meta = imports.gi.Meta;
+
+const Signals = imports.signals;
 
 const Animation = imports.ui.animation;
 const Background = imports.ui.background;
@@ -42,14 +45,19 @@ var DesktopManager = new Lang.Class(
     _init()
     {
         this._layoutChildrenId = 0;
-        this._desktopEnumerateCancellable = null;
+        this._scheduleDesktopsRefreshId = 0
+        this._monitorDesktopDir = null;
+        this._desktopMonitorCancellable = null,
         this._desktopContainers = [];
         this._dragCancelled = false;
 
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._addDesktopIcons());
         this._startupPreparedId = Main.layoutManager.connect('startup-prepared', () => this._addDesktopIcons());
 
+        this.connect("new-file-set", () => this._scheduleReLayoutChildren());
+
         this._addDesktopIcons();
+        this._monitorDesktopFolder();
 
         this._selection = [];
         this._onDrag = false;
@@ -65,7 +73,7 @@ var DesktopManager = new Lang.Class(
             this._desktopContainers.push(new DesktopContainer.DesktopContainer(bgManager));
         });
 
-        this._addFiles();
+        this._scanFiles();
     },
 
     _destroyDesktopIcons()
@@ -74,7 +82,7 @@ var DesktopManager = new Lang.Class(
         this._desktopContainers = [];
     },
 
-    _addFiles()
+    _scanFiles()
     {
         this._fileContainers = [];
         if (this._desktopEnumerateCancellable)
@@ -83,7 +91,7 @@ var DesktopManager = new Lang.Class(
         }
 
         this._desktopEnumerateCancellable = new Gio.Cancellable();
-        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP)
+        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
         let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
         desktopDir.enumerate_children_async("metadata::*, standard::name,standard::type,standard::icon,standard::display-name",
             Gio.FileQueryInfoFlags.NONE,
@@ -123,7 +131,51 @@ var DesktopManager = new Lang.Class(
         this._desktopContainers.forEach((item, index) => {
                 item.actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
             });
-        this._scheduleLayoutChildren();
+        this.emit('new-file-set');
+    },
+
+
+    _monitorDesktopFolder()
+    {
+        if (this._monitorDesktopDir)
+        {
+            this._monitorDesktopDir.cancel();
+            this._monitorDesktopDir = null;
+        }
+
+        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
+        let desktopDir = Gio.File.new_for_path(desktopPath);
+
+        this._monitorDesktopDir = desktopDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
+        this._monitorDesktopDir.set_rate_limit(1000);
+        this._monitorDesktopDir.connect('changed',
+            (obj, file, otherFile, eventType) => {
+                // Rate limiting isn't enough, as one action will create different events on the same file.
+                // limit by adding a timeout
+                if (this._scheduleDesktopsRefreshId)
+                {
+                    return;
+                }
+                // Only get a subset of events we are interested in.
+                // Note that CREATED will emit a CHANGES_DONE_HINT
+                if (eventType != Gio.FileMonitorEvent.CHANGES_DONE_HINT &&
+                    eventType != Gio.FileMonitorEvent.DELETED && eventType != Gio.FileMonitorEvent.RENAMED &&
+                    eventType != Gio.FileMonitorEvent.MOVED_IN && eventType != Gio.FileMonitorEvent.MOVED_OUT)
+                {
+                    return;
+                }
+                this._scheduleDesktopsRefreshId = Mainloop.timeout_add(500,
+                    () => this._refreshDesktops(file, otherFile));
+            });
+    },
+
+    //FIXME: we don't use file/otherfile for now and stupidely refresh all desktops
+    _refreshDesktops(file, otherFile)
+    {
+        this._scheduleDesktopsRefreshId = 0;
+        // TODO: handle DND, opened filecontainer menu…
+
+        this._scanFiles();
     },
 
     _setupDnD()
@@ -375,6 +427,7 @@ var DesktopManager = new Lang.Class(
                                 */
                             if (fileContainers.filter(w => w.file.get_uri() == placeholder._delegate.file.get_uri()).length == 0)
                             {
+                                //FIXME: dropDesktopContainer isn't defined
                                 result = dropDesktopContainer.findEmptyPlace(left, top);
                                 if (result == null)
                                 {
@@ -412,7 +465,7 @@ var DesktopManager = new Lang.Class(
             desktopContainer.removeFileContainer(fileContainer);
         }
 
-        /* Place them in the appropiate places */
+        /* Place them in the appropriate places */
         for (let i = 0; i < fileContainerDestinations.length; i++)
         {
             let [desktopContainer, fileContainer, left, top] = fileContainerDestinations[i];
@@ -505,6 +558,16 @@ var DesktopManager = new Lang.Class(
         }
 
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
+    },
+
+    _scheduleReLayoutChildren()
+    {
+        if (this._layoutChildrenId != 0)
+        {
+            GLib.source_remove(this._layoutChildrenId);
+        }
+
+        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._relayoutChildren());
     },
 
 
@@ -623,6 +686,17 @@ var DesktopManager = new Lang.Class(
 
     destroy()
     {
+        if (this._monitorDesktopDir)
+        {
+            this._monitorDesktopDir.cancel();
+        }
+        this._monitorDesktopDir = null;
+        if (this._scheduleDesktopsRefreshId)
+        {
+            Main.layoutManager.disconnect(this._scheduleDesktopsRefreshId);
+        }
+        this._scheduleDesktopsRefreshId = 0;
+
         if (this._monitorsChangedId)
         {
             Main.layoutManager.disconnect(this._monitorsChangedId);
@@ -638,6 +712,7 @@ var DesktopManager = new Lang.Class(
         this._desktopContainers.forEach(w => w.actor.destroy());
     }
 });
+Signals.addSignalMethods(DesktopManager.prototype);
 
 function distanceBetweenPoints(x, y, x2, y2)
 {
