@@ -144,16 +144,6 @@ var DesktopContainer = new Lang.Class(
         log("Paste clicked");
     },
 
-    _onSelectAllClicked()
-    {
-        log("Select All clicked");
-    },
-
-    _onPropertiesClicked()
-    {
-        log("Properties clicked");
-    },
-
     _createDesktopBackgroundMenu()
     {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
@@ -161,10 +151,6 @@ var DesktopContainer = new Lang.Class(
         menu.addAction(_("New Folder"), () => this._onNewFolderClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Paste"), () => this._onPasteClicked());
-        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_("Select All"), () => this._onSelectAllClicked());
-        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_("Properties"), () => this._onPropertiesClicked());
 
         menu.actor.add_style_class_name('background-menu');
 
