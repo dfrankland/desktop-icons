@@ -19,6 +19,8 @@
 const Clutter = imports.gi.Clutter;
 const Lang = imports.lang;
 const St = imports.gi.St;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 
 const Layout = imports.ui.layout;
 const Main = imports.ui.main;
@@ -31,6 +33,35 @@ const Extension = Me.imports.extension;
 const FileContainer = Me.imports.fileContainer;
 const Queue = Me.imports.queue;
 const Settings = Me.imports.settings;
+
+const Clipboard = St.Clipboard.get_default();
+const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
+
+const NautilusFileOperationsInterface = '<node>\
+<interface name="org.gnome.Nautilus.FileOperations"> \
+    <method name="CopyFile"> \
+        <arg name=" SourceFileURI" type="s" direction="in"/> \
+        <arg name=" SourceDisplayName" type="s" direction="in"/> \
+        <arg name=" DestinationDirectoryURI" type="s" direction="in"/> \
+        <arg name=" DestinationDisplayName" type="s" direction="in"/> \
+    </method> \
+</interface> \
+</node>';
+
+const NautilusFileOperationsProxyInterface = Gio.DBusProxy.makeProxyWrapper(NautilusFileOperationsInterface);
+
+let NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
+    Gio.DBus.session,
+    "org.gnome.NautilusDevel",
+    "/org/gnome/NautilusDevel",
+    (proxy, error) =>
+    {
+        if (error)
+        {
+            log("Error connecting to Nautilus");
+        }
+    }
+);
 
 var DesktopContainer = new Lang.Class(
 {
@@ -139,9 +170,55 @@ var DesktopContainer = new Lang.Class(
         log("New folder clicked");
     },
 
+    _parseClipboardText(text)
+    {
+         var lines = text.split("\n")
+         if(lines.length < 2)
+         {
+            return [false, false, null];
+         }
+         if (lines[0] != 'x-special/nautilus-clipboard')
+         {
+            return [false, false, null];
+         }
+         if (lines[1] != 'cut' && lines[1] != 'copy')
+         {
+            return [false, false, null];
+         }
+
+         var is_cut = lines[1] == "cut";
+         /* Remove the empty last line from the "split" */
+         lines.splice(lines.length - 1, 1)
+         /* Remove the x-special/nautilus-clipboard and the cut/copy lines */
+         lines.splice(0, 2)
+
+         return [true, is_cut, lines];
+    },
+
     _onPasteClicked()
     {
-        log("Paste clicked");
+        Clipboard.get_text(CLIPBOARD_TYPE,
+            (clipBoard, text) =>
+            {
+                let [valid, is_cut, files] = this._parseClipboardText(text);
+                if(valid)
+                {
+                    let desktop_dir = "file://" + GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
+                    for(let i = 0; i < files.length; i++)
+                    {
+                        NautilusFileOperationsProxy.CopyFileRemote(files[i], "", desktop_dir, "",
+                            (result, error) =>
+                            {
+                                if(error)
+                                {
+                                    log("Error pasting file: " + error.message);
+                                }
+                            }
+                        );
+                    }
+                }
+            }
+        );
     },
 
     _createDesktopBackgroundMenu()
