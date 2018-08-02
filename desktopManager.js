@@ -38,6 +38,9 @@ const FileContainer = Me.imports.fileContainer;
 const Queue = Me.imports.queue;
 const Settings = Me.imports.settings;
 
+const Clipboard = St.Clipboard.get_default();
+const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
+
 var DesktopManager = new Lang.Class(
 {
     Name: 'DesktopManager',
@@ -681,7 +684,14 @@ var DesktopManager = new Lang.Class(
 
     fileCopyClicked()
     {
-        log("Manager File copy clicked");
+        let nautilusClipboard = "x-special/nautilus-clipboard\n";
+        nautilusClipboard += "copy\n";
+        for (let i = 0; i < this._selection.length; i++)
+        {
+            nautilusClipboard += this._selection[i].file.get_uri() + "\n" ;
+        }
+
+        Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
     },
 
     destroy()
