@@ -264,7 +264,7 @@ var FileContainer = new Lang.Class (
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _buttonOnRelease(event, actor)
+    _buttonOnRelease(actor, event)
     {
         this._buttonPressed = false
         Extension.desktopManager.fileLeftClickReleased(this);
