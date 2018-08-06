@@ -17,6 +17,7 @@
  */
 
 const Clutter = imports.gi.Clutter;
+const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const St = imports.gi.St;
 const Pango = imports.gi.Pango;
@@ -44,6 +45,7 @@ var FileContainer = new Lang.Class (
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
         this.file = file;
+        this._fileInfo = fileInfo;
         let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
         if (savedCoordinates != null)
@@ -99,11 +101,25 @@ var FileContainer = new Lang.Class (
         this._createMenu();
 
         this._selected = false;
+        this._buttonPressed = false
     },
 
     _onOpenClicked()
     {
-        log ("Open clicked");
+        Gio.AppInfo.launch_default_for_uri_async(this.file.get_uri(),
+                                                 null, null,
+            (source, res) =>
+            {
+                try
+                {
+                    Gio.AppInfo.launch_default_for_uri_finish(res);
+                }
+                catch (e)
+                {
+                    log("Error opening file " + this.file.get_uri() + ": " + e.message);
+                }
+            }
+        );
     },
 
     _onCopyClicked()
@@ -141,11 +157,19 @@ var FileContainer = new Lang.Class (
         }
         if (button == 1)
         {
-            Extension.desktopManager.fileLeftClickPressed(this, event);
-            let [x, y] = event.get_coords();
-            this._buttonPressed = true;
-            this._buttonPressInitialX = x;
-            this._buttonPressInitialY = y;
+            if (event.get_click_count() == 1)
+            {
+                Extension.desktopManager.fileLeftClickPressed(this, event);
+                let [x, y] = event.get_coords();
+                this._buttonPressed = true;
+                this._buttonPressInitialX = x;
+                this._buttonPressInitialY = y;
+            }
+            else
+            {
+                this._buttonPressed = false;
+                this._onOpenClicked();
+            }
             return Clutter.EVENT_STOP;
         }
 
