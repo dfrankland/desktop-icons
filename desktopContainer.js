@@ -221,6 +221,26 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
+    _openDesktopInFilesOnClicked()
+    {
+        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
+        let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
+        Gio.AppInfo.launch_default_for_uri_async(desktopDir.get_uri(),
+                                                 null, null,
+            (source, res) =>
+            {
+                try
+                {
+                    Gio.AppInfo.launch_default_for_uri_finish(res);
+                }
+                catch (e)
+                {
+                    log("Error opening Desktop in Files: " + e.message);
+                }
+            }
+        );
+    },
+
     _createDesktopBackgroundMenu()
     {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
@@ -228,6 +248,8 @@ var DesktopContainer = new Lang.Class(
         menu.addAction(_("New Folder"), () => this._onNewFolderClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Paste"), () => this._onPasteClicked());
+        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        menu.addAction(_("Open Desktop in Files"), () => this._openDesktopInFilesOnClicked());
 
         menu.actor.add_style_class_name('background-menu');
 

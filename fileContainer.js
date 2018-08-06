@@ -18,6 +18,7 @@
 
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const St = imports.gi.St;
 const Pango = imports.gi.Pango;
@@ -35,6 +36,30 @@ const Extension = Me.imports.extension;
 const Settings = Me.imports.settings;
 
 const DRAG_TRESHOLD = 8;
+
+const FreeDesktopFileManagerInterface = '<node>\
+<interface name="org.freedesktop.FileManager1"> \
+    <method name="ShowItems"> \
+        <arg name="URIs" type="as" direction="in"/> \
+        <arg name="StartupId" type="s" direction="in"/> \
+    </method> \
+</interface> \
+</node>';
+
+const FreeDesktopFileManagerProxyInterface = Gio.DBusProxy.makeProxyWrapper(FreeDesktopFileManagerInterface);
+
+let FreeDesktopFileManagerProxy = new FreeDesktopFileManagerProxyInterface(
+    Gio.DBus.session,
+    "org.freedesktop.FileManager1",
+    "/org/freedesktop/FileManager1",
+    (proxy, error) =>
+    {
+        if (error)
+        {
+            log("Error connecting to Nautilus");
+        }
+    }
+);
 
 var FileContainer = new Lang.Class (
 {
@@ -127,6 +152,20 @@ var FileContainer = new Lang.Class (
         Extension.desktopManager.fileCopyClicked();
     },
 
+    _showInFilesOnClicked()
+    {
+
+        FreeDesktopFileManagerProxy.ShowItemsRemote([this.file.get_uri()], "",
+            (result, error) =>
+            {
+                if(error)
+                {
+                    log("Error showing file on desktop: " + error.message);
+                }
+            }
+        );
+    },
+
     _createMenu()
     {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
@@ -139,6 +178,8 @@ var FileContainer = new Lang.Class (
         this._menu.addAction(_("Open"), () => this._onOpenClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menu.addAction(_("Copy"), () => this._onCopyClicked());
+        this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._menu.addAction(_("Open in Files"), () => this._showInFilesOnClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menuManager.addMenu(this._menu);
 
