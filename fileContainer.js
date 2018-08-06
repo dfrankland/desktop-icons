@@ -130,7 +130,7 @@ var FileContainer = new Lang.Class (
         this._createMenu();
 
         this._selected = false;
-        this._buttonPressed = false
+        this._primaryButtonPressed = false
     },
 
     _openOnClicked()
@@ -227,13 +227,13 @@ var FileContainer = new Lang.Class (
             {
                 Extension.desktopManager.fileLeftClickPressed(this, event);
                 let [x, y] = event.get_coords();
-                this._buttonPressed = true;
+                this._primaryButtonPressed = true;
                 this._buttonPressInitialX = x;
                 this._buttonPressInitialY = y;
             }
             else
             {
-                this._buttonPressed = false;
+                this._primaryButtonPressed = false;
                 this._onOpenClicked();
             }
             return Clutter.EVENT_STOP;
@@ -245,7 +245,7 @@ var FileContainer = new Lang.Class (
     _onMotion(actor, event)
     {
         let [x, y] = event.get_coords();
-        if(this._buttonPressed)
+        if(this._primaryButtonPressed)
         {
             let xDiff = x - this._buttonPressInitialX;
             let yDiff = y - this._buttonPressInitialY;
@@ -254,7 +254,7 @@ var FileContainer = new Lang.Class (
             {
                 // Don't need to track anymore this if we start drag, and also
                 // avoids reentrance here
-                this._buttonPressed = false
+                this._primaryButtonPressed = false
                 let event = Clutter.get_current_event();
                 let [x, y] = event.get_coords();
                 Extension.desktopManager.dragStart();
