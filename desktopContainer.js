@@ -142,7 +142,19 @@ var DesktopContainer = new Lang.Class(
 
     _newFolderOnClicked()
     {
-        log("New folder clicked");
+        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
+        let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
+        let dir= desktopDir.get_child (_("New Folder"));
+        log("New folder clicked " + dir.get_uri());
+        DBusUtils.NautilusFileOperationsProxy.CreateFolderRemote(dir.get_uri(),
+            (result, error) =>
+            {
+                if(error)
+                {
+                    log("Error creating new folder: " + error.message);
+                }
+            }
+        );
     },
 
     _parseClipboardText(text)

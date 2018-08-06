@@ -11,6 +11,9 @@ const NautilusFileOperationsInterface = '<node>\
     <method name="TrashFiles"> \
         <arg name="URIs" type="as" direction="in"/> \
     </method> \
+    <method name="CreateFolder"> \
+        <arg name="URI" type="s" direction="in"/> \
+    </method> \
 </interface> \
 </node>';
 
