@@ -33,35 +33,10 @@ const Extension = Me.imports.extension;
 const FileContainer = Me.imports.fileContainer;
 const Queue = Me.imports.queue;
 const Settings = Me.imports.settings;
+const DBusUtils = Me.imports.dbusUtils;
 
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
-
-const NautilusFileOperationsInterface = '<node>\
-<interface name="org.gnome.Nautilus.FileOperations"> \
-    <method name="CopyFile"> \
-        <arg name=" SourceFileURI" type="s" direction="in"/> \
-        <arg name=" SourceDisplayName" type="s" direction="in"/> \
-        <arg name=" DestinationDirectoryURI" type="s" direction="in"/> \
-        <arg name=" DestinationDisplayName" type="s" direction="in"/> \
-    </method> \
-</interface> \
-</node>';
-
-const NautilusFileOperationsProxyInterface = Gio.DBusProxy.makeProxyWrapper(NautilusFileOperationsInterface);
-
-let NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
-    Gio.DBus.session,
-    "org.gnome.NautilusDevel",
-    "/org/gnome/NautilusDevel",
-    (proxy, error) =>
-    {
-        if (error)
-        {
-            log("Error connecting to Nautilus");
-        }
-    }
-);
 
 var DesktopContainer = new Lang.Class(
 {
@@ -206,7 +181,7 @@ var DesktopContainer = new Lang.Class(
                     let desktop_dir = "file://" + GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
                     for(let i = 0; i < files.length; i++)
                     {
-                        NautilusFileOperationsProxy.CopyFileRemote(files[i], "", desktop_dir, "",
+                        DBusUtils.NautilusFileOperationsProxy.CopyFileRemote(files[i], "", desktop_dir, "",
                             (result, error) =>
                             {
                                 if(error)

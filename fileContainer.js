@@ -34,36 +34,9 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
 const Settings = Me.imports.settings;
+const DBusUtils = Me.imports.dbusUtils;
 
 const DRAG_TRESHOLD = 8;
-
-const FreeDesktopFileManagerInterface = '<node>\
-<interface name="org.freedesktop.FileManager1"> \
-    <method name="ShowItems"> \
-        <arg name="URIs" type="as" direction="in"/> \
-        <arg name="StartupId" type="s" direction="in"/> \
-    </method> \
-    <method name="ShowItemProperties"> \
-        <arg name="URIs" type="as" direction="in"/> \
-        <arg name="StartupId" type="s" direction="in"/> \
-    </method> \
-</interface> \
-</node>';
-
-const FreeDesktopFileManagerProxyInterface = Gio.DBusProxy.makeProxyWrapper(FreeDesktopFileManagerInterface);
-
-let FreeDesktopFileManagerProxy = new FreeDesktopFileManagerProxyInterface(
-    Gio.DBus.session,
-    "org.freedesktop.FileManager1",
-    "/org/freedesktop/FileManager1",
-    (proxy, error) =>
-    {
-        if (error)
-        {
-            log("Error connecting to Nautilus");
-        }
-    }
-);
 
 var FileContainer = new Lang.Class (
 {
@@ -164,7 +137,7 @@ var FileContainer = new Lang.Class (
     _showInFilesOnClicked()
     {
 
-        FreeDesktopFileManagerProxy.ShowItemsRemote([this.file.get_uri()], "",
+        DBusUtils.FreeDesktopFileManagerProxy.ShowItemsRemote([this.file.get_uri()], "",
             (result, error) =>
             {
                 if(error)
@@ -178,7 +151,7 @@ var FileContainer = new Lang.Class (
     _propertiesOnClicked()
     {
 
-        FreeDesktopFileManagerProxy.ShowItemPropertiesRemote([this.file.get_uri()], "",
+        DBusUtils.FreeDesktopFileManagerProxy.ShowItemPropertiesRemote([this.file.get_uri()], "",
             (result, error) =>
             {
                 if(error)

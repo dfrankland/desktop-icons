@@ -37,32 +37,11 @@ const DesktopContainer = Me.imports.desktopContainer;
 const FileContainer = Me.imports.fileContainer;
 const Queue = Me.imports.queue;
 const Settings = Me.imports.settings;
+const DBusUtils = Me.imports.dbusUtils;
 
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
-const NautilusFileOperationsInterface = '<node>\
-<interface name="org.gnome.Nautilus.FileOperations"> \
-    <method name="TrashFiles"> \
-        <arg name="URIs" type="as" direction="in"/> \
-    </method> \
-</interface> \
-</node>';
-
-const NautilusFileOperationsProxyInterface = Gio.DBusProxy.makeProxyWrapper(NautilusFileOperationsInterface);
-
-let NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
-    Gio.DBus.session,
-    "org.gnome.NautilusDevel",
-    "/org/gnome/NautilusDevel",
-    (proxy, error) =>
-    {
-        if (error)
-        {
-            log("Error connecting to Nautilus");
-        }
-    }
-);
 
 var DesktopManager = new Lang.Class(
 {
@@ -655,7 +634,7 @@ var DesktopManager = new Lang.Class(
 
     trashFiles()
     {
-        NautilusFileOperationsProxy.TrashFilesRemote(this._selection.map((x) => { x.file.get_uri(); }),
+        DBusUtils.NautilusFileOperationsProxy.TrashFilesRemote(this._selection.map((x) => { return x.file.get_uri(); }),
             (source, error) =>
             {
                 log ("callback")
