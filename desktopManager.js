@@ -269,11 +269,15 @@ var DesktopManager = new Lang.Class(
     _finishAnimation()
     {
         if (!this._draggable._animationInProgress)
+        {
             return;
+        }
 
         this._draggable._animationInProgress = false;
         if (!this._draggable._buttonDown)
+        {
             this._draggable._dragComplete();
+        }
 
         global.screen.set_cursor(Meta.Cursor.DEFAULT);
     },
@@ -287,7 +291,8 @@ var DesktopManager = new Lang.Class(
         // We call observers only once per motion with the innermost
         // target actor. If necessary, the observer can walk the
         // parent itself.
-        let dropEvent = {
+        let dropEvent =
+        {
             dropActor: this._draggable._dragActor,
             targetActor: target,
             clutterEvent: event
@@ -332,7 +337,8 @@ var DesktopManager = new Lang.Class(
                             this._draggable._restoreDragActor(event.get_time());
                             return true;
                         }
-                        else {
+                        else
+                        {
                             // We need this in order to make sure drag-end is fired
                             destroyActor = true;
                         }
