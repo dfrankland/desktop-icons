@@ -184,6 +184,11 @@ var FileContainer = new Lang.Class (
         );
     },
 
+    _moveToTrashOnClicked()
+    {
+        Extension.desktopManager.trashFiles();
+    },
+
     _createMenu()
     {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
@@ -195,6 +200,7 @@ var FileContainer = new Lang.Class (
         this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
         this._menu.addAction(_("Open"), () => this._openOnClicked());
         this._menu.addAction(_("Copy"), () => this._copyOnclicked());
+        this._menu.addAction(_("Move to Trash"), () => this._moveToTrashOnClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menu.addAction(_("Properties"), () => this._propertiesOnClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());

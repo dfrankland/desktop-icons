@@ -41,6 +41,29 @@ const Settings = Me.imports.settings;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
+const NautilusFileOperationsInterface = '<node>\
+<interface name="org.gnome.Nautilus.FileOperations"> \
+    <method name="TrashFiles"> \
+        <arg name="URIs" type="as" direction="in"/> \
+    </method> \
+</interface> \
+</node>';
+
+const NautilusFileOperationsProxyInterface = Gio.DBusProxy.makeProxyWrapper(NautilusFileOperationsInterface);
+
+let NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
+    Gio.DBus.session,
+    "org.gnome.NautilusDevel",
+    "/org/gnome/NautilusDevel",
+    (proxy, error) =>
+    {
+        if (error)
+        {
+            log("Error connecting to Nautilus");
+        }
+    }
+);
+
 var DesktopManager = new Lang.Class(
 {
     Name: 'DesktopManager',
@@ -628,6 +651,20 @@ var DesktopManager = new Lang.Class(
     _findByFile(fileContainer, uri)
     {
         return fileContainer.file.get_uri() == uri;
+    },
+
+    trashFiles()
+    {
+        NautilusFileOperationsProxy.TrashFilesRemote(this._selection.map(x => x.file.get_uri()),
+            (source, error) =>
+            {
+                log ("callback")
+                if (error)
+                {
+                    log("Error trashing files on the desktop: " + error.message);
+                }
+            }
+        );
     },
 
     fileLeftClickPressed(fileContainer)
