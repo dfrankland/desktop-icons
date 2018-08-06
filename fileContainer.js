@@ -43,6 +43,10 @@ const FreeDesktopFileManagerInterface = '<node>\
         <arg name="URIs" type="as" direction="in"/> \
         <arg name="StartupId" type="s" direction="in"/> \
     </method> \
+    <method name="ShowItemProperties"> \
+        <arg name="URIs" type="as" direction="in"/> \
+        <arg name="StartupId" type="s" direction="in"/> \
+    </method> \
 </interface> \
 </node>';
 
@@ -166,6 +170,20 @@ var FileContainer = new Lang.Class (
         );
     },
 
+    _propertiesOnClicked()
+    {
+
+        FreeDesktopFileManagerProxy.ShowItemPropertiesRemote([this.file.get_uri()], "",
+            (result, error) =>
+            {
+                if(error)
+                {
+                    log("Error showing properties: " + error.message);
+                }
+            }
+        );
+    },
+
     _createMenu()
     {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
@@ -178,6 +196,7 @@ var FileContainer = new Lang.Class (
         this._menu.addAction(_("Open"), () => this._openOnClicked());
         this._menu.addAction(_("Copy"), () => this._copyOnclicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._menu.addAction(_("Properties"), () => this._propertiesOnClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menu.addAction(_("Show in Files"), () => this._showInFilesOnClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
