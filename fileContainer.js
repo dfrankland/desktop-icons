@@ -133,7 +133,7 @@ var FileContainer = new Lang.Class (
         this._primaryButtonPressed = false
     },
 
-    _openOnClicked()
+    _openFile()
     {
         Gio.AppInfo.launch_default_for_uri_async(this.file.get_uri(),
                                                  null, null,
@@ -149,6 +149,11 @@ var FileContainer = new Lang.Class (
                 }
             }
         );
+    },
+
+    _openOnClicked()
+    {
+        this._openFile();
     },
 
     _copyOnClicked()
@@ -234,7 +239,7 @@ var FileContainer = new Lang.Class (
             else
             {
                 this._primaryButtonPressed = false;
-                this._onOpenClicked();
+                this._openFile();
             }
             return Clutter.EVENT_STOP;
         }
