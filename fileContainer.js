@@ -266,8 +266,13 @@ var FileContainer = new Lang.Class (
 
     _buttonOnRelease(actor, event)
     {
-        this._buttonPressed = false
-        Extension.desktopManager.fileLeftClickReleased(this);
+        let button = event.get_button();
+        if (button == 1)
+        {
+            this._primaryButtonPressed = false
+            Extension.desktopManager.fileLeftClickReleased(this);
+            return Clutter.EVENT_STOP;
+        }
 
         return Clutter.EVENT_PROPAGATE;
     },
