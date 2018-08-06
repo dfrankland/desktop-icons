@@ -708,7 +708,7 @@ var DesktopManager = new Lang.Class(
             return;
         }
 
-        if (this._selection.map(function (x) { return x.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
+        if (this._selection.map(x => return x.file.get_uri()).indexOf(fileContainer.file.get_uri()) < 0)
         {
             this.setSelection([fileContainer]);
         }
@@ -719,7 +719,7 @@ var DesktopManager = new Lang.Class(
         for (let i = 0; i < this._fileContainers.length; i++)
         {
             let fileContainer = this._fileContainers[i];
-            fileContainer.setSelected(selection.map(function (x) { return x.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) >= 0);
+            fileContainer.setSelected(selection.map(x => return x.file.get_uri()).indexOf(fileContainer.file.get_uri()) >= 0);
         }
 
         this._selection = selection;
