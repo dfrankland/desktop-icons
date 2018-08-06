@@ -14,6 +14,10 @@ const NautilusFileOperationsInterface = '<node>\
     <method name="CreateFolder"> \
         <arg name="URI" type="s" direction="in"/> \
     </method> \
+    <method name="Undo"> \
+    </method> \
+    <method name="Redo"> \
+    </method> \
 </interface> \
 </node>';
 

@@ -208,6 +208,32 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
+    _undoOnClicked()
+    {
+        DBusUtils.NautilusFileOperationsProxy.UndoRemote(
+            (result, error) =>
+            {
+                if(error)
+                {
+                    log("Error performing undo: " + error.message);
+                }
+            }
+        );
+    },
+
+    _redoOnClicked()
+    {
+        DBusUtils.NautilusFileOperationsProxy.RedoRemote(
+            (result, error) =>
+            {
+                if(error)
+                {
+                    log("Error performing redo: " + error.message);
+                }
+            }
+        );
+    },
+
     _openDesktopInFilesOnClicked()
     {
         let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
@@ -237,6 +263,9 @@ var DesktopContainer = new Lang.Class(
         menu.addAction(_("Paste"), () => this._pasteOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Open Desktop in Files"), () => this._openDesktopInFilesOnClicked());
+        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        menu.addAction(_("Undo"), () => this._undoOnClicked());
+        menu.addAction(_("Redo"), () => this._redoOnClicked());
 
         menu.actor.add_style_class_name('background-menu');
 
