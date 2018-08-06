@@ -103,8 +103,8 @@ var DesktopContainer = new Lang.Class(
         this._bgDestroyedId = bgManager.backgroundActor.connect('destroy',
             () => this._backgroundDestroyed());
 
-        this.actor.connect('button-press-event', (actor, event) => this._onButtonPress(actor, event));
-        this.actor.connect('button-release-event', (actor, event) => this._onButtonRelease(actor, event));
+        this.actor.connect('button-press-event', (actor, event) => this._buttonOnPress(actor, event));
+        this.actor.connect('button-release-event', (actor, event) => this._buttonOnRelease(actor, event));
         this.actor.connect('motion-event', (actor, event) => this._onMotion(actor, event));
         this._rubberBand = new St.Widget({ style_class: "rubber-band" });
         this._rubberBand.hide();
@@ -165,7 +165,7 @@ var DesktopContainer = new Lang.Class(
         this._rubberBand.destroy();
     },
 
-    _onNewFolderClicked()
+    _newFolderOnClicked()
     {
         log("New folder clicked");
     },
@@ -195,7 +195,7 @@ var DesktopContainer = new Lang.Class(
          return [true, is_cut, lines];
     },
 
-    _onPasteClicked()
+    _pasteOnClicked()
     {
         Clipboard.get_text(CLIPBOARD_TYPE,
             (clipBoard, text) =>
@@ -245,9 +245,9 @@ var DesktopContainer = new Lang.Class(
     {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
             0, St.Side.TOP);
-        menu.addAction(_("New Folder"), () => this._onNewFolderClicked());
+        menu.addAction(_("New Folder"), () => this._newFolderOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_("Paste"), () => this._onPasteClicked());
+        menu.addAction(_("Paste"), () => this._pasteOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Open Desktop in Files"), () => this._openDesktopInFilesOnClicked());
 
@@ -342,7 +342,7 @@ var DesktopContainer = new Lang.Class(
         }
     },
 
-    _onButtonPress(actor, event)
+    _buttonOnPress(actor, event)
     {
         let button = event.get_button();
         let [x, y] = event.get_coords();
@@ -367,7 +367,7 @@ var DesktopContainer = new Lang.Class(
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _onButtonRelease(actor, event)
+    _buttonOnRelease(actor, event)
     {
         let button = event.get_button();
         if (button == 1)

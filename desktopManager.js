@@ -100,10 +100,10 @@ var DesktopManager = new Lang.Class(
             Gio.FileQueryInfoFlags.NONE,
             GLib.PRIORITY_DEFAULT,
             this._desktopEnumerateCancellable,
-            (source, res) => this._onDesktopEnumerateChildren(source, res));
+            (source, res) => this._desktopEnumerateChildrenOnFinished(source, res));
     },
 
-    _onDesktopEnumerateChildren(source, res)
+    _desktopEnumerateChildrenOnFinished(source, res)
     {
         let fileEnum;
         try
@@ -199,8 +199,8 @@ var DesktopManager = new Lang.Class(
                 dragActorOpacity: 100
             });
 
-        this._draggable.connect("drag-cancelled", () => this._onDragCancelled());
-        this._draggable.connect("drag-end", () => this._onDragEnd());
+        this._draggable.connect("drag-cancelled", () => this._dragOnCancelled());
+        this._draggable.connect("drag-end", () => this._dragOnEnd());
 
         this._draggable['_dragActorDropped'] = event => this._dragActorDropped(event);
         this._draggable['_finishAnimation'] = () => this._finishAnimation();
@@ -253,14 +253,14 @@ var DesktopManager = new Lang.Class(
         this._draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
     },
 
-    _onDragCancelled()
+    _dragOnCancelled()
     {
         let event = Clutter.get_current_event();
         let [x, y] = event.get_coords();
         this._dragCancelled = true;
     },
 
-    _onDragEnd()
+    _dragOnEnd()
     {
         this._onDrag = false;
         Main.layoutManager.uiGroup.remove_child(this._draggableContainer);
@@ -385,7 +385,7 @@ var DesktopManager = new Lang.Class(
                 Gio.FileQueryInfoFlags.NONE,
                 GLib.PRIORITY_DEFAULT,
                 this._setMetadataCancellable,
-                (source, result) => this._onSetMetadataFile(source, result));
+                (source, result) => this._setMetadataFileOnFinished(source, result));
         }
 
         this._layoutDrop(this._selection);
@@ -494,7 +494,7 @@ var DesktopManager = new Lang.Class(
         }
     },
 
-    _onSetMetadataFile(source, result)
+    _setMetadataFileOnFinished(source, result)
     {
         try
         {

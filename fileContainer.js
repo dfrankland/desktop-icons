@@ -119,9 +119,9 @@ var FileContainer = new Lang.Class (
         clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
         clutterText.set_ellipsize(Pango.EllipsizeMode.END);
 
-        this._container.connect("button-press-event", (actor, event) => this._onButtonPress(actor, event));
+        this._container.connect("button-press-event", (actor, event) => this._buttonOnPress(actor, event));
         this._container.connect("motion-event", (actor, event) => this._onMotion(actor, event));
-        this._container.connect("button-release-event", (actor, event) => this._onButtonRelease(actor, event));
+        this._container.connect("button-release-event", (actor, event) => this._buttonOnRelease(actor, event));
 
         this._createMenu();
 
@@ -129,7 +129,7 @@ var FileContainer = new Lang.Class (
         this._buttonPressed = false
     },
 
-    _onOpenClicked()
+    _openOnClicked()
     {
         Gio.AppInfo.launch_default_for_uri_async(this.file.get_uri(),
                                                  null, null,
@@ -147,7 +147,7 @@ var FileContainer = new Lang.Class (
         );
     },
 
-    _onCopyClicked()
+    _copyOnClicked()
     {
         Extension.desktopManager.fileCopyClicked();
     },
@@ -175,11 +175,11 @@ var FileContainer = new Lang.Class (
             side = St.Side.RIGHT;
         }
         this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
-        this._menu.addAction(_("Open"), () => this._onOpenClicked());
+        this._menu.addAction(_("Open"), () => this._openOnClicked());
+        this._menu.addAction(_("Copy"), () => this._copyOnclicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._menu.addAction(_("Copy"), () => this._onCopyClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._menu.addAction(_("Open in Files"), () => this._showInFilesOnClicked());
+        this._menu.addAction(_("Show in Files"), () => this._showInFilesOnClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menuManager.addMenu(this._menu);
 
@@ -187,7 +187,7 @@ var FileContainer = new Lang.Class (
         this._menu.actor.hide();
     },
 
-    _onButtonPress(actor, event)
+    _buttonOnPress(actor, event)
     {
         let button = event.get_button();
         if (button == 3)
@@ -239,7 +239,7 @@ var FileContainer = new Lang.Class (
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _onButtonRelease(event, actor)
+    _buttonOnRelease(event, actor)
     {
         this._buttonPressed = false
         Extension.desktopManager.fileLeftClickReleased(this);
