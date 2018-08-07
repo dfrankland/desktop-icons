@@ -2,11 +2,9 @@ const Gio = imports.gi.Gio;
 
 const NautilusFileOperationsInterface = '<node>\
 <interface name="org.gnome.Nautilus.FileOperations"> \
-    <method name="CopyFile"> \
-        <arg name=" SourceFileURI" type="s" direction="in"/> \
-        <arg name=" SourceDisplayName" type="s" direction="in"/> \
-        <arg name=" DestinationDirectoryURI" type="s" direction="in"/> \
-        <arg name=" DestinationDisplayName" type="s" direction="in"/> \
+    <method name="CopyURIs"> \
+        <arg name="URIs" type="as" direction="in"/> \
+        <arg name="Destination" type="s" direction="in"/> \
     </method> \
     <method name="TrashFiles"> \
         <arg name="URIs" type="as" direction="in"/> \

@@ -191,18 +191,15 @@ var DesktopContainer = new Lang.Class(
                 if(valid)
                 {
                     let desktop_dir = "file://" + GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
-                    for(let i = 0; i < files.length; i++)
-                    {
-                        DBusUtils.NautilusFileOperationsProxy.CopyFileRemote(files[i], "", desktop_dir, "",
-                            (result, error) =>
+                    DBusUtils.NautilusFileOperationsProxy.CopyURIsRemote(files, desktop_dir,
+                        (result, error) =>
+                        {
+                            if(error)
                             {
-                                if(error)
-                                {
-                                    log("Error pasting file: " + error.message);
-                                }
+                                log("Error pasting files: " + error.message);
                             }
-                        );
-                    }
+                        }
+                    );
                 }
             }
         );
