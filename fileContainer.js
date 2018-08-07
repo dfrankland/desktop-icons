@@ -29,6 +29,7 @@ const Signals = imports.signals;
 const Background = imports.ui.background;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
+const Util = imports.misc.util;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -81,13 +82,23 @@ var FileContainer = new Lang.Class (
 
         this._icon = new St.Icon({ gicon: fileInfo.get_icon(),
                                    icon_size: Settings.ICON_SIZE });
-        this._container.add_actor(this._icon);
+        this._iconPlaceholder = new St.Bin({ visible: true });
+        this._iconPlaceholder.child = this._icon;
+        this._container.add_actor(this._iconPlaceholder);
 
         this._label = new St.Label({ text: fileInfo.get_attribute_as_string('standard::display-name'),
                                      style_class: "name-label" });
         this._attributeCanExecute = fileInfo.get_attribute_boolean ('access::can-execute');
         this._fileType = fileInfo.get_file_type ();
         this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
+        this._attributeContentType = fileInfo.get_content_type ();
+        this._attributeHidden = fileInfo.get_is_hidden ();
+
+        this._loadContentsCancellable = new Gio.Cancellable();
+        if (this._attributeContentType == "application/x-desktop")
+        {
+            this._prepareDesktopFile();
+        }
         /* DEBUG
         this._label = new St.Label({ text: JSON.stringify(this._coordinates),
                                      style_class: "name-label" });
@@ -111,6 +122,62 @@ var FileContainer = new Lang.Class (
         {
             this._execLine = this.file.get_path();
         }
+    },
+
+    _prepareDesktopFile()
+    {
+        this.file.load_contents_async(this._loadContentsCancellable,
+            (source, result) =>
+            {
+                let contents;
+                try
+                {
+                    let [ok, loadedContents, etag_out] = source.load_contents_finish(result);
+                    contents = loadedContents;
+                }
+                catch (error)
+                {
+                    if (error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        log("Error loading Desktop files: " + error.message);
+                        return;
+                    }
+                }
+
+                let keyfile = new GLib.KeyFile();
+                keyfile.load_from_bytes(contents, GLib.KeyFileFlags.NONE);
+                                       log(keyfile.get_groups());
+
+                this._execLine = keyfile.get_locale_string("Desktop Entry", "Exec", null);
+
+                let iconStr = keyfile.get_locale_string("Desktop Entry", "Icon", null);
+                if(iconStr == null)
+                {
+                    return;
+                }
+
+                let icon;
+                if(GLib.path_is_absolute(iconStr))
+                {
+                    let iconfile = Gio.File.new_for_commandline_arg(iconStr);
+                    icon = new Gio.FileIcon(iconFile);
+                }
+                else
+                {
+                    icon = Gio.ThemedIcon.new_with_default_fallbacks(iconStr);
+                }
+
+                this._icon.destroy();
+                this._icon = new St.Icon({ gicon: icon,
+                                           icon_size: Settings.ICON_SIZE });
+                this._iconPlaceholder.child = this._icon;
+
+            }
+        )
     },
 
     _openFile()
