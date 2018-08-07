@@ -98,7 +98,7 @@ var DesktopManager = new Lang.Class(
         this._desktopEnumerateCancellable = new Gio.Cancellable();
         let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
         let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
-        desktopDir.enumerate_children_async("metadata::*, standard::name,standard::type,standard::icon,standard::display-name",
+        desktopDir.enumerate_children_async("metadata::*,standard::*,access::*",
             Gio.FileQueryInfoFlags.NONE,
             GLib.PRIORITY_DEFAULT,
             this._desktopEnumerateCancellable,

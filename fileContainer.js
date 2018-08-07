@@ -85,6 +85,9 @@ var FileContainer = new Lang.Class (
 
         this._label = new St.Label({ text: fileInfo.get_attribute_as_string('standard::display-name'),
                                      style_class: "name-label" });
+        this._attributeCanExecute = fileInfo.get_attribute_boolean ('access::can-execute');
+        this._fileType = fileInfo.get_file_type ();
+        this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
         /* DEBUG
         this._label = new St.Label({ text: JSON.stringify(this._coordinates),
                                      style_class: "name-label" });
@@ -104,10 +107,20 @@ var FileContainer = new Lang.Class (
 
         this._selected = false;
         this._primaryButtonPressed = false
+        if(this._attributeCanExecute)
+        {
+            this._execLine = this.file.get_path();
+        }
     },
 
     _openFile()
     {
+        if(this._attributeCanExecute && !this._isDirectory)
+        {
+            Util.spawnCommandLine(this._execLine);
+            return;
+        }
+
         Gio.AppInfo.launch_default_for_uri_async(this.file.get_uri(),
                                                  null, null,
             (source, res) =>
