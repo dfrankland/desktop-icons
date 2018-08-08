@@ -214,6 +214,11 @@ var FileContainer = new Lang.Class (
         Extension.desktopManager.fileCopyClicked();
     },
 
+    _cutOnClicked()
+    {
+        Extension.desktopManager.fileCutClicked();
+    },
+
     _showInFilesOnClicked()
     {
 
@@ -257,6 +262,7 @@ var FileContainer = new Lang.Class (
         }
         this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
         this._menu.addAction(_("Open"), () => this._openOnClicked());
+        this._menu.addAction(_("Cut"), () => this._cutOnClicked());
         this._menu.addAction(_("Copy"), () => this._copyOnClicked());
         this._menu.addAction(_("Move to Trash"), () => this._moveToTrashOnClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());

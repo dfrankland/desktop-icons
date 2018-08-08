@@ -6,6 +6,10 @@ const NautilusFileOperationsInterface = '<node>\
         <arg name="URIs" type="as" direction="in"/> \
         <arg name="Destination" type="s" direction="in"/> \
     </method> \
+    <method name="MoveURIs"> \
+        <arg name="URIs" type="as" direction="in"/> \
+        <arg name="Destination" type="s" direction="in"/> \
+    </method> \
     <method name="TrashFiles"> \
         <arg name="URIs" type="as" direction="in"/> \
     </method> \

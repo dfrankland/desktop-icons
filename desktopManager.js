@@ -716,6 +716,18 @@ var DesktopManager = new Lang.Class(
         Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
     },
 
+    fileCutClicked()
+    {
+        let nautilusClipboard = "x-special/nautilus-clipboard\n";
+        nautilusClipboard += "cut\n";
+        for (let i = 0; i < this._selection.length; i++)
+        {
+            nautilusClipboard += this._selection[i].file.get_uri() + "\n" ;
+        }
+
+        Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
+    },
+
     destroy()
     {
         if (this._monitorDesktopDir)
