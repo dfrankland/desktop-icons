@@ -34,6 +34,7 @@ const FileContainer = Me.imports.fileContainer;
 const Queue = Me.imports.queue;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
+const Util = imports.misc.util;
 
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
@@ -266,6 +267,12 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
+    _openTerminalOnClicked()
+    {
+        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
+        Util.spawnCommandLine("gnome-terminal --working-directory="+desktopPath);
+    },
+
     _createDesktopBackgroundMenu()
     {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
@@ -273,11 +280,11 @@ var DesktopContainer = new Lang.Class(
         menu.addAction(_("New Folder"), () => this._newFolderOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Paste"), () => this._pasteOnClicked());
-        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_("Open Desktop in Files"), () => this._openDesktopInFilesOnClicked());
-        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Undo"), () => this._undoOnClicked());
         menu.addAction(_("Redo"), () => this._redoOnClicked());
+        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        menu.addAction(_("Open Desktop in Files"), () => this._openDesktopInFilesOnClicked());
+        menu.addAction(_("Open Terminal"), () => this._openTerminalOnClicked());
 
         menu.actor.add_style_class_name('background-menu');
 
