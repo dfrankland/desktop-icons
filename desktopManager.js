@@ -578,17 +578,18 @@ var DesktopManager = new Lang.Class(
             GLib.source_remove(this._layoutChildrenId);
         }
 
+        for (let i = 0; i < this._desktopContainers.length; i++)
+        {
+            let desktopContainer = this._desktopContainers[i];
+            desktopContainer.reset();
+        }
+
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._relayoutChildren());
     },
 
 
     _relayoutChildren()
     {
-        for (let i = 0; i < this._desktopContainers.length; i++)
-        {
-            let desktopContainer = this._desktopContainers[i];
-            desktopContainer.reset();
-        }
         this._layoutChildren();
     },
 
