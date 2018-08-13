@@ -27,8 +27,8 @@ const NautilusFileOperationsProxyInterface = Gio.DBusProxy.makeProxyWrapper(Naut
 
 var NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
     Gio.DBus.session,
-    "org.gnome.NautilusDevel",
-    "/org/gnome/NautilusDevel",
+    "org.gnome.Nautilus",
+    "/org/gnome/Nautilus",
     (proxy, error) =>
     {
         if (error)
