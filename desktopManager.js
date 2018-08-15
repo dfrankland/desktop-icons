@@ -415,7 +415,7 @@ var DesktopManager = new Lang.Class(
                 {
 
                     let [containerX, containerY] = fileContainer.getCoordinates();
-                    let [placeholder, desktopContainer, left, top] = this._getClosestChildToPos(containerX, containerY);
+                    let [placeholder, dropDesktopContainer, left, top] = this._getClosestChildToPos(containerX, containerY);
                     if (placeholder._delegate != undefined)
                     {
                         if (placeholder._delegate instanceof FileContainer.FileContainer)
@@ -438,7 +438,6 @@ var DesktopManager = new Lang.Class(
                                 */
                             if (fileContainers.filter(w => w.file.get_uri() == placeholder._delegate.file.get_uri()).length == 0)
                             {
-                                //FIXME: dropDesktopContainer isn't defined
                                 result = dropDesktopContainer.findEmptyPlace(left, top);
                                 if (result == null)
                                 {
@@ -463,7 +462,7 @@ var DesktopManager = new Lang.Class(
                         placeholder.destroy();
                         toFill.push([desktopContainerOrig, leftOrig, topOrig]);
                     }
-                    fileContainerDestinations.push([desktopContainer, fileContainer, left, top]);
+                    fileContainerDestinations.push([dropDesktopContainer, fileContainer, left, top]);
                     break;
                 }
             }
