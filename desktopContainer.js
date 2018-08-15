@@ -82,6 +82,7 @@ var DesktopContainer = new Lang.Class(
         this.actor.connect('button-press-event', (actor, event) => this._buttonOnPress(actor, event));
         this.actor.connect('button-release-event', (actor, event) => this._buttonOnRelease(actor, event));
         this.actor.connect('motion-event', (actor, event) => this._onMotion(actor, event));
+        this.actor.connect('leave-event', (actor, event) => this._onLeave(actor, event));
         this._rubberBand = new St.Widget({ style_class: "rubber-band" });
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
@@ -411,6 +412,20 @@ var DesktopContainer = new Lang.Class(
             this._rubberBand.hide();
 
             return Clutter.EVENT_STOP;
+        }
+
+        return Clutter.EVENT_PROPAGATE;
+    },
+
+    _onLeave(actor, event)
+    {
+        let containerMap = this._fileContainers.map(function(container) { return container._container });
+        let relatedActor = event.get_related();
+
+        if (!containerMap.includes(relatedActor) && relatedActor !== this.actor)
+        {
+            this._drawingRubberBand = false;
+            this._rubberBand.hide();
         }
 
         return Clutter.EVENT_PROPAGATE;
