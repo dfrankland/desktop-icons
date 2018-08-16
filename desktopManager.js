@@ -402,9 +402,9 @@ var DesktopManager = new Lang.Class(
     _layoutDrop(fileContainers)
     {
         /* We need to delay replacements so we don't fiddle around with
-            * allocations while deciding what to replace with what, since it would
-            * screw it up.
-            */
+         * allocations while deciding what to replace with what, since it would
+         * screw it up.
+         */
         let fileContainerDestinations = [];
         let toFill = [];
         /* TODO: We should optimize this... */
@@ -425,21 +425,21 @@ var DesktopManager = new Lang.Class(
                         if (placeholder._delegate instanceof FileContainer.FileContainer)
                         {
                             /* If we are trying to drop in the same place as we were,
-                                * or in a place where we was one of the dragged items,
-                                * we simply do nothing and the effect will be that later
-                                * on we will remove the dragged items from the desktop
-                                * container and the dragged items will placed where
-                                * they need to be.
-                                *
-                                * Fortunately, the case where two dragged items end up
-                                * requiring the same place cannot happen given that
-                                * their distances are the same as when started dragging
-                                * so they can have only one place as the closest one
-                                * to them. (Except if the screen size changes while
-                                * dragging, then maybe we have a big problem, but
-                                * seriously... if that ever happens to the user, I will
-                                * send a jamon :))
-                                */
+                             * or in a place where we was one of the dragged items,
+                             * we simply do nothing and the effect will be that later
+                             * on we will remove the dragged items from the desktop
+                             * container and the dragged items will placed where
+                             * they need to be.
+                             *
+                             * Fortunately, the case where two dragged items end up
+                             * requiring the same place cannot happen given that
+                             * their distances are the same as when started dragging
+                             * so they can have only one place as the closest one
+                             * to them. (Except if the screen size changes while
+                             * dragging, then maybe we have a big problem, but
+                             * seriously... if that ever happens to the user, I will
+                             * send a jamon :))
+                             */
                             if (fileContainers.filter(w => w.file.get_uri() == placeholder._delegate.file.get_uri()).length == 0)
                             {
                                 result = dropDesktopContainer.findEmptyPlace(left, top);
@@ -452,17 +452,18 @@ var DesktopManager = new Lang.Class(
                                 left = result[1];
                                 top = result[2];
                                 /* We can already remove the placeholder to
-                                    * have a free space ready
-                                    */
+                                 * have a free space ready
+                                 */
                                 placeholder.destroy();
                                 toFill.push([desktopContainerOrig, leftOrig, topOrig]);
                             }
                         }
                     }
-                    else {
+                    else
+                    {
                         /* We can already remove the placeholder to
-                            * have a free space ready
-                            */
+                         * have a free space ready
+                         */
                         placeholder.destroy();
                         toFill.push([desktopContainerOrig, leftOrig, topOrig]);
                     }
