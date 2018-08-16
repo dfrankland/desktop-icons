@@ -59,6 +59,7 @@ var DesktopContainer = new Lang.Class(
             reactive: true,
             x_expand: true,
             y_expand: true,
+            can_focus: true,
             opacity: 255
         });
         this.actor._delegate = this;
@@ -89,6 +90,54 @@ var DesktopContainer = new Lang.Class(
 
         this._fileContainers = [];
         this._createPlaceholders();
+        this.actor.connect('key-press-event', this._onKeyPress.bind(this));
+    },
+
+    _onKeyPress(actor, event) {
+        if (global.stage.get_key_focus() != actor)
+        {
+            return Clutter.EVENT_PROPAGATE;
+        }
+        let symbol = event.get_key_symbol();
+        let isCtrl = (event.get_state() & Clutter.ModifierType.CONTROL_MASK) != 0;
+        let isShift = (event.get_state() & Clutter.ModifierType.SHIFT_MASK) != 0;
+        if (isCtrl && isShift && [Clutter.Z, Clutter.z].indexOf(symbol) > -1)
+        {
+            this._doRedo();
+            return Clutter.EVENT_STOP;
+        }
+        else if (isCtrl && [Clutter.Z, Clutter.z].indexOf(symbol) > -1)
+        {
+            this._doUndo();
+            return Clutter.EVENT_STOP;
+        }
+        else if (isCtrl && [Clutter.C, Clutter.c].indexOf(symbol) > -1)
+        {
+            Extension.desktopManager.doCopy();
+            return Clutter.EVENT_STOP;
+        }
+        else if (isCtrl && [Clutter.X, Clutter.x].indexOf(symbol) > -1)
+        {
+            Extension.desktopManager.doCut();
+            return Clutter.EVENT_STOP;
+        }
+        else if (isCtrl && [Clutter.V, Clutter.v].indexOf(symbol) > -1)
+        {
+            this._doPaste();
+            return Clutter.EVENT_STOP;
+        }
+        else if (symbol == Clutter.Return)
+        {
+            Extension.desktopManager.doOpen();
+            return Clutter.EVENT_STOP;
+        }
+        else if (symbol == Clutter.Delete)
+        {
+            Extension.desktopManager.doTrash();
+            return Clutter.EVENT_STOP;
+        }
+
+        return Clutter.EVENT_PROPAGATE;
     },
 
     _createPlaceholders()
@@ -420,6 +469,8 @@ var DesktopContainer = new Lang.Class(
 
     _buttonOnRelease(actor, event)
     {
+        this.actor.grab_key_focus();
+
         let button = event.get_button();
         if (button == 1)
         {

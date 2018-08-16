@@ -183,6 +183,21 @@ var DesktopManager = new Lang.Class(
         this._scanFiles();
     },
 
+    _getContainerWithChild(child)
+    {
+        for (let i = 0; i < this._desktopContainers.length; i++)
+        {
+            let children = this._desktopContainers[i].actor.get_children();
+
+            if (children.indexOf(child) != -1)
+            {
+                return this._desktopContainers[i];
+            }
+        }
+
+        return null;
+    },
+
     _setupDnD()
     {
         this._draggableContainer = new St.Widget({
@@ -233,18 +248,7 @@ var DesktopManager = new Lang.Class(
             this._draggableContainer.add_actor(clone);
         }
 
-        let desktopContainer = null;
-        for (let i = 0; i < this._desktopContainers.length; i++)
-        {
-            let children = this._desktopContainers[i].actor.get_children();
-
-            if (children.indexOf(this._selection[0].actor) != -1)
-            {
-                desktopContainer = this._desktopContainers[i];
-                break;
-            }
-        }
-
+        let desktopContainer = this._getContainerWithChild(this._selection[0].actor);
         if (desktopContainer == null)
         {
             log("Error in DnD searching for the container of the dragged item");
@@ -660,6 +664,13 @@ var DesktopManager = new Lang.Class(
         let event_state = event.get_state();
         let selection = []
 
+        let desktopContainer = this._getContainerWithChild(fileContainer.actor);
+        if (desktopContainer == null)
+        {
+            log("Error in left click pressed, child not found");
+            return;
+        }
+        desktopContainer.actor.grab_key_focus();
         // In this case we just do nothing because it could be the start of a drag.
         let alreadySelected = this._selection.find(x => x.file.get_uri() == fileContainer.file.get_uri()) != null;
         if (alreadySelected)
