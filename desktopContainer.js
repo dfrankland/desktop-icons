@@ -348,6 +348,10 @@ var DesktopContainer = new Lang.Class(
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Open Desktop in Files"), () => this._openDesktopInFilesOnClicked());
         menu.addAction(_("Open Terminal"), () => this._openTerminalOnClicked());
+        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        menu.addSettingsAction(_("Change Background…"), 'gnome-background-panel.desktop');
+        menu.addSettingsAction(_("Display Settings"), 'gnome-display-panel.desktop');
+        menu.addSettingsAction(_("Settings"), 'gnome-control-center.desktop');
 
         menu.actor.add_style_class_name('background-menu');
 
