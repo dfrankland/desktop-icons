@@ -650,7 +650,6 @@ var DesktopManager = new Lang.Class(
         DBusUtils.NautilusFileOperationsProxy.TrashFilesRemote(this._selection.map((x) => { return x.file.get_uri(); }),
             (source, error) =>
             {
-                log ("callback")
                 if (error)
                 {
                     log("Error trashing files on the desktop: " + error.message);
