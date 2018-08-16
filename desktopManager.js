@@ -370,13 +370,14 @@ var DesktopManager = new Lang.Class(
         return true;
     },
 
-    acceptDrop(source, actor, x, y, time)
+    acceptDrop(dragSource, actor, target, xEnd, yEnd, time)
     {
-        let [xEnd, yEnd] = [x, y];
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
         this._setMetadataCancellable.cancel();
         this._setMetadataCancellable = new Gio.Cancellable();
-        for (let k = 0; k < this._selection.length; k++)
+        let itemsToSet = this._selection.slice(0);
+        let itemsCount = 0;
+        for (let k = 0; k < itemsToSet.length; k++)
         {
             let fileContainer = this._selection[k];
             let info = new Gio.FileInfo();
@@ -391,10 +392,17 @@ var DesktopManager = new Lang.Class(
                 Gio.FileQueryInfoFlags.NONE,
                 GLib.PRIORITY_DEFAULT,
                 this._setMetadataCancellable,
-                (source, result) => this._setMetadataFileOnFinished(source, result));
+                (source, result) =>
+                {
+                    this._setMetadataFileOnFinished(source, result);
+                    itemsCount++;
+                    if(itemsCount == itemsToSet.length)
+                    {
+                        this._layoutDrop(itemsToSet);
+                    }
+                }
+            );
         }
-
-        this._layoutDrop(this._selection);
 
         return true;
     },
@@ -442,7 +450,7 @@ var DesktopManager = new Lang.Class(
                              */
                             if (fileContainers.filter(w => w.file.get_uri() == placeholder._delegate.file.get_uri()).length == 0)
                             {
-                                result = dropDesktopContainer.findEmptyPlace(left, top);
+                                let result = dropDesktopContainer.findEmptyPlace(left, top);
                                 if (result == null)
                                 {
                                     log("WARNING: No empty space in the desktop for another icon");
@@ -470,6 +478,10 @@ var DesktopManager = new Lang.Class(
                     fileContainerDestinations.push([dropDesktopContainer, fileContainer, left, top]);
                     break;
                 }
+                else
+                {
+                    log ("Error dropping, origin container not found");
+                }
             }
         }
 
@@ -496,7 +508,7 @@ var DesktopManager = new Lang.Class(
             let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
             newPlaceholder.add_actor(icon);
             */
-            desktopContainer._layout.attach(newPlaceholder, left, top, 1, 1);
+            desktopContainer.layout.attach(newPlaceholder, left, top, 1, 1);
         }
     },
 
@@ -530,16 +542,19 @@ var DesktopManager = new Lang.Class(
         {
             let desktopContainer = this._desktopContainers[k];
 
-            let workarea = Main.layoutManager.getWorkAreaForMonitor(desktopContainer._monitorConstraint.index);
-            let children = desktopContainer.actor.get_children();
-            let transformedPosition = desktopContainer.actor.get_transformed_position();
-            let currentRow = 0;
-            let currentColumn = 0;
-            let child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
-            while (child != null)
+            let maxColumns = desktopContainer.getMaxColumns();
+            let maxRows = desktopContainer.getMaxRows();
+            for (let column = 0; column < maxColumns; column++)
             {
-                if (child.visible)
+                for (let row = 0; row < maxRows; row++)
                 {
+                    let child = desktopContainer.layout.get_child_at(column, row);
+                    // It's used by other dragged item, so it has been destroyed
+                    if (child == null)
+                    {
+                        continue;
+                    }
+
                     let [proposedX, proposedY] = child.get_transformed_position();
                     let distance = distanceBetweenPoints(proposedX, proposedY, x, y);
                     if (distance < minDistance)
@@ -547,17 +562,9 @@ var DesktopManager = new Lang.Class(
                         closestChild = child;
                         minDistance = distance;
                         closestDesktopContainer = desktopContainer;
-                        left = currentColumn;
-                        top = currentRow;
+                        left = column;
+                        top = row;
                     }
-                }
-                currentColumn++;
-                child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
-                if (child == null)
-                {
-                    currentColumn = 0;
-                    currentRow++;
-                    child = desktopContainer._layout.get_child_at(currentColumn, currentRow);
                 }
             }
         }

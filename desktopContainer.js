@@ -47,7 +47,7 @@ var DesktopContainer = new Lang.Class(
     {
         this._bgManager = bgManager;
 
-        this._layout = new Clutter.GridLayout({
+        this.layout = new Clutter.GridLayout({
             orientation: Clutter.Orientation.VERTICAL,
             column_homogeneous: true,
             row_homogeneous: true
@@ -55,7 +55,7 @@ var DesktopContainer = new Lang.Class(
 
         this.actor = new St.Widget({
             name: "DesktopContainer",
-            layout_manager: this._layout,
+            layout_manager: this.layout,
             reactive: true,
             x_expand: true,
             y_expand: true,
@@ -142,9 +142,8 @@ var DesktopContainer = new Lang.Class(
 
     _createPlaceholders()
     {
-        let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        let maxRows = Math.ceil(workarea.height / Settings.ICON_MAX_WIDTH);
-        let maxColumns = Math.ceil(workarea.width / Settings.ICON_MAX_WIDTH);
+        let maxRows = this.getMaxRows();
+        let maxColumns = this.getMaxColumns();
 
         for (let i = 0; i < maxColumns; i++)
         {
@@ -155,7 +154,7 @@ var DesktopContainer = new Lang.Class(
                 let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
                 placeholder.add_actor(icon);
                 */
-                this._layout.attach(placeholder, i, j, 1, 1);
+                this.layout.attach(placeholder, i, j, 1, 1);
             }
         }
     },
@@ -406,7 +405,7 @@ var DesktopContainer = new Lang.Class(
     addFileContainer(fileContainer, top, left)
     {
         this._fileContainers.push(fileContainer);
-        this._layout.attach(fileContainer.actor, top, left, 1, 1);
+        this.layout.attach(fileContainer.actor, top, left, 1, 1);
     },
 
     removeFileContainer(fileContainer)
@@ -514,11 +513,22 @@ var DesktopContainer = new Lang.Class(
         });
     },
 
-    findEmptyPlace(left, top)
+    getMaxColumns()
     {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        let maxRows = Math.ceil(workarea.height / Settings.ICON_MAX_WIDTH);
-        let maxColumns = Math.ceil(workarea.width / Settings.ICON_MAX_WIDTH);
+        return Math.ceil(workarea.width / Settings.ICON_MAX_WIDTH);
+    },
+
+    getMaxRows()
+    {
+        let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
+        return Math.ceil(workarea.height / Settings.ICON_MAX_WIDTH);
+    },
+
+    findEmptyPlace(left, top)
+    {
+        let maxRows = this.getMaxRows();
+        let maxColumns = this.getMaxColumns();
         let bfsQueue = new Queue.Queue();
         bfsQueue.enqueue([left, top]);
         let bfsToVisit = [JSON.stringify([left, top])];
@@ -526,9 +536,10 @@ var DesktopContainer = new Lang.Class(
         while (!bfsQueue.isEmpty() && iterations < 1000)
         {
             let current = bfsQueue.dequeue();
-            let currentChild = this._layout.get_child_at(current[0], current[1]);
-            if (currentChild._delegate == undefined ||
-                !(currentChild._delegate instanceof FileContainer.FileContainer))
+            let currentChild = this.layout.get_child_at(current[0], current[1]);
+            if (currentChild != null &&
+                (currentChild._delegate == undefined ||
+                 !(currentChild._delegate instanceof FileContainer.FileContainer)))
             {
                 return [currentChild, current[0], current[1]];
             }
@@ -566,7 +577,7 @@ var DesktopContainer = new Lang.Class(
 
     acceptDrop(source, actor, x, y, time)
     {
-        Extension.desktopManager.acceptDrop(source, actor, x, y, time);
+        Extension.desktopManager.acceptDrop(source, actor, this, x, y, time);
 
         return true;
     },
@@ -579,32 +590,36 @@ var DesktopContainer = new Lang.Class(
             return [false, -1, -1];
         }
 
-        let children = this.actor.get_children();
-        let transformedPosition = this.actor.get_transformed_position();
-        let currentRow = 0;
-        let currentColumn = 0;
-        let child = this._layout.get_child_at(currentColumn, currentRow);
         let found = false
-        while (child != null)
+        let maxColumns = this.getMaxColumns();
+        let maxRows = this.getMaxRows();
+        let column = 0;
+        let row = 0;
+        for (column = 0; column < maxColumns; column++)
         {
-            if (child._delegate != undefined &&
-                child._delegate.file.get_uri() == childToFind.file.get_uri())
+            for (row = 0; row < maxRows; row++)
             {
-                found = true;
-                break;
+                let child = this.layout.get_child_at(column, row);
+                // It's used by other dragged item, so it has been destroyed
+                if (child == null)
+                {
+                    continue;
+                }
+                if (child._delegate != undefined &&
+                    child._delegate.file.get_uri() == childToFind.file.get_uri())
+                {
+                    found = true;
+                    break;
+                }
             }
 
-            currentColumn++;
-            child = this._layout.get_child_at(currentColumn, currentRow);
-            if (child == null)
+            if(found)
             {
-                currentColumn = 0;
-                currentRow++;
-                child = this._layout.get_child_at(currentColumn, currentRow);
+                break;
             }
         }
 
-        return [found, currentColumn, currentRow];
+        return [found, column, row];
     },
 
 });
