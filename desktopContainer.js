@@ -184,7 +184,7 @@ var DesktopContainer = new Lang.Class(
          return [true, is_cut, lines];
     },
 
-    _pasteOnClicked()
+    _doPaste()
     {
         Clipboard.get_text(CLIPBOARD_TYPE,
             (clipBoard, text) =>
@@ -222,7 +222,12 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
-    _undoOnClicked()
+    _pasteOnClicked()
+    {
+        this._doPaste();
+    },
+
+    _doUndo()
     {
         DBusUtils.NautilusFileOperationsProxy.UndoRemote(
             (result, error) =>
@@ -235,7 +240,12 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
-    _redoOnClicked()
+    _undoOnClicked()
+    {
+        this._doUndo();
+    },
+
+    _doRedo()
     {
         DBusUtils.NautilusFileOperationsProxy.RedoRemote(
             (result, error) =>
@@ -246,6 +256,11 @@ var DesktopContainer = new Lang.Class(
                 }
             }
         );
+    },
+
+    _redoOnClicked()
+    {
+        this._doRedo();
     },
 
     _openDesktopInFilesOnClicked()

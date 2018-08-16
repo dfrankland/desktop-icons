@@ -632,7 +632,15 @@ var DesktopManager = new Lang.Class(
         return fileContainer.file.get_uri() == uri;
     },
 
-    trashFiles()
+    doOpen()
+    {
+        for (let i = 0; i < this._selection.length; i++)
+        {
+            this._selection[i].doOpen();
+        }
+    },
+
+    doTrash()
     {
         DBusUtils.NautilusFileOperationsProxy.TrashFilesRemote(this._selection.map((x) => { return x.file.get_uri(); }),
             (source, error) =>
@@ -704,7 +712,7 @@ var DesktopManager = new Lang.Class(
         this._selection = selection;
     },
 
-    fileCopyClicked()
+    doCopy()
     {
         let nautilusClipboard = "x-special/nautilus-clipboard\n";
         nautilusClipboard += "copy\n";
@@ -716,7 +724,7 @@ var DesktopManager = new Lang.Class(
         Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
     },
 
-    fileCutClicked()
+    doCut()
     {
         let nautilusClipboard = "x-special/nautilus-clipboard\n";
         nautilusClipboard += "cut\n";

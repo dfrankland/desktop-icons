@@ -180,7 +180,7 @@ var FileContainer = new Lang.Class (
         )
     },
 
-    _openFile()
+    doOpen()
     {
         if(this._attributeCanExecute && !this._isDirectory)
         {
@@ -206,17 +206,17 @@ var FileContainer = new Lang.Class (
 
     _openOnClicked()
     {
-        this._openFile();
+        this.doOpen();
     },
 
     _copyOnClicked()
     {
-        Extension.desktopManager.fileCopyClicked();
+        Extension.desktopManager.doCopy();
     },
 
     _cutOnClicked()
     {
-        Extension.desktopManager.fileCutClicked();
+        Extension.desktopManager.doCut();
     },
 
     _showInFilesOnClicked()
@@ -249,7 +249,7 @@ var FileContainer = new Lang.Class (
 
     _moveToTrashOnClicked()
     {
-        Extension.desktopManager.trashFiles();
+        Extension.desktopManager.doTrash();
     },
 
     _createMenu()
@@ -298,7 +298,7 @@ var FileContainer = new Lang.Class (
             else
             {
                 this._primaryButtonPressed = false;
-                this._openFile();
+                this.doOpen();
             }
             return Clutter.EVENT_STOP;
         }
