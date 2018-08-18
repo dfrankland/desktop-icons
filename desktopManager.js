@@ -409,12 +409,7 @@ var DesktopManager = new Lang.Class(
 
     _layoutDrop(fileContainers)
     {
-        /* We need to delay replacements so we don't fiddle around with
-         * allocations while deciding what to replace with what, since it would
-         * screw it up.
-         */
         let fileContainerDestinations = [];
-        let toFill = [];
         /* TODO: We should optimize this... */
         for (let i = 0; i < fileContainers.length; i++)
         {
@@ -423,65 +418,87 @@ var DesktopManager = new Lang.Class(
             {
                 let desktopContainerOrig = this._desktopContainers[j];
                 let [found, leftOrig, topOrig] = desktopContainerOrig.getPosOfFileContainer(fileContainer);
-                if (found)
-                {
 
-                    let [containerX, containerY] = fileContainer.getCoordinates();
-                    let [placeholder, dropDesktopContainer, left, top] = this._getClosestChildToPos(containerX, containerY);
-                    if (placeholder._delegate != undefined)
+                if (!found)
+                {
+                    continue;
+                }
+
+                let [containerX, containerY] = fileContainer.getCoordinates();
+                let [placeholder, dropDesktopContainer, left, top] = this._getClosestChildToPos(containerX, containerY);
+                if (placeholder._delegate != undefined &&
+                    placeholder._delegate instanceof FileContainer.FileContainer)
+                {
+                    if (fileContainer.file.get_uri() == placeholder._delegate.file.get_uri())
                     {
-                        if (placeholder._delegate instanceof FileContainer.FileContainer)
+                        /* Dropping in the same place as it was, so do nothing. */
+                    }
+                    else if (fileContainers.filter(w => w.file.get_uri() ==
+                                                        placeholder._delegate.file.get_uri())
+                             .length > 0)
+                    {
+                        /* Dropping were another dragged item is placed, nothing
+                         * to do except check if there is any collision
+                         */
+
+                        let collision = fileContainerDestinations.filter(w =>
+                            (w[0] == dropDesktopContainer &&
+                             w[2] == left &&
+                             w[3] == top));
+                        if (collision.length > 0)
                         {
-                            /* If we are trying to drop in the same place as we were,
-                             * or in a place where we was one of the dragged items,
-                             * we simply do nothing and the effect will be that later
-                             * on we will remove the dragged items from the desktop
-                             * container and the dragged items will placed where
-                             * they need to be.
-                             *
-                             * Fortunately, the case where two dragged items end up
-                             * requiring the same place cannot happen given that
-                             * their distances are the same as when started dragging
-                             * so they can have only one place as the closest one
-                             * to them. (Except if the screen size changes while
-                             * dragging, then maybe we have a big problem, but
-                             * seriously... if that ever happens to the user, I will
-                             * send a jamon :))
-                             */
-                            if (fileContainers.filter(w => w.file.get_uri() == placeholder._delegate.file.get_uri()).length == 0)
-                            {
-                                let result = dropDesktopContainer.findEmptyPlace(left, top);
-                                if (result == null)
-                                {
-                                    log("WARNING: No empty space in the desktop for another icon");
-                                    return;
-                                }
-                                placeholder = result[0];
-                                left = result[1];
-                                top = result[2];
-                                /* We can already remove the placeholder to
-                                 * have a free space ready
-                                 */
-                                placeholder.destroy();
-                                toFill.push([desktopContainerOrig, leftOrig, topOrig]);
-                            }
+                            log ("Error: Cannot place file, collision with\
+                                  one of the dragged items "
+                                  + placeholder._delegate.file.get_uri() +
+                                  " " + left + " " + top);
+                            break;
                         }
                     }
                     else
                     {
-                        /* We can already remove the placeholder to
-                         * have a free space ready
+                        /* Dropping were another item is placed, need to search
+                         * for an empty space close by
                          */
+
+                        let result = dropDesktopContainer.findEmptyPlace(left, top);
+                        if (result == null)
+                        {
+                            log("Error: No empty space in the desktop for another icon");
+                            break;
+                        }
+                        placeholder = result[0];
+                        left = result[1];
+                        top = result[2];
+
+                        /* If a dragged item has been assigned the same
+                         * position as this one means we have a colision,
+                         * either the items were dragged out of the screen
+                         * and they are trying to fill the same position
+                         * on-screen or a resolution for collision in the
+                         * past assigned this place already.
+                         */
+                        let collision = fileContainerDestinations.filter(w =>
+                            (w[0] == dropDesktopContainer &&
+                             w[2] == left &&
+                             w[3] == top));
+                        if (collision.length > 0)
+                        {
+                            log ("Error: Cannot place file, collision with\
+                                  one of the dragged items when searching \
+                                  for an empty place " + placeholder._delegate.file.get_uri() +
+                                  " " + left + " " + top);
+                            break;
+                        }
+
                         placeholder.destroy();
-                        toFill.push([desktopContainerOrig, leftOrig, topOrig]);
                     }
-                    fileContainerDestinations.push([dropDesktopContainer, fileContainer, left, top]);
-                    break;
                 }
                 else
                 {
-                    log ("Error dropping, origin container not found");
+                    placeholder.destroy();
                 }
+                fileContainerDestinations.push([dropDesktopContainer, fileContainer, left, top]);
+                break;
             }
         }
 
@@ -500,15 +517,28 @@ var DesktopManager = new Lang.Class(
         }
 
         /* Fill the empty places with placeholders */
-        for (let i = 0; i < toFill.length; i++)
+        for (let i = 0; i < this._desktopContainers.length; i++)
         {
-            let [desktopContainer, left, top] = toFill[i];
-            let newPlaceholder = new St.Bin({ width: Settings.ICON_MAX_WIDTH, height: Settings.ICON_MAX_WIDTH });
-            /* DEBUG
-            let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
-            newPlaceholder.add_actor(icon);
-            */
-            desktopContainer.layout.attach(newPlaceholder, left, top, 1, 1);
+            let desktopContainer = this._desktopContainers[i];
+
+            let maxColumns = desktopContainer.getMaxColumns();
+            let maxRows = desktopContainer.getMaxRows();
+            for (let column = 0; column < maxColumns; column++)
+            {
+                for (let row = 0; row < maxRows; row++)
+                {
+                    let child = desktopContainer.layout.get_child_at(column, row);
+                    if (child == null)
+                    {
+                        let newPlaceholder = new St.Bin({ width: Settings.ICON_MAX_WIDTH, height: Settings.ICON_MAX_WIDTH });
+                        /* DEBUG
+                        let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
+                        newPlaceholder.add_actor(icon);
+                        */
+                        desktopContainer.layout.attach(newPlaceholder, column, row, 1, 1);
+                    }
+                }
+            }
         }
     },
 
