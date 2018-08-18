@@ -339,7 +339,7 @@ var DesktopContainer = new Lang.Class(
     _createDesktopBackgroundMenu()
     {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
-            0, St.Side.TOP);
+                                           0, St.Side.TOP);
         menu.addAction(_("New Folder"), () => this._newFolderOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Paste"), () => this._pasteOnClicked());
