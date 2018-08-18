@@ -39,6 +39,14 @@ const Util = imports.misc.util;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
+
+/* From NautilusFileUndoManagerState */
+var UndoStatus = {
+    NONE: 0,
+    UNDO: 1,
+    REDO: 2,
+};
+
 var DesktopContainer = new Lang.Class(
 {
     Name: 'DesktopContainer',
@@ -336,6 +344,20 @@ var DesktopContainer = new Lang.Class(
         Util.spawnCommandLine("gnome-terminal --working-directory="+desktopPath);
     },
 
+    _syncUndoRedo()
+    {
+        this._undoItem.actor.visible = DBusUtils.NautilusFileOperationsProxy.UndoStatus == UndoStatus.UNDO;
+        this._redoItem.actor.visible = DBusUtils.NautilusFileOperationsProxy.UndoStatus == UndoStatus.REDO;
+    },
+
+    _undoStatusChanged(proxy, properties, test)
+    {
+        if ('UndoStatus' in properties.deep_unpack())
+        {
+            this._syncUndoRedo();
+        }
+    },
+
     _createDesktopBackgroundMenu()
     {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
@@ -343,8 +365,8 @@ var DesktopContainer = new Lang.Class(
         menu.addAction(_("New Folder"), () => this._newFolderOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Paste"), () => this._pasteOnClicked());
-        menu.addAction(_("Undo"), () => this._undoOnClicked());
-        menu.addAction(_("Redo"), () => this._redoOnClicked());
+        this._undoItem = menu.addAction(_("Undo"), () => this._undoOnClicked());
+        this._redoItem = menu.addAction(_("Redo"), () => this._redoOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Open Desktop in Files"), () => this._openDesktopInFilesOnClicked());
         menu.addAction(_("Open Terminal"), () => this._openTerminalOnClicked());
@@ -357,6 +379,13 @@ var DesktopContainer = new Lang.Class(
 
         Main.layoutManager.uiGroup.add_actor(menu.actor);
         menu.actor.hide();
+
+        menu._propertiesChangedId = DBusUtils.NautilusFileOperationsProxy.connect("g-properties-changed",
+                                                                                  this._undoStatusChanged.bind(this));
+        this._syncUndoRedo();
+
+        menu.connect('destroy',
+            ()=> DBusUtils.NautilusFileOperationsProxy.disconnect(menu._propertiesChangedId));
 
         return menu;
     },

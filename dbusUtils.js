@@ -20,6 +20,7 @@ const NautilusFileOperationsInterface = '<node>\
     </method> \
     <method name="Redo"> \
     </method> \
+    <property name="UndoStatus" type="i" access="read"/>\
 </interface> \
 </node>';
 
