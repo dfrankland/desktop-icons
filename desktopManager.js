@@ -59,7 +59,7 @@ class DesktopManager {
         this._monitorDesktopFolder();
 
         this._selection = new Set();
-        this._onDrag = false;
+        this._inDrag = false;
         this._dragXStart = Number.POSITIVE_INFINITY;
         this._dragYStart = Number.POSITIVE_INFINITY;
         this._setMetadataCancellable = new Gio.Cancellable();
@@ -193,7 +193,7 @@ class DesktopManager {
     }
 
     dragStart() {
-        if (this._onDrag) {
+        if (this._inDrag) {
             return;
         }
 
@@ -201,7 +201,7 @@ class DesktopManager {
         let event = Clutter.get_current_event();
         let [x, y] = event.get_coords();
         [this._dragXStart, this._dragYStart] = event.get_coords();
-        this._onDrag = true;
+        this._inDrag = true;
 
         for (let fileItem of this._selection) {
             let clone = new Clutter.Clone({
@@ -224,7 +224,7 @@ class DesktopManager {
     }
 
     _onDragEnd() {
-        this._onDrag = false;
+        this._inDrag = false;
         Main.layoutManager.uiGroup.remove_child(this._draggableContainer);
     }
 
@@ -596,7 +596,7 @@ class DesktopManager {
     fileLeftClickReleased(fileItem) {
         let event = Clutter.get_current_event();
         let event_state = event.get_state();
-        if (!this._onDrag && !(event_state & Clutter.ModifierType.SHIFT_MASK)) {
+        if (!this._inDrag && !(event_state & Clutter.ModifierType.SHIFT_MASK)) {
             this.setSelection(new Set([[...this._selection].pop()]));
         }
     }
