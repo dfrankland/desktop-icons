@@ -358,16 +358,13 @@ var DesktopGrid = new Lang.Class(
     },
 
     _selectFromRubberband(currentX, currentY) {
-        let rubberX = Math.min(this._rubberBandInitialX, currentX);
-        let rubberY = Math.min(this._rubberBandInitialY, currentY);
-        let rubberWidth = Math.abs(this._rubberBandInitialX - currentX);
-        let rubberHeight = Math.abs(this._rubberBandInitialY - currentY);
+        let { x, y, width, height } = this._rubberBand;
         let selection = [];
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
             let [containerX, containerY] = fileItem.getInnerIconPosition();
             let [containerWidth, containerHeight] = fileItem.getInnerSize();
-            if (rectanglesIntersect(rubberX, rubberY, rubberWidth, rubberHeight,
+            if (rectanglesIntersect(x, y, width, height,
                 containerX, containerY, containerWidth, containerHeight)) {
                 selection.push(fileItem);
             }
