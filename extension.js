@@ -20,30 +20,23 @@ const Main = imports.ui.main;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const DesktopManager = Me.imports.desktopManager;
+const { DesktopManager } = Me.imports.desktopManager;
 const DBusUtils = Me.imports.dbusUtils;
 
-
-let injections = {};
-
-function removeBackgroundMenu() {
-    injections['_addBackgroundMenu'] = Main.layoutManager._addBackgroundMenu;
-    Main.layoutManager._addBackgroundMenu = function (bgManager) { };
-}
+var desktopManager = null;
+var addBackgroundMenuOrig = null;
 
 function init() {
+    addBackgroundMenuOrig = Main.layoutManager._addBackgroundMenu;
 }
-
-var desktopManager = null;
 
 function enable() {
     DBusUtils.init();
-    removeBackgroundMenu();
-    desktopManager = new DesktopManager.DesktopManager();
+    Main.layoutManager._addBackgroundMenu = function() {};
+    desktopManager = new DesktopManager();
 }
 
 function disable() {
     desktopManager.destroy();
-    for (let prop in injections)
-        Main.layoutManager[prop] = injections[prop];
+    Main.layoutManager._addBackgroundMenu = addBackgroundMenuOrig;
 }
