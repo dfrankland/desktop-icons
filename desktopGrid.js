@@ -505,9 +505,7 @@ var DesktopGrid = new Lang.Class(
     },
 
     acceptDrop(source, actor, x, y, time) {
-        Extension.desktopManager.acceptDrop(source, actor, this, x, y, time);
-
-        return true;
+        return Extension.desktopManager.acceptDrop(source, actor, this, x, y, time);
     },
 
     getPosOfFileItem(itemToFind) {
