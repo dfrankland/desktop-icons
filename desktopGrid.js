@@ -525,7 +525,7 @@ var DesktopGrid = class {
                     continue;
 
                 if (item._delegate != undefined &&
-                    item._delegate.file.get_uri() == itemToFind.file.get_uri()) {
+                    item._delegate.file.equal(itemToFind.file)) {
                     found = true;
                     break;
                 }

@@ -349,10 +349,9 @@ var DesktopManager = class {
                 let [placeholder, dropDesktopGrid, left, top] = this._getClosestChildToPos(containerX, containerY);
                 if (placeholder._delegate != undefined &&
                     placeholder._delegate instanceof FileItem.FileItem) {
-                    if (fileItem.file.get_uri() == placeholder._delegate.file.get_uri()) {
+                    if (fileItem.file.equal(placeholder._delegate.file)) {
                         /* Dropping in the same place as it was, so do nothing. */
-                    } else if (fileItems.filter(w => w.file.get_uri() ==
-                                                     placeholder._delegate.file.get_uri())
+                    } else if (fileItems.filter(w => w.file.equal(placeholder._delegate.file))
                                .length > 0) {
                         /* Dropping were another dragged item is placed, nothing
                          * to do except check if there is any collision
@@ -540,10 +539,6 @@ var DesktopManager = class {
 
         this._layoutChildrenId = 0;
         return GLib.SOURCE_REMOVE;
-    }
-
-    _findByFile(fileItem, uri) {
-        return fileItem.file.get_uri() == uri;
     }
 
     doOpen() {
