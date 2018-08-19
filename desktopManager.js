@@ -193,7 +193,6 @@ var DesktopManager = class {
         this._draggable.connect('drag-end', () => this._onDragEnd());
 
         this._draggable._dragActorDropped = event => this._dragActorDropped(event);
-        this._draggable._finishAnimation = () => this._finishAnimation();
     }
 
     dragStart() {
@@ -230,19 +229,6 @@ var DesktopManager = class {
     _onDragEnd() {
         this._inDrag = false;
         Main.layoutManager.uiGroup.remove_child(this._draggableContainer);
-    }
-
-    _finishAnimation() {
-        if (!this._draggable._animationInProgress) {
-            return;
-        }
-
-        this._draggable._animationInProgress = false;
-        if (!this._draggable._buttonDown) {
-            this._draggable._dragComplete();
-        }
-
-        global.screen.set_cursor(Meta.Cursor.DEFAULT);
     }
 
     _dragActorDropped(event) {
