@@ -346,7 +346,7 @@ var DesktopGrid = new Lang.Class(
         this.actor._desktopBackgroundManager.ignoreRelease();
     },
 
-    _drawRubberBand(currentX, currentY) {
+    _updateRubberBand(currentX, currentY) {
         let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
             : currentX;
         let y = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
@@ -355,7 +355,6 @@ var DesktopGrid = new Lang.Class(
         let height = Math.abs(this._rubberBandInitialY - currentY);
         this._rubberBand.set_position(x, y);
         this._rubberBand.set_size(width, height);
-        this._rubberBand.show();
     },
 
     _selectFromRubberband(currentX, currentY) {
@@ -403,7 +402,7 @@ var DesktopGrid = new Lang.Class(
     _onMotion(actor, event) {
         let [x, y] = event.get_coords();
         if (this._drawingRubberBand) {
-            this._drawRubberBand(x, y);
+            this._updateRubberBand(x, y);
             this._selectFromRubberband(x, y);
         }
     },
@@ -416,7 +415,8 @@ var DesktopGrid = new Lang.Class(
             this._rubberBandInitialX = x;
             this._rubberBandInitialY = y;
             this._drawingRubberBand = true;
-            this._drawRubberBand(x, y);
+            this._updateRubberBand(x, y);
+            this._rubberBand.show();
 
             return Clutter.EVENT_STOP;
         }
