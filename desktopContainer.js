@@ -548,15 +548,10 @@ var DesktopContainer = new Lang.Class(
         this.actor._desktopBackgroundManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
         this.actor._desktopBackgroundManager.addMenu(this.actor._desktopBackgroundMenu);
 
-        let grabOpBeginId = global.display.connect('grab-op-begin', () => {
-            // this._iconsContainer._desktopBackgroundMenu.close(BoxPointer.PopupAnimation.NONE);
-        });
-
         this.actor.connect('destroy', () => {
             this.actor._desktopBackgroundMenu.destroy();
             this.actor._desktopBackgroundMenu = null;
             this.actor._desktopBackgroundManager = null;
-            global.display.disconnect(grabOpBeginId);
         });
     },
 
