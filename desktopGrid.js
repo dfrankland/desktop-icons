@@ -214,7 +214,7 @@ var DesktopGrid = new Lang.Class(
                 if (!valid)
                     return;
 
-                let desktop_dir = 'file://' + GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
+                let desktop_dir = `file://${DesktopIconsUtil.getDesktopDir().get_uri()}`;
                 if (is_cut) {
                     DBusUtils.NautilusFileOperationsProxy.MoveURIsRemote(files, desktop_dir,
                         (result, error) => {
