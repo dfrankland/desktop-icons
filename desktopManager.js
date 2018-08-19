@@ -820,6 +820,5 @@ function distanceBetweenPoints(x, y, x2, y2)
 
 function forEachBackgroundManager(func)
 {
-    //Main.overview._bgManagers.forEach(func);
     Main.layoutManager._bgManagers.forEach(func);
 }
