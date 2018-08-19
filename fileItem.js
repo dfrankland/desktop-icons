@@ -145,21 +145,12 @@ var FileItem = new Lang.Class(
                 if (iconStr == null)
                     return;
 
-                let icon;
                 if (GLib.path_is_absolute(iconStr)) {
                     let iconfile = Gio.File.new_for_commandline_arg(iconStr);
-                    icon = new Gio.FileIcon(iconFile);
+                    this._icon.gicon = new Gio.FileIcon(iconFile);
                 } else {
-                    icon = Gio.ThemedIcon.new_with_default_fallbacks(iconStr);
+                    this._icon.gicon = Gio.ThemedIcon.new_with_default_fallbacks(iconStr);
                 }
-
-                this._icon.destroy();
-                this._icon = new St.Icon({
-                    gicon: icon,
-                    icon_size: Settings.ICON_SIZE
-                });
-                this._iconContainer.child = this._icon;
-
             }
         )
     },
