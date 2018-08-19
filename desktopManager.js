@@ -79,38 +79,16 @@ class DesktopManager {
         this._desktopGrids = [];
     }
 
-    _scanFiles() {
+    async _scanFiles() {
         this._fileItems = [];
-        if (this._desktopEnumerateCancellable)
-            this._desktopEnumerateCancellable.cancel();
 
-        this._desktopEnumerateCancellable = new Gio.Cancellable();
-        let desktopDir = DesktopIconsUtil.getDesktopDir();
-        desktopDir.enumerate_children_async('metadata::*,standard::*,access::*',
-            Gio.FileQueryInfoFlags.NONE,
-            GLib.PRIORITY_DEFAULT,
-            this._desktopEnumerateCancellable,
-            (source, res) => this._onDesktopEnumerateChildrenFinished(source, res));
-    }
-
-    _onDesktopEnumerateChildrenFinished(source, res) {
-        let fileEnum;
         try {
-            fileEnum = source.enumerate_children_finish(res);
-        } catch (error) {
-            if (error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
-                return;
-            } else {
-                log('Error loading Desktop files');
-                return;
-            }
-        }
-
-        let info;
-        while ((info = fileEnum.next_file(null))) {
-            let file = fileEnum.get_child(info);
-            let fileItem = new FileItem.FileItem(file, info);
-            this._fileItems.push(fileItem);
+            for (let [file, info] of await this._enumerateDesktop())
+                this._fileItems.push(new FileItem.FileItem(file, info));
+        } catch (e) {
+            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                log(`Error loading desktop files ${e.message}`);
+            return;
         }
 
         this._desktopGrids.forEach((item, index) => {
@@ -118,6 +96,34 @@ class DesktopManager {
         });
 
         this._scheduleReLayoutChildren();
+    }
+
+    _enumerateDesktop() {
+        return new Promise((resolve, reject) => {
+            if (this._desktopEnumerateCancellable)
+                this._desktopEnumerateCancellable.cancel();
+
+            this._desktopEnumerateCancellable = new Gio.Cancellable();
+
+            let desktopDir = DesktopIconsUtil.getDesktopDir();
+            desktopDir.enumerate_children_async('metadata::*,standard::*,access::*',
+                Gio.FileQueryInfoFlags.NONE,
+                GLib.PRIORITY_DEFAULT,
+                this._desktopEnumerateCancellable,
+                (o, res) => {
+                    try {
+                        let fileEnum = desktopDir.enumerate_children_finish(res);
+                        let resultGenerator = function *() {
+                            let info;
+                            while ((info = fileEnum.next_file(null)))
+                                yield [fileEnum.get_child(info), info];
+                        };
+                        resolve(resultGenerator());
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+        });
     }
 
     _monitorDesktopFolder() {
