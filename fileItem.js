@@ -39,9 +39,9 @@ const DBusUtils = Me.imports.dbusUtils;
 
 const DRAG_TRESHOLD = 8;
 
-var FileContainer = new Lang.Class(
+var FileItem = new Lang.Class(
 {
-    Name: 'FileContainer',
+    Name: 'FileItem',
 
     _init(file, fileInfo) {
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
@@ -323,4 +323,4 @@ var FileContainer = new Lang.Class(
         this._selected = selected;
     }
 });
-Signals.addSignalMethods(FileContainer.prototype);
+Signals.addSignalMethods(FileItem.prototype);

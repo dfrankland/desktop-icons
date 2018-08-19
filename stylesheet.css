@@ -1,12 +1,12 @@
-.file-container {
+.file-item {
     padding: 6px;
 }
 
-.file-container:hover {
+.file-item:hover {
    background-color: rgba(238, 238, 238, 0.2);
 }
 
-.file-container:selected {
+.file-item:selected {
    background-color: rgba(74, 144, 217, 0.6);
 }
 

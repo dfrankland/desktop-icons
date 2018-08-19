@@ -30,7 +30,7 @@ const PopupMenu = imports.ui.popupMenu;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
-const FileContainer = Me.imports.fileContainer;
+const FileItem = Me.imports.fileItem;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
 const Util = imports.misc.util;
@@ -94,7 +94,7 @@ var DesktopContainer = new Lang.Class(
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
 
-        this._fileContainers = [];
+        this._fileItems = [];
         this._createPlaceholders();
         this.actor.connect('key-press-event', this._onKeyPress.bind(this));
     },
@@ -365,36 +365,36 @@ var DesktopContainer = new Lang.Class(
         let rubberWidth = Math.abs(this._rubberBandInitialX - currentX);
         let rubberHeight = Math.abs(this._rubberBandInitialY - currentY);
         let selection = [];
-        for (let i = 0; i < this._fileContainers.length; i++) {
-            let fileContainer = this._fileContainers[i];
-            let [containerX, containerY] = fileContainer.getInnerIconPosition();
-            let [containerWidth, containerHeight] = fileContainer.getInnerSize();
+        for (let i = 0; i < this._fileItems.length; i++) {
+            let fileItem = this._fileItems[i];
+            let [containerX, containerY] = fileItem.getInnerIconPosition();
+            let [containerWidth, containerHeight] = fileItem.getInnerSize();
             if (rectanglesIntersect(rubberX, rubberY, rubberWidth, rubberHeight,
                 containerX, containerY, containerWidth, containerHeight)) {
-                selection.push(fileContainer);
+                selection.push(fileItem);
             }
         }
 
         Extension.desktopManager.setSelection(selection);
     },
 
-    addFileContainer(fileContainer, top, left) {
-        this._fileContainers.push(fileContainer);
-        this.layout.attach(fileContainer.actor, top, left, 1, 1);
+    addFileItem(fileItem, top, left) {
+        this._fileItems.push(fileItem);
+        this.layout.attach(fileItem.actor, top, left, 1, 1);
     },
 
-    removeFileContainer(fileContainer) {
-        let index = this._fileContainers.indexOf(fileContainer);
+    removeFileItem(fileItem) {
+        let index = this._fileItems.indexOf(fileItem);
         if (index > -1)
-            this._fileContainers.splice(index, 1);
+            this._fileItems.splice(index, 1);
         else
             log('Error removing children from container');
 
-        this.actor.remove_child(fileContainer.actor);
+        this.actor.remove_child(fileItem.actor);
     },
 
     reset() {
-        this._fileContainers = [];
+        this._fileItems = [];
         this.actor.remove_all_children();
         this._createPlaceholders();
     },
@@ -444,7 +444,7 @@ var DesktopContainer = new Lang.Class(
     },
 
     _onLeave(actor, event) {
-        let containerMap = this._fileContainers.map(function (container) { return container._container });
+        let containerMap = this._fileItems.map(function (container) { return container._container });
         let relatedActor = event.get_related();
 
         if (!containerMap.includes(relatedActor) && relatedActor !== this.actor) {
@@ -489,7 +489,7 @@ var DesktopContainer = new Lang.Class(
             let currentChild = this.layout.get_child_at(current[0], current[1]);
             if (currentChild != null &&
                 (currentChild._delegate == undefined ||
-                    !(currentChild._delegate instanceof FileContainer.FileContainer))) {
+                    !(currentChild._delegate instanceof FileItem.FileItem))) {
                 return [currentChild, current[0], current[1]];
             }
 
@@ -521,9 +521,9 @@ var DesktopContainer = new Lang.Class(
         return true;
     },
 
-    getPosOfFileContainer(childToFind) {
+    getPosOfFileItem(childToFind) {
         if (childToFind == null) {
-            log('Error at getPosOfFileContainer: child cannot be null');
+            log('Error at getPosOfFileItem: child cannot be null');
             return [false, -1, -1];
         }
 

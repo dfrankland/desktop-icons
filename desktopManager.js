@@ -34,7 +34,7 @@ const Main = imports.ui.main;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const DesktopContainer = Me.imports.desktopContainer;
-const FileContainer = Me.imports.fileContainer;
+const FileItem = Me.imports.fileItem;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
 
@@ -84,7 +84,7 @@ var DesktopManager = new Lang.Class(
     },
 
     _scanFiles() {
-        this._fileContainers = [];
+        this._fileItems = [];
         if (this._desktopEnumerateCancellable)
             this._desktopEnumerateCancellable.cancel();
 
@@ -114,8 +114,8 @@ var DesktopManager = new Lang.Class(
         let info;
         while ((info = fileEnum.next_file(null))) {
             let file = fileEnum.get_child(info);
-            let fileContainer = new FileContainer.FileContainer(file, info);
-            this._fileContainers.push(fileContainer);
+            let fileItem = new FileItem.FileItem(file, info);
+            this._fileItems.push(fileItem);
         }
 
         this._desktopContainers.forEach((item, index) => {
@@ -211,7 +211,7 @@ var DesktopManager = new Lang.Class(
         this._onDrag = true;
 
         for (let i = 0; i < this._selection.length; i++) {
-            let fileContainer = this._selection[i];
+            let fileItem = this._selection[i];
             let clone = new Clutter.Clone({
                 source: this._selection[i].actor,
                 reactive: false
@@ -334,15 +334,15 @@ var DesktopManager = new Lang.Class(
         let itemsToSet = this._selection.slice(0);
         let itemsCount = 0;
         for (let k = 0; k < itemsToSet.length; k++) {
-            let fileContainer = this._selection[k];
+            let fileItem = this._selection[k];
             let info = new Gio.FileInfo();
-            let [fileContainerX, fileContainerY] = fileContainer.actor.get_transformed_position();
-            let fileX = Math.round(xDiff + fileContainerX);
-            let fileY = Math.round(yDiff + fileContainerY);
-            fileContainer.setCoordinates(fileX, fileY);
+            let [fileItemX, fileItemY] = fileItem.actor.get_transformed_position();
+            let fileX = Math.round(xDiff + fileItemX);
+            let fileY = Math.round(yDiff + fileItemY);
+            fileItem.setCoordinates(fileX, fileY);
             info.set_attribute_string('metadata::nautilus-icon-position',
                 fileX.toString().concat(',').concat(fileY.toString()));
-            let gioFile = Gio.File.new_for_uri(fileContainer.file.get_uri());
+            let gioFile = Gio.File.new_for_uri(fileItem.file.get_uri());
             gioFile.set_attributes_async(info,
                 Gio.FileQueryInfoFlags.NONE,
                 GLib.PRIORITY_DEFAULT,
@@ -360,34 +360,34 @@ var DesktopManager = new Lang.Class(
         return true;
     },
 
-    _layoutDrop(fileContainers) {
-        let fileContainerDestinations = [];
+    _layoutDrop(fileItems) {
+        let fileItemDestinations = [];
         /* TODO: We should optimize this... */
-        for (let i = 0; i < fileContainers.length; i++) {
-            let fileContainer = fileContainers[i];
+        for (let i = 0; i < fileItems.length; i++) {
+            let fileItem = fileItems[i];
             for (let j = 0; j < this._desktopContainers.length; j++) {
                 let desktopContainerOrig = this._desktopContainers[j];
-                let [found, leftOrig, topOrig] = desktopContainerOrig.getPosOfFileContainer(fileContainer);
+                let [found, leftOrig, topOrig] = desktopContainerOrig.getPosOfFileItem(fileItem);
 
                 if (!found) {
                     continue;
                 }
 
-                let [containerX, containerY] = fileContainer.getCoordinates();
+                let [containerX, containerY] = fileItem.getCoordinates();
                 let [placeholder, dropDesktopContainer, left, top] = this._getClosestChildToPos(containerX, containerY);
                 if (placeholder._delegate != undefined &&
-                    placeholder._delegate instanceof FileContainer.FileContainer) {
-                    if (fileContainer.file.get_uri() == placeholder._delegate.file.get_uri()) {
+                    placeholder._delegate instanceof FileItem.FileItem) {
+                    if (fileItem.file.get_uri() == placeholder._delegate.file.get_uri()) {
                         /* Dropping in the same place as it was, so do nothing. */
                     }
-                    else if (fileContainers.filter(w => w.file.get_uri() ==
+                    else if (fileItems.filter(w => w.file.get_uri() ==
                         placeholder._delegate.file.get_uri())
                         .length > 0) {
                         /* Dropping were another dragged item is placed, nothing
                             * to do except check if there is any collision
                             */
 
-                        let collision = fileContainerDestinations.filter(w =>
+                        let collision = fileItemDestinations.filter(w =>
                             (w[0] == dropDesktopContainer &&
                                 w[2] == left &&
                                 w[3] == top));
@@ -420,7 +420,7 @@ var DesktopManager = new Lang.Class(
                             * on-screen or a resolution for collision in the
                             * past assigned this place already.
                             */
-                        let collision = fileContainerDestinations.filter(w =>
+                        let collision = fileItemDestinations.filter(w =>
                             (w[0] == dropDesktopContainer &&
                                 w[2] == left &&
                                 w[3] == top));
@@ -438,21 +438,21 @@ var DesktopManager = new Lang.Class(
                 else {
                     placeholder.destroy();
                 }
-                fileContainerDestinations.push([dropDesktopContainer, fileContainer, left, top]);
+                fileItemDestinations.push([dropDesktopContainer, fileItem, left, top]);
                 break;
             }
         }
 
         /* First remove all from the desktop containers to avoid collisions */
-        for (let i = 0; i < fileContainerDestinations.length; i++) {
-            let [desktopContainer, fileContainer, left, top] = fileContainerDestinations[i];
-            desktopContainer.removeFileContainer(fileContainer);
+        for (let i = 0; i < fileItemDestinations.length; i++) {
+            let [desktopContainer, fileItem, left, top] = fileItemDestinations[i];
+            desktopContainer.removeFileItem(fileItem);
         }
 
         /* Place them in the appropriate places */
-        for (let i = 0; i < fileContainerDestinations.length; i++) {
-            let [desktopContainer, fileContainer, left, top] = fileContainerDestinations[i];
-            desktopContainer.addFileContainer(fileContainer, left, top);
+        for (let i = 0; i < fileItemDestinations.length; i++) {
+            let [desktopContainer, fileItem, left, top] = fileItemDestinations[i];
+            desktopContainer.addFileItem(fileItem, left, top);
         }
 
         /* Fill the empty places with placeholders */
@@ -546,16 +546,16 @@ var DesktopManager = new Lang.Class(
     },
 
     _layoutChildren() {
-        for (let i = 0; i < this._fileContainers.length; i++) {
-            let fileContainer = this._fileContainers[i];
-            if (fileContainer.actor.visible) {
-                let [containerX, containerY] = fileContainer.getCoordinates();
+        for (let i = 0; i < this._fileItems.length; i++) {
+            let fileItem = this._fileItems[i];
+            if (fileItem.actor.visible) {
+                let [containerX, containerY] = fileItem.getCoordinates();
                 let result = this._getClosestChildToPos(containerX, containerY);
                 let placeholder = result[0];
                 let desktopContainer = result[1];
                 let left = result[2];
                 let top = result[3];
-                if (placeholder._delegate != undefined && placeholder._delegate instanceof FileContainer.FileContainer) {
+                if (placeholder._delegate != undefined && placeholder._delegate instanceof FileItem.FileItem) {
                     result = desktopContainer.findEmptyPlace(left, top);
                     if (result == null) {
                         log('WARNING: No empty space in the desktop for another icon');
@@ -567,7 +567,7 @@ var DesktopManager = new Lang.Class(
                     top = result[2];
                 }
                 placeholder.destroy();
-                desktopContainer.addFileContainer(fileContainer, left, top);
+                desktopContainer.addFileItem(fileItem, left, top);
             }
         }
 
@@ -575,8 +575,8 @@ var DesktopManager = new Lang.Class(
         return GLib.SOURCE_REMOVE;
     },
 
-    _findByFile(fileContainer, uri) {
-        return fileContainer.file.get_uri() == uri;
+    _findByFile(fileItem, uri) {
+        return fileItem.file.get_uri() == uri;
     },
 
     doOpen() {
@@ -593,30 +593,30 @@ var DesktopManager = new Lang.Class(
         );
     },
 
-    fileLeftClickPressed(fileContainer) {
+    fileLeftClickPressed(fileItem) {
         let event = Clutter.get_current_event();
         let event_state = event.get_state();
         let selection = []
 
-        let desktopContainer = this._getContainerWithChild(fileContainer.actor);
+        let desktopContainer = this._getContainerWithChild(fileItem.actor);
         if (desktopContainer == null) {
             log('Error in left click pressed, child not found');
             return;
         }
         desktopContainer.actor.grab_key_focus();
         // In this case we just do nothing because it could be the start of a drag.
-        let alreadySelected = this._selection.find(x => x.file.get_uri() == fileContainer.file.get_uri()) != null;
+        let alreadySelected = this._selection.find(x => x.file.get_uri() == fileItem.file.get_uri()) != null;
         if (alreadySelected)
             return;
 
         if (event_state & Clutter.ModifierType.SHIFT_MASK)
             selection = this._selection;
 
-        selection.push(fileContainer);
+        selection.push(fileItem);
         this.setSelection(selection);
     },
 
-    fileLeftClickReleased(fileContainer) {
+    fileLeftClickReleased(fileItem) {
         let event = Clutter.get_current_event();
         let event_state = event.get_state();
         if (!this._onDrag && !(event_state & Clutter.ModifierType.SHIFT_MASK)) {
@@ -624,21 +624,21 @@ var DesktopManager = new Lang.Class(
         }
     },
 
-    fileRightClickClicked(fileContainer) {
-        if (fileContainer == null) {
+    fileRightClickClicked(fileItem) {
+        if (fileItem == null) {
             this.setSelection([]);
 
             return;
         }
 
-        if (this._selection.map((x) => { return x.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) < 0)
-            this.setSelection([fileContainer]);
+        if (this._selection.map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) < 0)
+            this.setSelection([fileItem]);
     },
 
     setSelection(selection) {
-        for (let i = 0; i < this._fileContainers.length; i++) {
-            let fileContainer = this._fileContainers[i];
-            fileContainer.setSelected(selection.map((x) => { return x.file.get_uri(); }).indexOf(fileContainer.file.get_uri()) >= 0);
+        for (let i = 0; i < this._fileItems.length; i++) {
+            let fileItem = this._fileItems[i];
+            fileItem.setSelected(selection.map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) >= 0);
         }
 
         this._selection = selection;
