@@ -60,16 +60,15 @@ var FileItem = new Lang.Class(
         this.actor.set_width(Settings.ICON_MAX_WIDTH);
         this.actor._delegate = this;
 
-        let containerLayout = new Clutter.BoxLayout({ orientation: Clutter.Orientation.VERTICAL });
-        this._container = new St.Widget({
-            layout_manager: containerLayout,
+        this._container = new St.BoxLayout({
             reactive: true,
             track_hover: true,
             can_focus: true,
-            style_class: 'file-container',
+            style_class: 'file-item',
             x_expand: true,
             y_expand: true,
-            x_align: Clutter.ActorAlign.CENTER
+            x_align: Clutter.ActorAlign.CENTER,
+            vertical: true
         });
         this.actor.add_actor(this._container);
 
