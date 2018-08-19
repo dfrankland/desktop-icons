@@ -1,4 +1,6 @@
 const Gio = imports.gi.Gio;
+var NautilusFileOperationsProxy;
+var FreeDesktopFileManagerProxy;
 
 const NautilusFileOperationsInterface = `<node>
 <interface name="org.gnome.Nautilus.FileOperations"> 
@@ -26,19 +28,6 @@ const NautilusFileOperationsInterface = `<node>
 
 const NautilusFileOperationsProxyInterface = Gio.DBusProxy.makeProxyWrapper(NautilusFileOperationsInterface);
 
-var NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
-    Gio.DBus.session,
-    "org.gnome.Nautilus",
-    "/org/gnome/Nautilus",
-    (proxy, error) =>
-    {
-        if (error)
-        {
-            log("Error connecting to Nautilus");
-        }
-    }
-);
-
 const FreeDesktopFileManagerInterface = `<node>
 <interface name="org.freedesktop.FileManager1"> 
     <method name="ShowItems"> 
@@ -54,15 +43,26 @@ const FreeDesktopFileManagerInterface = `<node>
 
 const FreeDesktopFileManagerProxyInterface = Gio.DBusProxy.makeProxyWrapper(FreeDesktopFileManagerInterface);
 
-var FreeDesktopFileManagerProxy = new FreeDesktopFileManagerProxyInterface(
-    Gio.DBus.session,
-    "org.freedesktop.FileManager1",
-    "/org/freedesktop/FileManager1",
-    (proxy, error) =>
-    {
-        if (error)
-        {
-            log("Error connecting to Nautilus");
+function init() {
+    NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
+        Gio.DBus.session,
+        "org.gnome.Nautilus",
+        "/org/gnome/Nautilus",
+        (proxy, error) => {
+            if (error) {
+                log("Error connecting to Nautilus");
+            }
         }
-    }
-);
+    );
+
+    FreeDesktopFileManagerProxy = new FreeDesktopFileManagerProxyInterface(
+        Gio.DBus.session,
+        "org.freedesktop.FileManager1",
+        "/org/freedesktop/FileManager1",
+        (proxy, error) => {
+            if (error) {
+                log("Error connecting to Nautilus");
+            }
+        }
+    );
+}

@@ -1,4 +1,3 @@
-
 /* Desktop Icons GNOME Shell extension
  *
  * Copyright (C) 2017 Carlos Soriano <csoriano@gnome.org>
@@ -22,6 +21,7 @@ const Main = imports.ui.main;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const DesktopManager = Me.imports.desktopManager;
+const DBusUtils = Me.imports.dbusUtils;
 
 
 let injections = {};
@@ -40,6 +40,7 @@ var desktopManager = null;
 
 function enable()
 {
+    DBusUtils.init();
     removeBackgroundMenu();
     desktopManager = new DesktopManager.DesktopManager();
 }
