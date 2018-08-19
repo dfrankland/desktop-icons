@@ -466,31 +466,31 @@ var DesktopGrid = new Lang.Class(
         return Math.ceil(workarea.height / Settings.ICON_MAX_WIDTH);
     },
 
-    findEmptyPlace(left, top) {
+    findEmptyPlace(originCol, originRow) {
         let maxRows = this.getMaxRows();
         let maxColumns = this.getMaxColumns();
         let bfsQueue = [];
-        bfsQueue.push([left, top]);
-        let bfsPendingOrVisitedNodes = new Set([`${[left, top]}`]);
+        bfsQueue.push([originCol, originRow]);
+        let bfsPendingOrVisitedNodes = new Set([`${[originCol, originRow]}`]);
         let iterations = 0;
         while (bfsQueue.length != 0) {
-            let current = bfsQueue.shift();
-            let currentChild = this.layout.get_child_at(current[0], current[1]);
+            let [col, row] = bfsQueue.shift();
+            let currentChild = this.layout.get_child_at(col, row);
             if (currentChild != null &&
                 (currentChild._delegate == undefined ||
                     !(currentChild._delegate instanceof FileItem.FileItem))) {
-                return [currentChild, current[0], current[1]];
+                return [currentChild, col, row];
             }
 
             let adjacents = [];
-            if (current[0] + 1 < maxColumns)
-                adjacents.push([current[0] + 1, current[1]]);
-            if (current[1] + 1 < maxRows)
-                adjacents.push([current[0], current[1] + 1]);
-            if (current[0] - 1 >= 0)
-                adjacents.push([current[0] - 1, current[1]]);
-            if (current[1] - 1 >= 0)
-                adjacents.push([current[0], current[1] - 1]);
+            if (col + 1 < maxColumns)
+                adjacents.push([col + 1, row]);
+            if (row + 1 < maxRows)
+                adjacents.push([col, row + 1]);
+            if (col - 1 >= 0)
+                adjacents.push([col - 1, row]);
+            if (row - 1 >= 0)
+                adjacents.push([col, row - 1]);
 
             for (let i = 0; i < adjacents.length; i++) {
                 if (!bfsPendingOrVisitedNodes.has(`${adjacents[i]}`)) {
