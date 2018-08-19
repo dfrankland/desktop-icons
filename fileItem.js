@@ -222,7 +222,6 @@ var FileItem = new Lang.Class(
         this._menu.addAction(_('Properties'), () => this._onPropertiesClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menu.addAction(_('Show in Files'), () => this._onShowInFilesClicked());
-        this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menuManager.addMenu(this._menu);
 
         Main.layoutManager.uiGroup.add_actor(this._menu.actor);
