@@ -55,8 +55,6 @@ class DesktopManager {
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._addDesktopIcons());
         this._startupPreparedId = Main.layoutManager.connect('startup-prepared', () => this._addDesktopIcons());
 
-        this.connect('new-file-set', () => this._scheduleReLayoutChildren());
-
         this._addDesktopIcons();
         this._monitorDesktopFolder();
 
@@ -118,7 +116,8 @@ class DesktopManager {
         this._desktopGrids.forEach((item, index) => {
             item.actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
         });
-        this.emit('new-file-set');
+
+        this._scheduleReLayoutChildren();
     }
 
     _monitorDesktopFolder() {
