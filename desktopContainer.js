@@ -242,7 +242,7 @@ var DesktopContainer = new Lang.Class(
     _doPaste()
     {
         Clipboard.get_text(CLIPBOARD_TYPE,
-            (clipBoard, text) =>
+            (clipboard, text) =>
             {
                 let [valid, is_cut, files] = this._parseClipboardText(text);
                 if(valid)
@@ -346,8 +346,8 @@ var DesktopContainer = new Lang.Class(
 
     _syncUndoRedo()
     {
-        this._undoItem.actor.visible = DBusUtils.NautilusFileOperationsProxy.UndoStatus == UndoStatus.UNDO;
-        this._redoItem.actor.visible = DBusUtils.NautilusFileOperationsProxy.UndoStatus == UndoStatus.REDO;
+        this._undoMenuItem.actor.visible = DBusUtils.NautilusFileOperationsProxy.UndoStatus == UndoStatus.UNDO;
+        this._redoMenuItem.actor.visible = DBusUtils.NautilusFileOperationsProxy.UndoStatus == UndoStatus.REDO;
     },
 
     _undoStatusChanged(proxy, properties, test)
@@ -365,8 +365,8 @@ var DesktopContainer = new Lang.Class(
         menu.addAction(_("New Folder"), () => this._newFolderOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Paste"), () => this._pasteOnClicked());
-        this._undoItem = menu.addAction(_("Undo"), () => this._undoOnClicked());
-        this._redoItem = menu.addAction(_("Redo"), () => this._redoOnClicked());
+        this._undoMenuItem = menu.addAction(_("Undo"), () => this._undoOnClicked());
+        this._redoMenuItem = menu.addAction(_("Redo"), () => this._redoOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Open Desktop in Files"), () => this._openDesktopInFilesOnClicked());
         menu.addAction(_("Open Terminal"), () => this._openTerminalOnClicked());
