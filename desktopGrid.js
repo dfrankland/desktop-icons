@@ -222,8 +222,7 @@ var DesktopGrid = new Lang.Class(
                                 log('Error moving files: ' + error.message);
                         }
                     );
-                }
-                else {
+                } else {
                     DBusUtils.NautilusFileOperationsProxy.CopyURIsRemote(files, desktop_dir,
                         (result, error) => {
                             if (error)
