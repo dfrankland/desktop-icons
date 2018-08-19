@@ -50,14 +50,10 @@ var FileItem = new Lang.Class(
         this._fileInfo = fileInfo;
         let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
-        if (savedCoordinates != null) {
-            this._coordinates = savedCoordinates.split(',')
-                .map(function (x) {
-                    return Number(x);
-                });
-        } else {
+        if (savedCoordinates != null)
+            this._coordinates = savedCoordinates.split(',').map(x => Number(x));
+        else
             this._coordinates = [0, 0]
-        }
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_height(Settings.ICON_MAX_WIDTH);
