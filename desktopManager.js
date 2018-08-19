@@ -315,7 +315,7 @@ var DesktopManager = class {
             let fileY = Math.round(yDiff + fileItemY);
             fileItem.coordinates = [fileX, fileY];
             info.set_attribute_string('metadata::nautilus-icon-position',
-                fileX.toString().concat(',').concat(fileY.toString()));
+                                      `${fileX},${fileY}`);
             let gioFile = Gio.File.new_for_uri(fileItem.file.get_uri());
             gioFile.set_attributes_async(info,
                 Gio.FileQueryInfoFlags.NONE,
