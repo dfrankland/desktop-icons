@@ -26,30 +26,24 @@ const DBusUtils = Me.imports.dbusUtils;
 
 let injections = {};
 
-function removeBackgroundMenu()
-{
+function removeBackgroundMenu() {
     injections['_addBackgroundMenu'] = Main.layoutManager._addBackgroundMenu;
     Main.layoutManager._addBackgroundMenu = function (bgManager) { };
 }
 
-function init()
-{
+function init() {
 }
 
 var desktopManager = null;
 
-function enable()
-{
+function enable() {
     DBusUtils.init();
     removeBackgroundMenu();
     desktopManager = new DesktopManager.DesktopManager();
 }
 
-function disable()
-{
+function disable() {
     desktopManager.destroy();
     for (let prop in injections)
-    {
         Main.layoutManager[prop] = injections[prop];
-    }
 }

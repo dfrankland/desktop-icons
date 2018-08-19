@@ -1,31 +1,25 @@
-.file-container
-{
+.file-container {
     padding: 6px;
 }
 
-.file-container:hover
-{
+.file-container:hover {
    background-color: rgba(238, 238, 238, 0.2);
 }
 
-.file-container:selected
-{
+.file-container:selected {
    background-color: rgba(74, 144, 217, 0.6);
 }
 
-.rubber-band
-{
+.rubber-band {
    background-color: rgba(74, 144, 238, 0.4);
 }
 
-.name-label
-{
+.name-label {
     text-shadow: 1px 1px black;
     color: white;
     text-align: center;
 }
 
-.dragabble
-{
+.dragabble {
     background-color: red;
 }
