@@ -256,7 +256,7 @@ var DesktopManager = new Lang.Class(
     _dragActorDropped(event) {
         let [dropX, dropY] = event.get_coords();
         let target = this._draggable._dragActor.get_stage().get_actor_at_pos(Clutter.PickMode.ALL,
-            dropX, dropY);
+                                                                             dropX, dropY);
 
         // We call observers only once per motion with the innermost
         // target actor. If necessary, the observer can walk the
