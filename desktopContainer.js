@@ -86,8 +86,8 @@ var DesktopContainer = new Lang.Class(
         this._bgDestroyedId = bgManager.backgroundActor.connect('destroy',
             () => this._backgroundDestroyed());
 
-        this.actor.connect('button-press-event', (actor, event) => this._buttonOnPress(actor, event));
-        this.actor.connect('button-release-event', (actor, event) => this._buttonOnRelease(actor, event));
+        this.actor.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
+        this.actor.connect('button-release-event', (actor, event) => this._onReleaseButton(actor, event));
         this.actor.connect('motion-event', (actor, event) => this._onMotion(actor, event));
         this.actor.connect('leave-event', (actor, event) => this._onLeave(actor, event));
         this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
@@ -176,7 +176,7 @@ var DesktopContainer = new Lang.Class(
         this._rubberBand.destroy();
     },
 
-    _newFolderOnClicked() {
+    _omNewFolderClicked() {
         let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
         let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
         let dir = desktopDir.get_child(_('New Folder'));
@@ -235,7 +235,7 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
-    _pasteOnClicked() {
+    _onPasteClicked() {
         this._doPaste();
     },
 
@@ -248,7 +248,7 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
-    _undoOnClicked() {
+    _onUndoClicked() {
         this._doUndo();
     },
 
@@ -261,11 +261,11 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
-    _redoOnClicked() {
+    _onRedoClicked() {
         this._doRedo();
     },
 
-    _openDesktopInFilesOnClicked() {
+    _onOpenDesktopInFilesClicked() {
         let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
         let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
         Gio.AppInfo.launch_default_for_uri_async(desktopDir.get_uri(),
@@ -280,7 +280,7 @@ var DesktopContainer = new Lang.Class(
         );
     },
 
-    _openTerminalOnClicked() {
+    _onOpenTerminalClicked() {
         let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
         Util.spawnCommandLine('gnome-terminal --working-directory=' + desktopPath);
     },
@@ -298,14 +298,14 @@ var DesktopContainer = new Lang.Class(
     _createDesktopBackgroundMenu() {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
             0, St.Side.TOP);
-        menu.addAction(_('New Folder'), () => this._newFolderOnClicked());
+        menu.addAction(_('New Folder'), () => this._omNewFolderClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._pasteMenuItem = menu.addAction(_('Paste'), () => this._pasteOnClicked());
-        this._undoMenuItem = menu.addAction(_('Undo'), () => this._undoOnClicked());
-        this._redoMenuItem = menu.addAction(_('Redo'), () => this._redoOnClicked());
+        this._pasteMenuItem = menu.addAction(_('Paste'), () => this._onPasteClicked());
+        this._undoMenuItem = menu.addAction(_('Undo'), () => this._onUndoClicked());
+        this._redoMenuItem = menu.addAction(_('Redo'), () => this._onRedoClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_('Open Desktop in Files'), () => this._openDesktopInFilesOnClicked());
-        menu.addAction(_('Open Terminal'), () => this._openTerminalOnClicked());
+        menu.addAction(_('Open Desktop in Files'), () => this._onOpenDesktopInFilesClicked());
+        menu.addAction(_('Open Terminal'), () => this._onOpenTerminalClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addSettingsAction(_('Change Background…'), 'gnome-background-panel.desktop');
         menu.addSettingsAction(_('Display Settings'), 'gnome-display-panel.desktop');
@@ -407,7 +407,7 @@ var DesktopContainer = new Lang.Class(
         }
     },
 
-    _buttonOnPress(actor, event) {
+    _onPressButton(actor, event) {
         let button = event.get_button();
         let [x, y] = event.get_coords();
         if (button == 1) {
@@ -429,7 +429,7 @@ var DesktopContainer = new Lang.Class(
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _buttonOnRelease(actor, event) {
+    _onReleaseButton(actor, event) {
         this.actor.grab_key_focus();
 
         let button = event.get_button();

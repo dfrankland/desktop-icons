@@ -105,9 +105,9 @@ var FileItem = new Lang.Class(
         clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
         clutterText.set_ellipsize(Pango.EllipsizeMode.END);
 
-        this._container.connect('button-press-event', (actor, event) => this._buttonOnPress(actor, event));
+        this._container.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
         this._container.connect('motion-event', (actor, event) => this._onMotion(actor, event));
-        this._container.connect('button-release-event', (actor, event) => this._buttonOnRelease(actor, event));
+        this._container.connect('button-release-event', (actor, event) => this._onReleaseButton(actor, event));
 
         this._createMenu();
 
@@ -184,19 +184,19 @@ var FileItem = new Lang.Class(
         );
     },
 
-    _openOnClicked() {
+    _onOpenClicked() {
         this.doOpen();
     },
 
-    _copyOnClicked() {
+    _onCopyClicked() {
         Extension.desktopManager.doCopy();
     },
 
-    _cutOnClicked() {
+    _onCutClicked() {
         Extension.desktopManager.doCut();
     },
 
-    _showInFilesOnClicked() {
+    _onShowInFilesClicked() {
 
         DBusUtils.FreeDesktopFileManagerProxy.ShowItemsRemote([this.file.get_uri()], '',
             (result, error) => {
@@ -206,7 +206,7 @@ var FileItem = new Lang.Class(
         );
     },
 
-    _propertiesOnClicked() {
+    _onPropertiesClicked() {
 
         DBusUtils.FreeDesktopFileManagerProxy.ShowItemPropertiesRemote([this.file.get_uri()], '',
             (result, error) => {
@@ -216,7 +216,7 @@ var FileItem = new Lang.Class(
         );
     },
 
-    _moveToTrashOnClicked() {
+    _onMoveToTrashClicked() {
         Extension.desktopManager.doTrash();
     },
 
@@ -226,14 +226,14 @@ var FileItem = new Lang.Class(
         if (Clutter.get_default_text_direction() == Clutter.TextDirection.RTL)
             side = St.Side.RIGHT;
         this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
-        this._menu.addAction(_('Open'), () => this._openOnClicked());
-        this._menu.addAction(_('Cut'), () => this._cutOnClicked());
-        this._menu.addAction(_('Copy'), () => this._copyOnClicked());
-        this._menu.addAction(_('Move to Trash'), () => this._moveToTrashOnClicked());
+        this._menu.addAction(_('Open'), () => this._onOpenClicked());
+        this._menu.addAction(_('Cut'), () => this._onCutClicked());
+        this._menu.addAction(_('Copy'), () => this._onCopyClicked());
+        this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._menu.addAction(_('Properties'), () => this._propertiesOnClicked());
+        this._menu.addAction(_('Properties'), () => this._onPropertiesClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._menu.addAction(_('Show in Files'), () => this._showInFilesOnClicked());
+        this._menu.addAction(_('Show in Files'), () => this._onShowInFilesClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menuManager.addMenu(this._menu);
 
@@ -241,7 +241,7 @@ var FileItem = new Lang.Class(
         this._menu.actor.hide();
     },
 
-    _buttonOnPress(actor, event) {
+    _onPressButton(actor, event) {
         let button = event.get_button();
         if (button == 3) {
             Extension.desktopManager.fileRightClickClicked(this);
@@ -283,7 +283,7 @@ var FileItem = new Lang.Class(
         return Clutter.EVENT_PROPAGATE;
     },
 
-    _buttonOnRelease(actor, event) {
+    _onReleaseButton(actor, event) {
         let button = event.get_button();
         if (button == 1) {
             this._primaryButtonPressed = false

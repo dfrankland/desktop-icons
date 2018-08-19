@@ -95,10 +95,10 @@ var DesktopManager = new Lang.Class(
             Gio.FileQueryInfoFlags.NONE,
             GLib.PRIORITY_DEFAULT,
             this._desktopEnumerateCancellable,
-            (source, res) => this._desktopEnumerateChildrenOnFinished(source, res));
+            (source, res) => this._onDesktopEnumerateChildrenFinished(source, res));
     },
 
-    _desktopEnumerateChildrenOnFinished(source, res) {
+    _onDesktopEnumerateChildrenFinished(source, res) {
         let fileEnum;
         try {
             fileEnum = source.enumerate_children_finish(res);
@@ -192,8 +192,8 @@ var DesktopManager = new Lang.Class(
                 dragActorOpacity: 100
             });
 
-        this._draggable.connect('drag-cancelled', () => this._dragOnCancelled());
-        this._draggable.connect('drag-end', () => this._dragOnEnd());
+        this._draggable.connect('drag-cancelled', () => this._onDragCancelled());
+        this._draggable.connect('drag-end', () => this._onDragEnd());
 
         this._draggable['_dragActorDropped'] = event => this._dragActorDropped(event);
         this._draggable['_finishAnimation'] = () => this._finishAnimation();
@@ -231,13 +231,13 @@ var DesktopManager = new Lang.Class(
         this._draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
     },
 
-    _dragOnCancelled() {
+    _onDragCancelled() {
         let event = Clutter.get_current_event();
         let [x, y] = event.get_coords();
         this._dragCancelled = true;
     },
 
-    _dragOnEnd() {
+    _onDragEnd() {
         this._onDrag = false;
         Main.layoutManager.uiGroup.remove_child(this._draggableContainer);
     },
@@ -348,7 +348,7 @@ var DesktopManager = new Lang.Class(
                 GLib.PRIORITY_DEFAULT,
                 this._setMetadataCancellable,
                 (source, result) => {
-                    this._setMetadataFileOnFinished(source, result);
+                    this._onSetMetadataFileFinished(source, result);
                     itemsCount++;
                     if (itemsCount == itemsToSet.length) {
                         this._layoutDrop(itemsToSet);
@@ -477,7 +477,7 @@ var DesktopManager = new Lang.Class(
         }
     },
 
-    _setMetadataFileOnFinished(source, result) {
+    _onSetMetadataFileFinished(source, result) {
         try {
             let [success, info] = source.set_attributes_finish(result);
         }
