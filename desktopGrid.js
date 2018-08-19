@@ -190,13 +190,12 @@ var DesktopGrid = new Lang.Class(
 
     _parseClipboardText(text) {
         let lines = text.split('\n')
-        if (lines.length < 2)
-            return [false, false, null];
-            
-        if (lines[0] != 'x-special/nautilus-clipboard')
+        let [mime, action, ...files] = lines;
+
+        if (mime != 'x-special/nautilus-clipboard')
             return [false, false, null];
 
-        if (lines[1] != 'cut' && lines[1] != 'copy')
+        if (!(['copy', 'cut'].includes(action)))
             return [false, false, null];
 
         var is_cut = lines[1] == 'cut';
