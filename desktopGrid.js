@@ -361,7 +361,7 @@ class DesktopGrid {
             fileItem => fileItem.intersectsWith(x, y, width, height)
         );
 
-        Extension.desktopManager.setSelection(selection);
+        Extension.desktopManager.setSelection(new Set(selection));
     }
 
     addFileItem(fileItem, top, left) {

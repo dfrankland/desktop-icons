@@ -60,7 +60,7 @@ class DesktopManager {
         this._addDesktopIcons();
         this._monitorDesktopFolder();
 
-        this._selection = [];
+        this._selection = new Set();
         this._onDrag = false;
         this._dragXStart = Number.POSITIVE_INFINITY;
         this._dragYStart = Number.POSITIVE_INFINITY;
@@ -204,21 +204,14 @@ class DesktopManager {
         [this._dragXStart, this._dragYStart] = event.get_coords();
         this._onDrag = true;
 
-        for (let i = 0; i < this._selection.length; i++) {
-            let fileItem = this._selection[i];
+        for (let fileItem of this._selection) {
             let clone = new Clutter.Clone({
-                source: this._selection[i].actor,
+                source: fileItem.actor,
                 reactive: false
             });
-            clone.x = this._selection[i].actor.get_transformed_position()[0];
-            clone.y = this._selection[i].actor.get_transformed_position()[1];
+            clone.x = fileItem.actor.get_transformed_position()[0];
+            clone.y = fileItem.actor.get_transformed_position()[1];
             this._draggableContainer.add_actor(clone);
-        }
-
-        let desktopGrid = this._getContainerWithChild(this._selection[0].actor);
-        if (desktopGrid == null) {
-            log('Error in DnD searching for the container of the dragged item');
-            return;
         }
 
         Main.layoutManager.uiGroup.add_child(this._draggableContainer);
@@ -324,10 +317,9 @@ class DesktopManager {
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
         this._setMetadataCancellable.cancel();
         this._setMetadataCancellable = new Gio.Cancellable();
-        let itemsToSet = this._selection.slice(0);
+        let itemsToSet = new Set(this._selection);
         let itemsCount = 0;
-        for (let k = 0; k < itemsToSet.length; k++) {
-            let fileItem = this._selection[k];
+        for (let fileItem of itemsToSet) {
             let info = new Gio.FileInfo();
             let [fileItemX, fileItemY] = fileItem.actor.get_transformed_position();
             let fileX = Math.round(xDiff + fileItemX);
@@ -343,9 +335,8 @@ class DesktopManager {
                 (source, result) => {
                     this._onSetMetadataFileFinished(source, result);
                     itemsCount++;
-                    if (itemsCount == itemsToSet.length) {
-                        this._layoutDrop(itemsToSet);
-                    }
+                    if (itemsCount == itemsToSet.size)
+                        this._layoutDrop([...itemsToSet]);
                 }
             );
         }
@@ -571,12 +562,12 @@ class DesktopManager {
     }
 
     doOpen() {
-        for (let i = 0; i < this._selection.length; i++)
-            this._selection[i].doOpen();
+        for (let fileItem of this._selection)
+            fileItem.doOpen();
     }
 
     doTrash() {
-        DBusUtils.NautilusFileOperationsProxy.TrashFilesRemote(this._selection.map((x) => { return x.file.get_uri(); }),
+        DBusUtils.NautilusFileOperationsProxy.TrashFilesRemote([...this._selection].map((x) => { return x.file.get_uri(); }),
             (source, error) => {
                 if (error)
                     log('Error trashing files on the desktop: ' + error.message);
@@ -587,7 +578,7 @@ class DesktopManager {
     fileLeftClickPressed(fileItem) {
         let event = Clutter.get_current_event();
         let event_state = event.get_state();
-        let selection = []
+        let selection = new Set();
 
         let desktopGrid = this._getContainerWithChild(fileItem.actor);
         if (desktopGrid == null) {
@@ -596,14 +587,14 @@ class DesktopManager {
         }
         desktopGrid.actor.grab_key_focus();
         // In this case we just do nothing because it could be the start of a drag.
-        let alreadySelected = this._selection.find(x => x.file.get_uri() == fileItem.file.get_uri()) != null;
+        let alreadySelected = [...this._selection].find(x => x.file.get_uri() == fileItem.file.get_uri()) != null;
         if (alreadySelected)
             return;
 
         if (event_state & Clutter.ModifierType.SHIFT_MASK)
             selection = this._selection;
 
-        selection.push(fileItem);
+        selection.add(fileItem);
         this.setSelection(selection);
     }
 
@@ -611,25 +602,25 @@ class DesktopManager {
         let event = Clutter.get_current_event();
         let event_state = event.get_state();
         if (!this._onDrag && !(event_state & Clutter.ModifierType.SHIFT_MASK)) {
-            this.setSelection([this._selection[this._selection.length - 1]]);
+            this.setSelection(new Set([[...this._selection].pop()]));
         }
     }
 
     fileRightClickClicked(fileItem) {
         if (fileItem == null) {
-            this.setSelection([]);
+            this.setSelection(new Set());
 
             return;
         }
 
-        if (this._selection.map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) < 0)
+        if ([...this._selection].map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) < 0)
             this.setSelection([fileItem]);
     }
 
     setSelection(selection) {
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
-            fileItem.setSelected(selection.map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) >= 0);
+            fileItem.setSelected([...selection].map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) >= 0);
         }
 
         this._selection = selection;
@@ -638,8 +629,8 @@ class DesktopManager {
     doCopy() {
         let nautilusClipboard = 'x-special/nautilus-clipboard\n';
         nautilusClipboard += 'copy\n';
-        for (let i = 0; i < this._selection.length; i++)
-            nautilusClipboard += this._selection[i].file.get_uri() + '\n';
+        for (let fileItem of this._selection)
+            nautilusClipboard += fileItem.file.get_uri() + '\n';
 
         Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
     }
@@ -647,8 +638,8 @@ class DesktopManager {
     doCut() {
         let nautilusClipboard = 'x-special/nautilus-clipboard\n';
         nautilusClipboard += 'cut\n';
-        for (let i = 0; i < this._selection.length; i++)
-            nautilusClipboard += this._selection[i].file.get_uri() + '\n';
+        for (let fileItem of this._selection)
+            nautilusClipboard += fileItem.file.get_uri() + '\n';
 
         Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
     }
