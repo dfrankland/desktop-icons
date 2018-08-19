@@ -510,8 +510,8 @@ var DesktopGrid = new Lang.Class(
         return true;
     },
 
-    getPosOfFileItem(childToFind) {
-        if (childToFind == null) {
+    getPosOfFileItem(itemToFind) {
+        if (itemToFind == null) {
             log('Error at getPosOfFileItem: child cannot be null');
             return [false, -1, -1];
         }
@@ -523,13 +523,13 @@ var DesktopGrid = new Lang.Class(
         let row = 0;
         for (column = 0; column < maxColumns; column++) {
             for (row = 0; row < maxRows; row++) {
-                let child = this.layout.get_child_at(column, row);
+                let item = this.layout.get_child_at(column, row);
                 // It's used by other dragged item, so it has been destroyed
-                if (child == null)
+                if (item == null)
                     continue;
 
-                if (child._delegate != undefined &&
-                    child._delegate.file.get_uri() == childToFind.file.get_uri()) {
+                if (item._delegate != undefined &&
+                    item._delegate.file.get_uri() == itemToFind.file.get_uri()) {
                     found = true;
                     break;
                 }
