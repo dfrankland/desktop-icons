@@ -189,7 +189,7 @@ var DesktopGrid = new Lang.Class(
     },
 
     _parseClipboardText(text) {
-        var lines = text.split('\n')
+        let lines = text.split('\n')
         if (lines.length < 2)
             return [false, false, null];
             
