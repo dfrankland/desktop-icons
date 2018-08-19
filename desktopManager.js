@@ -49,7 +49,7 @@ var DesktopManager = class {
         this._scheduleDesktopsRefreshId = 0
         this._monitorDesktopDir = null;
         this._desktopMonitorCancellable = null;
-        this._desktopGrids = [];
+        this._desktopGrids = {};
         this._dragCancelled = false;
 
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._addDesktopIcons());
@@ -67,15 +67,15 @@ var DesktopManager = class {
     _addDesktopIcons() {
         this._destroyDesktopIcons();
         forEachBackgroundManager(bgManager => {
-            this._desktopGrids.push(new DesktopGrid.DesktopGrid(bgManager));
+            this._desktopGrids[bgManager._monitorIndex] = new DesktopGrid.DesktopGrid(bgManager);
         });
 
         this._scanFiles();
     }
 
     _destroyDesktopIcons() {
-        this._desktopGrids.forEach((l) => l.actor.destroy());
-        this._desktopGrids = [];
+        Object.keys(this._desktopGrids).forEach((l) => this._desktopGrids[l].actor.destroy());
+        this._desktopGrids = {};
     }
 
     async _scanFiles() {
@@ -90,8 +90,8 @@ var DesktopManager = class {
             return;
         }
 
-        this._desktopGrids.forEach((item, index) => {
-            item.actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
+        Object.keys(this._desktopGrids).forEach((w) => {
+            this._desktopGrids[w].actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
         });
 
         this._scheduleReLayoutChildren();
@@ -161,13 +161,12 @@ var DesktopManager = class {
     }
 
     _getContainerWithChild(child) {
-        for (let i = 0; i < this._desktopGrids.length; i++) {
-            let children = this._desktopGrids[i].actor.get_children();
+        let monitorIndex = Main.layoutManager.findIndexForActor(child);
+        let desktopGrid = this._desktopGrids[monitorIndex];
+        let children = desktopGrid.actor.get_children();
 
-            if (children.indexOf(child) != -1) {
-                return this._desktopGrids[i];
-            }
-        }
+        if (children.indexOf(child) != -1)
+            return desktopGrid;
 
         return null;
     }
@@ -323,9 +322,11 @@ var DesktopManager = class {
         /* TODO: We should optimize this... */
         for (let i = 0; i < fileItems.length; i++) {
             let fileItem = fileItems[i];
-            for (let j = 0; j < this._desktopGrids.length; j++) {
-                let desktopGridOrig = this._desktopGrids[j];
+            for (let key in this._desktopGrids) {
+                let desktopGridOrig = this._desktopGrids[key];
                 let [found, leftOrig, topOrig] = desktopGridOrig.getPosOfFileItem(fileItem);
+                if (!found)
+                    log (`not found! ${fileItem.file.get_uri()}`)
 
                 if (!found)
                     continue;
@@ -409,8 +410,8 @@ var DesktopManager = class {
         }
 
         /* Fill the empty places with placeholders */
-        for (let i = 0; i < this._desktopGrids.length; i++) {
-            let desktopGrid = this._desktopGrids[i];
+        for (let key in this._desktopGrids) {
+            let desktopGrid = this._desktopGrids[key];
 
             let maxColumns = desktopGrid.getMaxColumns();
             let maxRows = desktopGrid.getMaxRows();
@@ -436,30 +437,31 @@ var DesktopManager = class {
         let closestDesktopGrid = null;
         let left = 0;
         let top = 0;
-        for (let k = 0; k < this._desktopGrids.length; k++) {
-            let desktopGrid = this._desktopGrids[k];
+        let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({ x, y }));
+        let desktopGrid = this._desktopGrids[monitorIndex];
+        let maxColumns = desktopGrid.getMaxColumns();
+        let maxRows = desktopGrid.getMaxRows();
+        for (let column = 0; column < maxColumns; column++) {
+            for (let row = 0; row < maxRows; row++) {
+                let child = desktopGrid.layout.get_child_at(column, row);
+                // It's used by other dragged item, so it has been destroyed
+                if (child == null)
+                    continue;
 
-            let maxColumns = desktopGrid.getMaxColumns();
-            let maxRows = desktopGrid.getMaxRows();
-            for (let column = 0; column < maxColumns; column++) {
-                for (let row = 0; row < maxRows; row++) {
-                    let child = desktopGrid.layout.get_child_at(column, row);
-                    // It's used by other dragged item, so it has been destroyed
-                    if (child == null)
-                        continue;
-
-                    let [proposedX, proposedY] = child.get_transformed_position();
-                    let distance = distanceBetweenPoints(proposedX, proposedY, x, y);
-                    if (distance < minDistance) {
-                        closestChild = child;
-                        minDistance = distance;
-                        closestDesktopGrid = desktopGrid;
-                        left = column;
-                        top = row;
-                    }
+                let [proposedX, proposedY] = child.get_transformed_position();
+                let distance = distanceBetweenPoints(proposedX, proposedY, x, y);
+                if (distance < minDistance) {
+                    closestChild = child;
+                    minDistance = distance;
+                    closestDesktopGrid = desktopGrid;
+                    left = column;
+                    top = row;
                 }
             }
         }
+
+        if (!closestDesktopGrid)
+            log ("Error getting closest child to position");
 
         return [closestChild, closestDesktopGrid, left, top];
     }
@@ -475,10 +477,8 @@ var DesktopManager = class {
         if (this._layoutChildrenId != 0)
             GLib.source_remove(this._layoutChildrenId);
 
-        for (let i = 0; i < this._desktopGrids.length; i++) {
-            let desktopGrid = this._desktopGrids[i];
-            desktopGrid.reset();
-        }
+        for (let key in this._desktopGrids)
+            this._desktopGrids.get(key).reset();
 
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._relayoutChildren());
     }
@@ -492,21 +492,14 @@ var DesktopManager = class {
             let fileItem = this._fileItems[i];
             if (fileItem.actor.visible) {
                 let [containerX, containerY] = fileItem.coordinates;
-                let result = this._getClosestChildToPos(containerX, containerY);
-                let placeholder = result[0];
-                let desktopGrid = result[1];
-                let left = result[2];
-                let top = result[3];
+                let [placeholder, desktopGrid, left, top] = this._getClosestChildToPos(containerX, containerY);
                 if (placeholder._delegate != undefined && placeholder._delegate instanceof FileItem.FileItem) {
-                    result = desktopGrid.findEmptyPlace(left, top);
-                    if (result == null) {
+                    [placeholder, left, top] = desktopGrid.findEmptyPlace(left, top);
+                    if (placeholder == null) {
                         log('WARNING: No empty space in the desktop for another icon');
                         this._layoutChildrenId = 0;
                         return GLib.SOURCE_REMOVE;
                     }
-                    placeholder = result[0];
-                    left = result[1];
-                    top = result[2];
                 }
                 placeholder.destroy();
                 desktopGrid.addFileItem(fileItem, left, top);
@@ -616,7 +609,8 @@ var DesktopManager = class {
             Main.layoutManager.disconnect(this._startupPreparedId);
         this._startupPreparedId = 0;
 
-        this._desktopGrids.forEach(w => w.actor.destroy());
+        Object.keys(this._desktopGrids).forEach(w => this._desktopGrids[w].actor.destroy());
+        this._desktopGrids = {}
     }
 };
 Signals.addSignalMethods(DesktopManager.prototype);
