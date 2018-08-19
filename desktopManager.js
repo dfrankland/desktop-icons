@@ -337,16 +337,14 @@ var DesktopManager = class {
                     placeholder._delegate instanceof FileItem.FileItem) {
                     if (fileItem.file.equal(placeholder._delegate.file)) {
                         /* Dropping in the same place as it was, so do nothing. */
-                    } else if (fileItems.filter(w => w.file.equal(placeholder._delegate.file))
-                               .length > 0) {
+                    } else if (fileItems.some(w => w.file.equal(placeholder._delegate.file))) {
                         /* Dropping were another dragged item is placed, nothing
                          * to do except check if there is any collision
                          */
-
                         let collision = fileItemDestinations.filter(w =>
                             (w[0] == dropDesktopGrid &&
-                                w[2] == left &&
-                                w[3] == top));
+                             w[2] == left &&
+                             w[3] == top));
                         if (collision.length > 0) {
                             log('Error: Cannot place file, collision with\
                                 one of the dragged items '
@@ -359,14 +357,11 @@ var DesktopManager = class {
                          * for an empty space close by
                          */
 
-                        let result = dropDesktopGrid.findEmptyPlace(left, top);
-                        if (result == null) {
+                        [placeholder, left, top] = dropDesktopGrid.findEmptyPlace(left, top);
+                        if (!placeholder) {
                             log('Error: No empty space in the desktop for another icon');
                             break;
                         }
-                        placeholder = result[0];
-                        left = result[1];
-                        top = result[2];
 
                         /* If a dragged item has been assigned the same
                          * position as this one means we have a colision,
@@ -377,8 +372,8 @@ var DesktopManager = class {
                          */
                         let collision = fileItemDestinations.filter(w =>
                             (w[0] == dropDesktopGrid &&
-                                w[2] == left &&
-                                w[3] == top));
+                             w[2] == left &&
+                             w[3] == top));
                         if (collision.length > 0) {
                             log('Error: Cannot place file, collision with\
                                 one of the dragged items when searching \
