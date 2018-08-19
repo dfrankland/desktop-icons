@@ -353,9 +353,8 @@ class DesktopManager {
                 let desktopGridOrig = this._desktopGrids[j];
                 let [found, leftOrig, topOrig] = desktopGridOrig.getPosOfFileItem(fileItem);
 
-                if (!found) {
+                if (!found)
                     continue;
-                }
 
                 let [containerX, containerY] = fileItem.coordinates;
                 let [placeholder, dropDesktopGrid, left, top] = this._getClosestChildToPos(containerX, containerY);
@@ -363,13 +362,12 @@ class DesktopManager {
                     placeholder._delegate instanceof FileItem.FileItem) {
                     if (fileItem.file.get_uri() == placeholder._delegate.file.get_uri()) {
                         /* Dropping in the same place as it was, so do nothing. */
-                    }
-                    else if (fileItems.filter(w => w.file.get_uri() ==
-                        placeholder._delegate.file.get_uri())
-                        .length > 0) {
+                    } else if (fileItems.filter(w => w.file.get_uri() ==
+                                                     placeholder._delegate.file.get_uri())
+                               .length > 0) {
                         /* Dropping were another dragged item is placed, nothing
-                            * to do except check if there is any collision
-                            */
+                         * to do except check if there is any collision
+                         */
 
                         let collision = fileItemDestinations.filter(w =>
                             (w[0] == dropDesktopGrid &&
@@ -382,11 +380,10 @@ class DesktopManager {
                                 ' ' + left + ' ' + top);
                             break;
                         }
-                    }
-                    else {
+                    } else {
                         /* Dropping were another item is placed, need to search
-                            * for an empty space close by
-                            */
+                         * for an empty space close by
+                         */
 
                         let result = dropDesktopGrid.findEmptyPlace(left, top);
                         if (result == null) {
@@ -398,12 +395,12 @@ class DesktopManager {
                         top = result[2];
 
                         /* If a dragged item has been assigned the same
-                            * position as this one means we have a colision,
-                            * either the items were dragged out of the screen
-                            * and they are trying to fill the same position
-                            * on-screen or a resolution for collision in the
-                            * past assigned this place already.
-                            */
+                         * position as this one means we have a colision,
+                         * either the items were dragged out of the screen
+                         * and they are trying to fill the same position
+                         * on-screen or a resolution for collision in the
+                         * past assigned this place already.
+                         */
                         let collision = fileItemDestinations.filter(w =>
                             (w[0] == dropDesktopGrid &&
                                 w[2] == left &&
@@ -418,8 +415,7 @@ class DesktopManager {
 
                         placeholder.destroy();
                     }
-                }
-                else {
+                } else {
                     placeholder.destroy();
                 }
                 fileItemDestinations.push([dropDesktopGrid, fileItem, left, top]);
