@@ -33,6 +33,7 @@ const Extension = Me.imports.extension;
 const FileItem = Me.imports.fileItem;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
+const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Util = imports.misc.util;
 
 const Clipboard = St.Clipboard.get_default();
@@ -177,9 +178,7 @@ var DesktopGrid = new Lang.Class(
     },
 
     _omNewFolderClicked() {
-        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
-        let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
-        let dir = desktopDir.get_child(_('New Folder'));
+        let dir = DesktopIconsUtil.getDesktopDir().get_child(_('New Folder'));
         DBusUtils.NautilusFileOperationsProxy.CreateFolderRemote(dir.get_uri(),
             (result, error) => {
                 if (error)
@@ -267,9 +266,7 @@ var DesktopGrid = new Lang.Class(
     },
 
     _onOpenDesktopInFilesClicked() {
-        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
-        let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
-        Gio.AppInfo.launch_default_for_uri_async(desktopDir.get_uri(),
+        Gio.AppInfo.launch_default_for_uri_async(DesktopIconsUtil.getDesktopDir().get_uri(),
             null, null,
             (source, res) => {
                 try {

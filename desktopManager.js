@@ -37,6 +37,7 @@ const DesktopGrid = Me.imports.desktopGrid;
 const FileItem = Me.imports.fileItem;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
+const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
@@ -89,8 +90,7 @@ var DesktopManager = new Lang.Class(
             this._desktopEnumerateCancellable.cancel();
 
         this._desktopEnumerateCancellable = new Gio.Cancellable();
-        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
-        let desktopDir = Gio.File.new_for_commandline_arg(desktopPath);
+        let desktopDir = DesktopIconsUtil.getDesktopDir();
         desktopDir.enumerate_children_async('metadata::*,standard::*,access::*',
             Gio.FileQueryInfoFlags.NONE,
             GLib.PRIORITY_DEFAULT,
@@ -131,9 +131,7 @@ var DesktopManager = new Lang.Class(
             this._monitorDesktopDir = null;
         }
 
-        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
-        let desktopDir = Gio.File.new_for_path(desktopPath);
-
+        let desktopDir = DesktopIconsUtil.getDesktopDir();
         this._monitorDesktopDir = desktopDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
         this._monitorDesktopDir.set_rate_limit(1000);
         this._monitorDesktopDir.connect('changed',
