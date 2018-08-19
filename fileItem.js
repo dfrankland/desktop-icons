@@ -76,9 +76,9 @@ var FileItem = new Lang.Class(
             gicon: fileInfo.get_icon(),
             icon_size: Settings.ICON_SIZE
         });
-        this._iconPlaceholder = new St.Bin({ visible: true });
-        this._iconPlaceholder.child = this._icon;
-        this._container.add_actor(this._iconPlaceholder);
+        this._iconContainer = new St.Bin({ visible: true });
+        this._iconContainer.child = this._icon;
+        this._container.add_actor(this._iconContainer);
 
         this._label = new St.Label({
             text: fileInfo.get_attribute_as_string('standard::display-name'),
@@ -160,7 +160,7 @@ var FileItem = new Lang.Class(
                     gicon: icon,
                     icon_size: Settings.ICON_SIZE
                 });
-                this._iconPlaceholder.child = this._icon;
+                this._iconContainer.child = this._icon;
 
             }
         )
