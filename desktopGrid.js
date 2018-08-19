@@ -212,24 +212,25 @@ var DesktopGrid = new Lang.Class(
         Clipboard.get_text(CLIPBOARD_TYPE,
             (clipboard, text) => {
                 let [valid, is_cut, files] = this._parseClipboardText(text);
-                if (valid) {
-                    let desktop_dir = 'file://' + GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
-                    if (is_cut) {
-                        DBusUtils.NautilusFileOperationsProxy.MoveURIsRemote(files, desktop_dir,
-                            (result, error) => {
-                                if (error)
-                                    log('Error moving files: ' + error.message);
-                            }
-                        );
-                    }
-                    else {
-                        DBusUtils.NautilusFileOperationsProxy.CopyURIsRemote(files, desktop_dir,
-                            (result, error) => {
-                                if (error)
-                                    log('Error copying files: ' + error.message);
-                            }
-                        );
-                    }
+                if (!valid)
+                    return;
+
+                let desktop_dir = 'file://' + GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
+                if (is_cut) {
+                    DBusUtils.NautilusFileOperationsProxy.MoveURIsRemote(files, desktop_dir,
+                        (result, error) => {
+                            if (error)
+                                log('Error moving files: ' + error.message);
+                        }
+                    );
+                }
+                else {
+                    DBusUtils.NautilusFileOperationsProxy.CopyURIsRemote(files, desktop_dir,
+                        (result, error) => {
+                            if (error)
+                                log('Error copying files: ' + error.message);
+                        }
+                    );
                 }
             }
         );
