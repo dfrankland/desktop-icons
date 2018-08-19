@@ -339,7 +339,7 @@ var DesktopManager = new Lang.Class(
             let [fileItemX, fileItemY] = fileItem.actor.get_transformed_position();
             let fileX = Math.round(xDiff + fileItemX);
             let fileY = Math.round(yDiff + fileItemY);
-            fileItem.setCoordinates(fileX, fileY);
+            fileItem.coordinates = [fileX, fileY];
             info.set_attribute_string('metadata::nautilus-icon-position',
                 fileX.toString().concat(',').concat(fileY.toString()));
             let gioFile = Gio.File.new_for_uri(fileItem.file.get_uri());
@@ -373,7 +373,7 @@ var DesktopManager = new Lang.Class(
                     continue;
                 }
 
-                let [containerX, containerY] = fileItem.getCoordinates();
+                let [containerX, containerY] = fileItem.coordinates;
                 let [placeholder, dropDesktopContainer, left, top] = this._getClosestChildToPos(containerX, containerY);
                 if (placeholder._delegate != undefined &&
                     placeholder._delegate instanceof FileItem.FileItem) {
@@ -549,7 +549,7 @@ var DesktopManager = new Lang.Class(
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
             if (fileItem.actor.visible) {
-                let [containerX, containerY] = fileItem.getCoordinates();
+                let [containerX, containerY] = fileItem.coordinates;
                 let result = this._getClosestChildToPos(containerX, containerY);
                 let placeholder = result[0];
                 let desktopContainer = result[1];

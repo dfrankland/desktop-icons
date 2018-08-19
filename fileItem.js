@@ -281,12 +281,12 @@ var FileItem = new Lang.Class(
         return Clutter.EVENT_PROPAGATE;
     },
 
-    getCoordinates() {
+    get coordinates() {
         return this._coordinates;
     },
 
-    setCoordinates(x, y) {
-        this._coordinates = [x, y];
+    set coordinates(coords) {
+        this._coordinates = [coords[0], coords[1]];
         /* DEBUG
         this._label.set_text(JSON.stringify(this._coordinates));
         */
