@@ -364,7 +364,7 @@ var DesktopContainer = new Lang.Class(
                                            0, St.Side.TOP);
         menu.addAction(_("New Folder"), () => this._newFolderOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_("Paste"), () => this._pasteOnClicked());
+        this._pasteMenuItem = menu.addAction(_("Paste"), () => this._pasteOnClicked());
         this._undoMenuItem = menu.addAction(_("Undo"), () => this._undoOnClicked());
         this._redoMenuItem = menu.addAction(_("Redo"), () => this._redoOnClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -385,7 +385,22 @@ var DesktopContainer = new Lang.Class(
         this._syncUndoRedo();
 
         menu.connect('destroy',
-            ()=> DBusUtils.NautilusFileOperationsProxy.disconnect(menu._propertiesChangedId));
+            () => DBusUtils.NautilusFileOperationsProxy.disconnect(menu._propertiesChangedId));
+        menu.connect('open-state-changed',
+            (popupm, isOpen) =>
+            {
+                if (isOpen)
+                {
+                    Clipboard.get_text(CLIPBOARD_TYPE,
+                        (clipBoard, text) =>
+                        {
+                            let [valid, is_cut, files] = this._parseClipboardText(text);
+                            this._pasteMenuItem.actor.visible = valid;
+                        }
+                    );
+                }
+            }
+       );
 
         return menu;
     },
