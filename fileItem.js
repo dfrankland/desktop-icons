@@ -39,11 +39,9 @@ const DBusUtils = Me.imports.dbusUtils;
 
 const DRAG_TRESHOLD = 8;
 
-var FileItem = new Lang.Class(
-{
-    Name: 'FileItem',
+class FileItem {
 
-    _init(file, fileInfo) {
+    constructor(file, fileInfo) {
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
         this._file = file;
@@ -116,11 +114,11 @@ var FileItem = new Lang.Class(
         this._primaryButtonPressed = false
         if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
-    },
+    }
 
     get file() {
         return this._file;
-    },
+    }
 
     _prepareDesktopFile() {
         this.file.load_contents_async(this._loadContentsCancellable,
@@ -153,7 +151,7 @@ var FileItem = new Lang.Class(
                 }
             }
         )
-    },
+    }
 
     doOpen() {
         if (this._attributeCanExecute && !this._isDirectory) {
@@ -174,15 +172,15 @@ var FileItem = new Lang.Class(
                 }
             }
         );
-    },
+    }
 
     _onCopyClicked() {
         Extension.desktopManager.doCopy();
-    },
+    }
 
     _onCutClicked() {
         Extension.desktopManager.doCut();
-    },
+    }
 
     _onShowInFilesClicked() {
 
@@ -192,7 +190,7 @@ var FileItem = new Lang.Class(
                     log('Error showing file on desktop: ' + error.message);
             }
         );
-    },
+    }
 
     _onPropertiesClicked() {
 
@@ -202,11 +200,11 @@ var FileItem = new Lang.Class(
                     log('Error showing properties: ' + error.message);
             }
         );
-    },
+    }
 
     _onMoveToTrashClicked() {
         Extension.desktopManager.doTrash();
-    },
+    }
 
     _createMenu() {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
@@ -226,7 +224,7 @@ var FileItem = new Lang.Class(
 
         Main.layoutManager.uiGroup.add_actor(this._menu.actor);
         this._menu.actor.hide();
-    },
+    }
 
     _onPressButton(actor, event) {
         let button = event.get_button();
@@ -249,7 +247,7 @@ var FileItem = new Lang.Class(
         }
 
         return Clutter.EVENT_PROPAGATE;
-    },
+    }
 
     _onMotion(actor, event) {
         let [x, y] = event.get_coords();
@@ -268,7 +266,7 @@ var FileItem = new Lang.Class(
         }
 
         return Clutter.EVENT_PROPAGATE;
-    },
+    }
 
     _onReleaseButton(actor, event) {
         let button = event.get_button();
@@ -279,18 +277,18 @@ var FileItem = new Lang.Class(
         }
 
         return Clutter.EVENT_PROPAGATE;
-    },
+    }
 
     get coordinates() {
         return this._coordinates;
-    },
+    }
 
     set coordinates(coords) {
         this._coordinates = [coords[0], coords[1]];
         /* DEBUG
         this._label.set_text(JSON.stringify(this._coordinates));
         */
-    },
+    }
 
     intersectsWith(argX, argY, argWidth, argHeight)
     {
@@ -303,7 +301,7 @@ var FileItem = new Lang.Class(
         let [intersects, _] = rect.intersect(boundingBox);
 
         return intersects;
-    },
+    }
 
     setSelected(selected) {
         if (selected)
@@ -313,5 +311,5 @@ var FileItem = new Lang.Class(
 
         this._selected = selected;
     }
-});
+};
 Signals.addSignalMethods(FileItem.prototype);

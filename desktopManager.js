@@ -33,8 +33,8 @@ const Main = imports.ui.main;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const DesktopGrid = Me.imports.desktopGrid;
-const FileItem = Me.imports.fileItem;
+var DesktopGrid = Me.imports.desktopGrid;
+var FileItem = Me.imports.fileItem;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
 const DesktopIconsUtil = Me.imports.desktopIconsUtil;
@@ -43,11 +43,8 @@ const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
 
-var DesktopManager = new Lang.Class(
-{
-    Name: 'DesktopManager',
-
-    _init() {
+class DesktopManager {
+    constructor() {
         this._layoutChildrenId = 0;
         this._scheduleDesktopsRefreshId = 0
         this._monitorDesktopDir = null;
@@ -68,7 +65,7 @@ var DesktopManager = new Lang.Class(
         this._dragXStart = Number.POSITIVE_INFINITY;
         this._dragYStart = Number.POSITIVE_INFINITY;
         this._setMetadataCancellable = new Gio.Cancellable();
-    },
+    }
 
     _addDesktopIcons() {
         this._destroyDesktopIcons();
@@ -77,12 +74,12 @@ var DesktopManager = new Lang.Class(
         });
 
         this._scanFiles();
-    },
+    }
 
     _destroyDesktopIcons() {
         this._desktopGrids.forEach((l) => l.actor.destroy());
         this._desktopGrids = [];
-    },
+    }
 
     _scanFiles() {
         this._fileItems = [];
@@ -96,7 +93,7 @@ var DesktopManager = new Lang.Class(
             GLib.PRIORITY_DEFAULT,
             this._desktopEnumerateCancellable,
             (source, res) => this._onDesktopEnumerateChildrenFinished(source, res));
-    },
+    }
 
     _onDesktopEnumerateChildrenFinished(source, res) {
         let fileEnum;
@@ -122,8 +119,7 @@ var DesktopManager = new Lang.Class(
             item.actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
         });
         this.emit('new-file-set');
-    },
-
+    }
 
     _monitorDesktopFolder() {
         if (this._monitorDesktopDir) {
@@ -151,7 +147,7 @@ var DesktopManager = new Lang.Class(
                 this._scheduleDesktopsRefreshId = Mainloop.timeout_add(500,
                     () => this._refreshDesktops(file, otherFile));
             });
-    },
+    }
 
     //FIXME: we don't use file/otherfile for now and stupidely refresh all desktops
     _refreshDesktops(file, otherFile) {
@@ -159,7 +155,7 @@ var DesktopManager = new Lang.Class(
         // TODO: handle DND, opened filecontainer menu…
 
         this._scanFiles();
-    },
+    }
 
     _getContainerWithChild(child) {
         for (let i = 0; i < this._desktopGrids.length; i++) {
@@ -171,7 +167,7 @@ var DesktopManager = new Lang.Class(
         }
 
         return null;
-    },
+    }
 
     _setupDnD() {
         this._draggableContainer = new St.Widget({
@@ -195,7 +191,7 @@ var DesktopManager = new Lang.Class(
 
         this._draggable['_dragActorDropped'] = event => this._dragActorDropped(event);
         this._draggable['_finishAnimation'] = () => this._finishAnimation();
-    },
+    }
 
     dragStart() {
         if (this._onDrag) {
@@ -227,18 +223,18 @@ var DesktopManager = new Lang.Class(
 
         Main.layoutManager.uiGroup.add_child(this._draggableContainer);
         this._draggable.startDrag(x, y, global.get_current_time(), event.get_event_sequence());
-    },
+    }
 
     _onDragCancelled() {
         let event = Clutter.get_current_event();
         let [x, y] = event.get_coords();
         this._dragCancelled = true;
-    },
+    }
 
     _onDragEnd() {
         this._onDrag = false;
         Main.layoutManager.uiGroup.remove_child(this._draggableContainer);
-    },
+    }
 
     _finishAnimation() {
         if (!this._draggable._animationInProgress) {
@@ -251,7 +247,7 @@ var DesktopManager = new Lang.Class(
         }
 
         global.screen.set_cursor(Meta.Cursor.DEFAULT);
-    },
+    }
 
     _dragActorDropped(event) {
         let [dropX, dropY] = event.get_coords();
@@ -322,7 +318,7 @@ var DesktopManager = new Lang.Class(
         this._draggable._cancelDrag(event.get_time());
 
         return true;
-    },
+    }
 
     acceptDrop(dragSource, actor, target, xEnd, yEnd, time) {
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
@@ -355,7 +351,7 @@ var DesktopManager = new Lang.Class(
         }
 
         return true;
-    },
+    }
 
     _layoutDrop(fileItems) {
         let fileItemDestinations = [];
@@ -472,17 +468,16 @@ var DesktopManager = new Lang.Class(
                 }
             }
         }
-    },
+    }
 
     _onSetMetadataFileFinished(source, result) {
         try {
             let [success, info] = source.set_attributes_finish(result);
-        }
-        catch (error) {
+        } catch (error) {
             if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                 log('Error setting metadata to desktop files ', error);
         }
-    },
+    }
 
     _getClosestChildToPos(x, y) {
         let minDistance = Number.POSITIVE_INFINITY;
@@ -516,14 +511,14 @@ var DesktopManager = new Lang.Class(
         }
 
         return [closestChild, closestDesktopGrid, left, top];
-    },
+    }
 
     _scheduleLayoutChildren() {
         if (this._layoutChildrenId != 0)
             GLib.source_remove(this._layoutChildrenId);
 
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
-    },
+    }
 
     _scheduleReLayoutChildren() {
         if (this._layoutChildrenId != 0)
@@ -535,12 +530,11 @@ var DesktopManager = new Lang.Class(
         }
 
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._relayoutChildren());
-    },
-
+    }
 
     _relayoutChildren() {
         this._layoutChildren();
-    },
+    }
 
     _layoutChildren() {
         for (let i = 0; i < this._fileItems.length; i++) {
@@ -570,16 +564,16 @@ var DesktopManager = new Lang.Class(
 
         this._layoutChildrenId = 0;
         return GLib.SOURCE_REMOVE;
-    },
+    }
 
     _findByFile(fileItem, uri) {
         return fileItem.file.get_uri() == uri;
-    },
+    }
 
     doOpen() {
         for (let i = 0; i < this._selection.length; i++)
             this._selection[i].doOpen();
-    },
+    }
 
     doTrash() {
         DBusUtils.NautilusFileOperationsProxy.TrashFilesRemote(this._selection.map((x) => { return x.file.get_uri(); }),
@@ -588,7 +582,7 @@ var DesktopManager = new Lang.Class(
                     log('Error trashing files on the desktop: ' + error.message);
             }
         );
-    },
+    }
 
     fileLeftClickPressed(fileItem) {
         let event = Clutter.get_current_event();
@@ -611,7 +605,7 @@ var DesktopManager = new Lang.Class(
 
         selection.push(fileItem);
         this.setSelection(selection);
-    },
+    }
 
     fileLeftClickReleased(fileItem) {
         let event = Clutter.get_current_event();
@@ -619,7 +613,7 @@ var DesktopManager = new Lang.Class(
         if (!this._onDrag && !(event_state & Clutter.ModifierType.SHIFT_MASK)) {
             this.setSelection([this._selection[this._selection.length - 1]]);
         }
-    },
+    }
 
     fileRightClickClicked(fileItem) {
         if (fileItem == null) {
@@ -630,7 +624,7 @@ var DesktopManager = new Lang.Class(
 
         if (this._selection.map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) < 0)
             this.setSelection([fileItem]);
-    },
+    }
 
     setSelection(selection) {
         for (let i = 0; i < this._fileItems.length; i++) {
@@ -639,7 +633,7 @@ var DesktopManager = new Lang.Class(
         }
 
         this._selection = selection;
-    },
+    }
 
     doCopy() {
         let nautilusClipboard = 'x-special/nautilus-clipboard\n';
@@ -648,7 +642,7 @@ var DesktopManager = new Lang.Class(
             nautilusClipboard += this._selection[i].file.get_uri() + '\n';
 
         Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
-    },
+    }
 
     doCut() {
         let nautilusClipboard = 'x-special/nautilus-clipboard\n';
@@ -657,7 +651,7 @@ var DesktopManager = new Lang.Class(
             nautilusClipboard += this._selection[i].file.get_uri() + '\n';
 
         Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
-    },
+    }
 
     destroy() {
         if (this._monitorDesktopDir)
@@ -677,7 +671,7 @@ var DesktopManager = new Lang.Class(
 
         this._desktopGrids.forEach(w => w.actor.destroy());
     }
-});
+};
 Signals.addSignalMethods(DesktopManager.prototype);
 
 function distanceBetweenPoints(x, y, x2, y2) {

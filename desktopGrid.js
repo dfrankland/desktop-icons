@@ -30,7 +30,7 @@ const PopupMenu = imports.ui.popupMenu;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
-const FileItem = Me.imports.fileItem;
+var FileItem = Me.imports.fileItem;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
 const DesktopIconsUtil = Me.imports.desktopIconsUtil;
@@ -47,11 +47,9 @@ var UndoStatus = {
     REDO: 2,
 };
 
-var DesktopGrid = new Lang.Class(
-{
-    Name: 'DesktopGrid',
+class DesktopGrid {
 
-    _init(bgManager) {
+    constructor(bgManager) {
         this._bgManager = bgManager;
 
         this.layout = new Clutter.GridLayout({
@@ -98,7 +96,7 @@ var DesktopGrid = new Lang.Class(
         this._fileItems = [];
         this._createPlaceholders();
         this.actor.connect('key-press-event', this._onKeyPress.bind(this));
-    },
+    }
 
     _onKeyPress(actor, event) {
         if (global.stage.get_key_focus() != actor)
@@ -137,7 +135,7 @@ var DesktopGrid = new Lang.Class(
         }
 
         return Clutter.EVENT_PROPAGATE;
-    },
+    }
 
     _createPlaceholders() {
         let maxRows = this.getMaxRows();
@@ -153,7 +151,7 @@ var DesktopGrid = new Lang.Class(
                 this.layout.attach(placeholder, i, j, 1, 1);
             }
         }
-    },
+    }
 
     _backgroundDestroyed() {
         this._bgDestroyedId = 0;
@@ -166,7 +164,7 @@ var DesktopGrid = new Lang.Class(
         } else {
             this.actor.destroy();
         }
-    },
+    }
 
     _onDestroy() {
         if (this._bgDestroyedId)
@@ -175,7 +173,7 @@ var DesktopGrid = new Lang.Class(
         this._bgDestroyedId = 0;
         this._bgManager = null;
         this._rubberBand.destroy();
-    },
+    }
 
     _omNewFolderClicked() {
         let dir = DesktopIconsUtil.getDesktopDir().get_child(_('New Folder'));
@@ -185,7 +183,7 @@ var DesktopGrid = new Lang.Class(
                     log('Error creating new folder: ' + error.message);
             }
         );
-    },
+    }
 
     _parseClipboardText(text) {
         let lines = text.split('\n')
@@ -205,7 +203,7 @@ var DesktopGrid = new Lang.Class(
         files.pop();
 
         return [true, isCut, lines];
-    },
+    }
 
     _doPaste() {
         Clipboard.get_text(CLIPBOARD_TYPE,
@@ -232,11 +230,11 @@ var DesktopGrid = new Lang.Class(
                 }
             }
         );
-    },
+    }
 
     _onPasteClicked() {
         this._doPaste();
-    },
+    }
 
     _doUndo() {
         DBusUtils.NautilusFileOperationsProxy.UndoRemote(
@@ -245,11 +243,11 @@ var DesktopGrid = new Lang.Class(
                     log('Error performing undo: ' + error.message);
             }
         );
-    },
+    }
 
     _onUndoClicked() {
         this._doUndo();
-    },
+    }
 
     _doRedo() {
         DBusUtils.NautilusFileOperationsProxy.RedoRemote(
@@ -258,11 +256,11 @@ var DesktopGrid = new Lang.Class(
                     log('Error performing redo: ' + error.message);
             }
         );
-    },
+    }
 
     _onRedoClicked() {
         this._doRedo();
-    },
+    }
 
     _onOpenDesktopInFilesClicked() {
         Gio.AppInfo.launch_default_for_uri_async(DesktopIconsUtil.getDesktopDir().get_uri(),
@@ -275,24 +273,24 @@ var DesktopGrid = new Lang.Class(
                 }
             }
         );
-    },
+    }
 
     _onOpenTerminalClicked() {
         let desktopUri = DesktopIconsUtil.getDesktopDir().get_uri();
         let command = DesktopIconsUtil.getTerminalCommand(desktopUri);
 
         Util.spawnCommandLine(command);
-    },
+    }
 
     _syncUndoRedo() {
         this._undoMenuItem.actor.visible = DBusUtils.NautilusFileOperationsProxy.UndoStatus == UndoStatus.UNDO;
         this._redoMenuItem.actor.visible = DBusUtils.NautilusFileOperationsProxy.UndoStatus == UndoStatus.REDO;
-    },
+    }
 
     _undoStatusChanged(proxy, properties, test) {
         if ('UndoStatus' in properties.deep_unpack())
             this._syncUndoRedo();
-    },
+    }
 
     _createDesktopBackgroundMenu() {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
@@ -335,7 +333,7 @@ var DesktopGrid = new Lang.Class(
         );
 
         return menu;
-    },
+    }
 
     _openMenu(x, y) {
         Main.layoutManager.setDummyCursorGeometry(x, y, 0, 0);
@@ -344,7 +342,7 @@ var DesktopGrid = new Lang.Class(
          * to not immediately close the menu on release
          */
         this.actor._desktopBackgroundManager.ignoreRelease();
-    },
+    }
 
     _updateRubberBand(currentX, currentY) {
         let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
@@ -355,7 +353,7 @@ var DesktopGrid = new Lang.Class(
         let height = Math.abs(this._rubberBandInitialY - currentY);
         this._rubberBand.set_position(x, y);
         this._rubberBand.set_size(width, height);
-    },
+    }
 
     _selectFromRubberband(currentX, currentY) {
         let { x, y, width, height } = this._rubberBand;
@@ -364,12 +362,12 @@ var DesktopGrid = new Lang.Class(
         );
 
         Extension.desktopManager.setSelection(selection);
-    },
+    }
 
     addFileItem(fileItem, top, left) {
         this._fileItems.push(fileItem);
         this.layout.attach(fileItem.actor, top, left, 1, 1);
-    },
+    }
 
     removeFileItem(fileItem) {
         let index = this._fileItems.indexOf(fileItem);
@@ -379,13 +377,13 @@ var DesktopGrid = new Lang.Class(
             log('Error removing children from container');
 
         this.actor.remove_child(fileItem.actor);
-    },
+    }
 
     reset() {
         this._fileItems = [];
         this.actor.remove_all_children();
         this._createPlaceholders();
-    },
+    }
 
     _onMotion(actor, event) {
         let [x, y] = event.get_coords();
@@ -393,7 +391,7 @@ var DesktopGrid = new Lang.Class(
             this._updateRubberBand(x, y);
             this._selectFromRubberband(x, y);
         }
-    },
+    }
 
     _onPressButton(actor, event) {
         let button = event.get_button();
@@ -416,7 +414,7 @@ var DesktopGrid = new Lang.Class(
         }
 
         return Clutter.EVENT_PROPAGATE;
-    },
+    }
 
     _onReleaseButton(actor, event) {
         this.actor.grab_key_focus();
@@ -430,7 +428,7 @@ var DesktopGrid = new Lang.Class(
         }
 
         return Clutter.EVENT_PROPAGATE;
-    },
+    }
 
     _onLeave(actor, event) {
         let containerMap = this._fileItems.map(function (container) { return container._container });
@@ -442,7 +440,7 @@ var DesktopGrid = new Lang.Class(
         }
 
         return Clutter.EVENT_PROPAGATE;
-    },
+    }
 
     _addDesktopBackgroundMenu() {
         this.actor._desktopBackgroundMenu = this._createDesktopBackgroundMenu();
@@ -454,17 +452,17 @@ var DesktopGrid = new Lang.Class(
             this.actor._desktopBackgroundMenu = null;
             this.actor._desktopBackgroundManager = null;
         });
-    },
+    }
 
     getMaxColumns() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
         return Math.ceil(workarea.width / Settings.ICON_MAX_WIDTH);
-    },
+    }
 
     getMaxRows() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
         return Math.ceil(workarea.height / Settings.ICON_MAX_WIDTH);
-    },
+    }
 
     findEmptyPlace(originCol, originRow) {
         let maxRows = this.getMaxRows();
@@ -502,11 +500,11 @@ var DesktopGrid = new Lang.Class(
         }
 
         return null;
-    },
+    }
 
     acceptDrop(source, actor, x, y, time) {
         return Extension.desktopManager.acceptDrop(source, actor, this, x, y, time);
-    },
+    }
 
     getPosOfFileItem(itemToFind) {
         if (itemToFind == null) {
@@ -538,5 +536,5 @@ var DesktopGrid = new Lang.Class(
         }
 
         return [found, column, row];
-    },
-});
+    }
+};
