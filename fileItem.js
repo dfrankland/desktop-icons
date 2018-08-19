@@ -176,10 +176,6 @@ var FileItem = new Lang.Class(
         );
     },
 
-    _onOpenClicked() {
-        this.doOpen();
-    },
-
     _onCopyClicked() {
         Extension.desktopManager.doCopy();
     },
@@ -218,7 +214,7 @@ var FileItem = new Lang.Class(
         if (Clutter.get_default_text_direction() == Clutter.TextDirection.RTL)
             side = St.Side.RIGHT;
         this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
-        this._menu.addAction(_('Open'), () => this._onOpenClicked());
+        this._menu.addAction(_('Open'), () => this.doOpen());
         this._menu.addAction(_('Cut'), () => this._onCutClicked());
         this._menu.addAction(_('Copy'), () => this._onCopyClicked());
         this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
