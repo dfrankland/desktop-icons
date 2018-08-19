@@ -180,7 +180,7 @@ var DesktopManager = class {
             height: 1,
             x: 0,
             y: 0,
-            style_class: 'dragabble'
+            style_class: 'draggable'
         });
         this._draggableContainer._delegate = this;
         this._draggable = DND.makeDraggable(this._draggableContainer,
