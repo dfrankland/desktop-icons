@@ -130,12 +130,9 @@ var FileItem = new Lang.Class(
                     let [ok, loadedContents, etag_out] = source.load_contents_finish(result);
                     contents = loadedContents;
                 } catch (error) {
-                    if (error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
-                        return;
-                    } else {
+                    if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) 
                         log('Error loading Desktop files: ' + error.message);
-                        return;
-                    }
+                    return;
                 }
 
                 let keyfile = new GLib.KeyFile();
