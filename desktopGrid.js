@@ -358,10 +358,8 @@ var DesktopGrid = new Lang.Class(
     },
 
     _selectFromRubberband(currentX, currentY) {
-        let rubberX = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
-            : currentX;
-        let rubberY = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
-            : currentY;
+        let rubberX = Math.min(this._rubberBandInitialX, currentX);
+        let rubberY = Math.min(this._rubberBandInitialY, currentY);
         let rubberWidth = Math.abs(this._rubberBandInitialX - currentX);
         let rubberHeight = Math.abs(this._rubberBandInitialY - currentY);
         let selection = [];
