@@ -527,7 +527,7 @@ var DesktopGrid = new Lang.Class(
                     continue;
 
                 if (item._delegate != undefined &&
-                    item._delegate.file.get_uri() == itemToFind.file.get_uri()) {
+                    item._delegate == itemToFind) {
                     found = true;
                     break;
                 }
