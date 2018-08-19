@@ -46,7 +46,7 @@ var FileItem = new Lang.Class(
     _init(file, fileInfo) {
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
-        this.file = file;
+        this._file = file;
         this._fileInfo = fileInfo;
         let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
@@ -120,6 +120,10 @@ var FileItem = new Lang.Class(
         this._primaryButtonPressed = false
         if (this._attributeCanExecute)
             this._execLine = this.file.get_path();
+    },
+
+    get file() {
+        return this._file;
     },
 
     _prepareDesktopFile() {
