@@ -472,8 +472,7 @@ var DesktopManager = class {
         if (this._layoutChildrenId != 0)
             GLib.source_remove(this._layoutChildrenId);
 
-        for (let key in this._desktopGrids)
-            this._desktopGrids.get(key).reset();
+        Object.keys(this._desktopGrids).forEach((w) => this._desktopGrids[w].reset());
 
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._relayoutChildren());
     }
