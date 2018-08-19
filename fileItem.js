@@ -54,8 +54,8 @@ var FileItem = class {
             this._coordinates = [0, 0]
 
         this.actor = new St.Bin({ visible: true });
-        this.actor.set_height(Settings.ICON_MAX_WIDTH);
-        this.actor.set_width(Settings.ICON_MAX_WIDTH);
+        this.actor.set_height(Settings.ICON_MAX_SIZE);
+        this.actor.set_width(Settings.ICON_MAX_SIZE);
         this.actor._delegate = this;
 
         this._container = new St.BoxLayout({

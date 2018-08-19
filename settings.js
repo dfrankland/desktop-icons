@@ -19,4 +19,4 @@
 
 //FIXME: would be tweakable later on
 var ICON_SIZE = 64;
-var ICON_MAX_WIDTH = 130;
+var ICON_MAX_SIZE = 130;

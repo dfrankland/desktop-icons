@@ -143,7 +143,7 @@ var DesktopGrid = class {
 
         for (let i = 0; i < maxColumns; i++) {
             for (let j = 0; j < maxRows; j++) {
-                let placeholder = new St.Bin({ width: Settings.ICON_MAX_WIDTH, height: Settings.ICON_MAX_WIDTH });
+                let placeholder = new St.Bin({ width: Settings.ICON_MAX_SIZE, height: Settings.ICON_MAX_SIZE });
                 /* DEBUG
                 let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
                 placeholder.add_actor(icon);
@@ -457,12 +457,12 @@ var DesktopGrid = class {
 
     getMaxColumns() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        return Math.ceil(workarea.width / Settings.ICON_MAX_WIDTH);
+        return Math.ceil(workarea.width / Settings.ICON_MAX_SIZE);
     }
 
     getMaxRows() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        return Math.ceil(workarea.height / Settings.ICON_MAX_WIDTH);
+        return Math.ceil(workarea.height / Settings.ICON_MAX_SIZE);
     }
 
     findEmptyPlace(originCol, originRow) {

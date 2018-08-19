@@ -414,7 +414,7 @@ var DesktopManager = class {
                 for (let row = 0; row < maxRows; row++) {
                     let child = desktopGrid.layout.get_child_at(column, row);
                     if (child == null) {
-                        let newPlaceholder = new St.Bin({ width: Settings.ICON_MAX_WIDTH, height: Settings.ICON_MAX_WIDTH });
+                        let newPlaceholder = new St.Bin({ width: Settings.ICON_MAX_SIZE, height: Settings.ICON_MAX_SIZE });
                         /* DEBUG
                         let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
                         newPlaceholder.add_actor(icon);
