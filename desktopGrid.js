@@ -340,7 +340,9 @@ var DesktopGrid = new Lang.Class(
     _openMenu(x, y) {
         Main.layoutManager.setDummyCursorGeometry(x, y, 0, 0);
         this.actor._desktopBackgroundMenu.open(BoxPointer.PopupAnimation.NONE);
-        //TODO: Why does it need ignoreRelease?
+        /* Since the handler is in the press event it needs to ignore the release event
+         * to not immediately close the menu on release
+         */
         this.actor._desktopBackgroundManager.ignoreRelease();
     },
 
