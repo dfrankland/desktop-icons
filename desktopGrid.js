@@ -359,16 +359,9 @@ var DesktopGrid = new Lang.Class(
 
     _selectFromRubberband(currentX, currentY) {
         let { x, y, width, height } = this._rubberBand;
-        let selection = [];
-        for (let i = 0; i < this._fileItems.length; i++) {
-            let fileItem = this._fileItems[i];
-            let [containerX, containerY] = fileItem.getInnerIconPosition();
-            let [containerWidth, containerHeight] = fileItem.getInnerSize();
-            if (rectanglesIntersect(x, y, width, height,
-                containerX, containerY, containerWidth, containerHeight)) {
-                selection.push(fileItem);
-            }
-        }
+        let selection = this._fileItems.filter(
+            fileItem => fileItem.intersectsWith(x, y, width, height)
+        );
 
         Extension.desktopManager.setSelection(selection);
     },
@@ -549,12 +542,3 @@ var DesktopGrid = new Lang.Class(
         return [found, column, row];
     },
 });
-
-/*
- * https://silentmatt.com/rectangle-intersection/
- */
-function rectanglesIntersect(rect1X, rect1Y, rect1Width, rect1Height,
-    rect2X, rect2Y, rect2Width, rect2Height) {
-    return rect1X < (rect2X + rect2Width) && (rect1X + rect1Width) > rect2X &&
-        rect1Y < (rect2Y + rect2Height) && (rect1Y + rect1Height) > rect2Y
-}

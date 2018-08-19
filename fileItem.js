@@ -292,12 +292,17 @@ var FileItem = new Lang.Class(
         */
     },
 
-    getInnerIconPosition() {
-        return this._container.get_transformed_position();
-    },
+    intersectsWith(argX, argY, argWidth, argHeight)
+    {
+        let rect = new Meta.Rectangle({ x: argX, y: argY, width: argWidth, height: argHeight });
+        let [containerX, containerY] = this._container.get_transformed_position();
+        let boundingBox = new Meta.Rectangle({ x: containerX,
+                                               y: containerY,
+                                               width: this._container.width,
+                                               height: this._container.height });
+        let [intersects, _] = rect.intersect(boundingBox);
 
-    getInnerSize() {
-        return [this._container.width, this._container.height];
+        return intersects;
     },
 
     setSelected(selected) {
