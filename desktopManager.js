@@ -144,11 +144,10 @@ var DesktopManager = class {
                 }
                 // Only get a subset of events we are interested in.
                 // Note that CREATED will emit a CHANGES_DONE_HINT
-                if (eventType != Gio.FileMonitorEvent.CHANGES_DONE_HINT &&
-                    eventType != Gio.FileMonitorEvent.DELETED && eventType != Gio.FileMonitorEvent.RENAMED &&
-                    eventType != Gio.FileMonitorEvent.MOVED_IN && eventType != Gio.FileMonitorEvent.MOVED_OUT) {
+                if (![CHANGES_DONE_HINT, DELETED, RENAMED,
+                    MOVED_IN, MOVED_OUT].includes(eventType))
                     return;
-                }
+
                 this._scheduleDesktopsRefreshId = Mainloop.timeout_add(500,
                     () => this._refreshDesktops(file, otherFile));
             });
