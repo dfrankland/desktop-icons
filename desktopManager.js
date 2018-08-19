@@ -35,7 +35,6 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const DesktopContainer = Me.imports.desktopContainer;
 const FileContainer = Me.imports.fileContainer;
-const Queue = Me.imports.queue;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
 

@@ -31,7 +31,6 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
 const FileContainer = Me.imports.fileContainer;
-const Queue = Me.imports.queue;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
 const Util = imports.misc.util;
@@ -577,13 +576,13 @@ var DesktopContainer = new Lang.Class(
     {
         let maxRows = this.getMaxRows();
         let maxColumns = this.getMaxColumns();
-        let bfsQueue = new Queue.Queue();
-        bfsQueue.enqueue([left, top]);
+        let bfsQueue = [];
+        bfsQueue.push([left, top]);
         let bfsToVisit = [JSON.stringify([left, top])];
         let iterations = 0;
-        while (!bfsQueue.isEmpty() && iterations < 1000)
+        while (bfsQueue.length != 0)
         {
-            let current = bfsQueue.dequeue();
+            let current = bfsQueue.shift();
             let currentChild = this.layout.get_child_at(current[0], current[1]);
             if (currentChild != null &&
                 (currentChild._delegate == undefined ||
@@ -613,7 +612,7 @@ var DesktopContainer = new Lang.Class(
             {
                 if (bfsToVisit.indexOf(JSON.stringify(adjacents[i])) < 0)
                 {
-                    bfsQueue.enqueue(adjacents[i]);
+                    bfsQueue.push(adjacents[i]);
                     bfsToVisit.push(JSON.stringify(adjacents[i]));
                 }
             }
