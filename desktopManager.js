@@ -175,7 +175,6 @@ var DesktopManager = class {
 
     _setupDnD() {
         this._draggableContainer = new St.Widget({
-            layout_manager: new Clutter.FixedLayout(),
             visible: true,
             width: 1,
             height: 1,
