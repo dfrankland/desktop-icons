@@ -88,10 +88,11 @@ var FileItem = new Lang.Class(
         this._fileType = fileInfo.get_file_type();
         this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
         this._attributeContentType = fileInfo.get_content_type();
+        this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
         this._attributeHidden = fileInfo.get_is_hidden();
 
         this._loadContentsCancellable = new Gio.Cancellable();
-        if (this._attributeContentType == 'application/x-desktop')
+        if (this._isDesktopFile)
             this._prepareDesktopFile();
 
         /* DEBUG
@@ -113,7 +114,7 @@ var FileItem = new Lang.Class(
 
         this._selected = false;
         this._primaryButtonPressed = false
-        if (this._attributeCanExecute)
+        if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
     },
 
@@ -168,6 +169,9 @@ var FileItem = new Lang.Class(
 
     doOpen() {
         if (this._attributeCanExecute && !this._isDirectory) {
+            if (!this._execLine)
+                return;
+
             Util.spawnCommandLine(this._execLine);
             return;
         }
