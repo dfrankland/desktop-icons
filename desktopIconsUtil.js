@@ -19,7 +19,18 @@
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 
+const TERMINAL_SCHEMA = 'org.gnome.desktop.default-applications.terminal';
+const EXEC_KEY = 'exec';
+
 function getDesktopDir() {
     let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
     return Gio.File.new_for_commandline_arg(desktopPath);
+}
+
+function getTerminalCommand(workdir) {
+    let terminalSettings = new Gio.Settings({ schema_id: TERMINAL_SCHEMA });
+    let exec = terminalSettings.get_string(EXEC_KEY);
+    let command = `${exec} --working-directory=${workdir}`;
+
+    return command;
 }

@@ -278,8 +278,10 @@ var DesktopGrid = new Lang.Class(
     },
 
     _onOpenTerminalClicked() {
-        let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
-        Util.spawnCommandLine('gnome-terminal --working-directory=' + desktopPath);
+        let desktopUri = DesktopIconsUtil.getDesktopDir().get_uri();
+        let command = DesktopIconsUtil.getTerminalCommand(desktopUri);
+
+        Util.spawnCommandLine(command);
     },
 
     _syncUndoRedo() {
