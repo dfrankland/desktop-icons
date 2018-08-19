@@ -39,7 +39,7 @@ const DBusUtils = Me.imports.dbusUtils;
 
 const DRAG_TRESHOLD = 8;
 
-class FileItem {
+var FileItem = class {
 
     constructor(file, fileInfo) {
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;

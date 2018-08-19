@@ -30,7 +30,7 @@ const PopupMenu = imports.ui.popupMenu;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
-var FileItem = Me.imports.fileItem;
+const FileItem = Me.imports.fileItem;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
 const DesktopIconsUtil = Me.imports.desktopIconsUtil;
@@ -47,7 +47,7 @@ var UndoStatus = {
     REDO: 2,
 };
 
-class DesktopGrid {
+var DesktopGrid = class {
 
     constructor(bgManager) {
         this._bgManager = bgManager;

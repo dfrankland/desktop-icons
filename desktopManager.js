@@ -33,8 +33,8 @@ const Main = imports.ui.main;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-var DesktopGrid = Me.imports.desktopGrid;
-var FileItem = Me.imports.fileItem;
+const DesktopGrid = Me.imports.desktopGrid;
+const FileItem = Me.imports.fileItem;
 const Settings = Me.imports.settings;
 const DBusUtils = Me.imports.dbusUtils;
 const DesktopIconsUtil = Me.imports.desktopIconsUtil;
@@ -43,7 +43,7 @@ const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
 
-class DesktopManager {
+var DesktopManager = class {
     constructor() {
         this._layoutChildrenId = 0;
         this._scheduleDesktopsRefreshId = 0
