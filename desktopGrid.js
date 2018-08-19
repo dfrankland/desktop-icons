@@ -46,9 +46,9 @@ var UndoStatus = {
     REDO: 2,
 };
 
-var DesktopContainer = new Lang.Class(
+var DesktopGrid = new Lang.Class(
 {
-    Name: 'DesktopContainer',
+    Name: 'DesktopGrid',
 
     _init(bgManager) {
         this._bgManager = bgManager;
@@ -60,7 +60,7 @@ var DesktopContainer = new Lang.Class(
         });
 
         this.actor = new St.Widget({
-            name: 'DesktopContainer',
+            name: 'DesktopGrid',
             layout_manager: this.layout,
             reactive: true,
             x_expand: true,
