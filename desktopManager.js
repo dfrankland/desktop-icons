@@ -463,7 +463,7 @@ var DesktopManager = class {
 
     _scheduleLayoutChildren() {
         if (this._layoutChildrenId != 0)
-            GLib.source_remove(this._layoutChildrenId);
+            return;
 
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
     }
