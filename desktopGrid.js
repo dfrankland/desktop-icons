@@ -197,14 +197,15 @@ var DesktopGrid = new Lang.Class(
 
         if (!(['copy', 'cut'].includes(action)))
             return [false, false, null];
+        let isCut = action == 'cut';
+        
+        /* Last line is empty due to the split */
+        if (files.length <= 1)
+            return [false, false, null];
+        /* Remove last line */
+        files.splice(files.length - 1, 1)
 
-        var is_cut = lines[1] == 'cut';
-        /* Remove the empty last line from the 'split' */
-        lines.splice(lines.length - 1, 1)
-        /* Remove the x-special/nautilus-clipboard and the cut/copy lines */
-        lines.splice(0, 2)
-
-        return [true, is_cut, lines];
+        return [true, isCut, lines];
     },
 
     _doPaste() {
