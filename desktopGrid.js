@@ -203,7 +203,7 @@ var DesktopGrid = new Lang.Class(
         if (files.length <= 1)
             return [false, false, null];
         /* Remove last line */
-        files.splice(files.length - 1, 1)
+        files.pop();
 
         return [true, isCut, lines];
     },
