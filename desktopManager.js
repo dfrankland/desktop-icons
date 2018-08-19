@@ -261,8 +261,7 @@ var DesktopManager = new Lang.Class(
         // We call observers only once per motion with the innermost
         // target actor. If necessary, the observer can walk the
         // parent itself.
-        let dropEvent =
-        {
+        let dropEvent = {
             dropActor: this._draggable._dragActor,
             targetActor: target,
             clutterEvent: event
