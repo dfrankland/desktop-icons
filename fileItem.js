@@ -90,6 +90,7 @@ var FileItem = class {
         this._attributeHidden = fileInfo.get_is_hidden();
 
         this._loadContentsCancellable = new Gio.Cancellable();
+        this._setMetadataCancellable = null;
         if (this._isDesktopFile)
             this._prepareDesktopFile();
 
@@ -284,8 +285,30 @@ var FileItem = class {
         return this._coordinates;
     }
 
+    _onSetMetadataFileFinished(source, result) {
+        try {
+            let [success, info] = source.set_attributes_finish(result);
+        } catch (error) {
+            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                log('Error setting metadata to desktop files ', error);
+        }
+    }
+
     set coordinates(coords) {
+        if (this._setMetadataCancellable)
+            this._setMetadataCancellable.cancel();
+        
+        this._setMetadataCancellable = new Gio.Cancellable();
         this._coordinates = [coords[0], coords[1]];
+        let info = new Gio.FileInfo();
+        info.set_attribute_string('metadata::nautilus-icon-position',
+                                  `${coords[0]},${coords[1]}`);
+        this.file.set_attributes_async(info,
+            Gio.FileQueryInfoFlags.NONE,
+            GLib.PRIORITY_DEFAULT,
+            this._setMetadataCancellable,
+            (source, result) => this._onSetMetadataFileFinished(source, result)
+        );
         /* DEBUG
         this._label.set_text(JSON.stringify(this._coordinates));
         */

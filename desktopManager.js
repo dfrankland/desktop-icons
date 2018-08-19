@@ -62,7 +62,6 @@ var DesktopManager = class {
         this._inDrag = false;
         this._dragXStart = Number.POSITIVE_INFINITY;
         this._dragYStart = Number.POSITIVE_INFINITY;
-        this._setMetadataCancellable = new Gio.Cancellable();
     }
 
     _addDesktopIcons() {
@@ -304,8 +303,6 @@ var DesktopManager = class {
 
     acceptDrop(dragSource, actor, target, xEnd, yEnd, time) {
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
-        this._setMetadataCancellable.cancel();
-        this._setMetadataCancellable = new Gio.Cancellable();
         let itemsToSet = new Set(this._selection);
         let itemsCount = 0;
         for (let fileItem of itemsToSet) {
@@ -314,21 +311,9 @@ var DesktopManager = class {
             let fileX = Math.round(xDiff + fileItemX);
             let fileY = Math.round(yDiff + fileItemY);
             fileItem.coordinates = [fileX, fileY];
-            info.set_attribute_string('metadata::nautilus-icon-position',
-                                      `${fileX},${fileY}`);
-            let gioFile = Gio.File.new_for_uri(fileItem.file.get_uri());
-            gioFile.set_attributes_async(info,
-                Gio.FileQueryInfoFlags.NONE,
-                GLib.PRIORITY_DEFAULT,
-                this._setMetadataCancellable,
-                (source, result) => {
-                    this._onSetMetadataFileFinished(source, result);
-                    itemsCount++;
-                    if (itemsCount == itemsToSet.size)
-                        this._layoutDrop([...itemsToSet]);
-                }
-            );
         }
+
+        this._layoutDrop([...itemsToSet]);
 
         return true;
     }
@@ -442,15 +427,6 @@ var DesktopManager = class {
                     }
                 }
             }
-        }
-    }
-
-    _onSetMetadataFileFinished(source, result) {
-        try {
-            let [success, info] = source.set_attributes_finish(result);
-        } catch (error) {
-            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                log('Error setting metadata to desktop files ', error);
         }
     }
 
