@@ -348,9 +348,9 @@ var DesktopGrid = new Lang.Class(
 
     _updateRubberBand(currentX, currentY) {
         let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
-            : currentX;
+                                                    : currentX;
         let y = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
-            : currentY;
+                                                    : currentY;
         let width = Math.abs(this._rubberBandInitialX - currentX);
         let height = Math.abs(this._rubberBandInitialY - currentY);
         this._rubberBand.set_position(x, y);
