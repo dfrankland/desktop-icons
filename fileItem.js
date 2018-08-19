@@ -100,6 +100,7 @@ var FileItem = class {
 
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
+        /* TODO: Convert to gobject.set for 3.30 */
         clutterText.set_line_wrap(true);
         clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
         clutterText.set_ellipsize(Pango.EllipsizeMode.END);

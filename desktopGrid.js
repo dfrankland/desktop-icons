@@ -351,6 +351,7 @@ var DesktopGrid = class {
                                                     : currentY;
         let width = Math.abs(this._rubberBandInitialX - currentX);
         let height = Math.abs(this._rubberBandInitialY - currentY);
+        /* TODO: Convert to gobject.set for 3.30 */
         this._rubberBand.set_position(x, y);
         this._rubberBand.set_size(width, height);
     }
