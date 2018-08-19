@@ -192,8 +192,8 @@ var DesktopManager = class {
         this._draggable.connect('drag-cancelled', () => this._onDragCancelled());
         this._draggable.connect('drag-end', () => this._onDragEnd());
 
-        this._draggable['_dragActorDropped'] = event => this._dragActorDropped(event);
-        this._draggable['_finishAnimation'] = () => this._finishAnimation();
+        this._draggable._dragActorDropped = event => this._dragActorDropped(event);
+        this._draggable._finishAnimation = () => this._finishAnimation();
     }
 
     dragStart() {
