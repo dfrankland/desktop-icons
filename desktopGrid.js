@@ -471,7 +471,7 @@ var DesktopGrid = new Lang.Class(
         let maxColumns = this.getMaxColumns();
         let bfsQueue = [];
         bfsQueue.push([left, top]);
-        let bfsToVisit = [JSON.stringify([left, top])];
+        let bfsPendingOrVisitedNodes = new Set([`${[left, top]}`]);
         let iterations = 0;
         while (bfsQueue.length != 0) {
             let current = bfsQueue.shift();
@@ -493,9 +493,9 @@ var DesktopGrid = new Lang.Class(
                 adjacents.push([current[0], current[1] - 1]);
 
             for (let i = 0; i < adjacents.length; i++) {
-                if (bfsToVisit.indexOf(JSON.stringify(adjacents[i])) < 0) {
+                if (!bfsPendingOrVisitedNodes.has(`${adjacents[i]}`)) {
                     bfsQueue.push(adjacents[i]);
-                    bfsToVisit.push(JSON.stringify(adjacents[i]));
+                    bfsPendingOrVisitedNodes.add(`${adjacents[i]}`);
                 }
             }
             iterations++;
