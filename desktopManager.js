@@ -433,12 +433,6 @@ var DesktopManager = class {
     }
 
     fileRightClickClicked(fileItem) {
-        if (fileItem == null) {
-            this.setSelection(new Set());
-
-            return;
-        }
-
         if ([...this._selection].map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) < 0)
             this.setSelection([fileItem]);
     }
