@@ -170,7 +170,7 @@ var DesktopGrid = class {
         DBusUtils.NautilusFileOperationsProxy.CreateFolderRemote(dir.get_uri(),
             (result, error) => {
                 if (error)
-                    log('Error creating new folder: ' + error.message);
+                    throw new Error('Error creating new folder: ' + error.message);
             }
         );
     }
@@ -207,14 +207,14 @@ var DesktopGrid = class {
                     DBusUtils.NautilusFileOperationsProxy.MoveURIsRemote(files, desktop_dir,
                         (result, error) => {
                             if (error)
-                                log('Error moving files: ' + error.message);
+                                throw new Error('Error moving files: ' + error.message);
                         }
                     );
                 } else {
                     DBusUtils.NautilusFileOperationsProxy.CopyURIsRemote(files, desktop_dir,
                         (result, error) => {
                             if (error)
-                                log('Error copying files: ' + error.message);
+                                throw new Error('Error copying files: ' + error.message);
                         }
                     );
                 }
@@ -230,7 +230,7 @@ var DesktopGrid = class {
         DBusUtils.NautilusFileOperationsProxy.UndoRemote(
             (result, error) => {
                 if (error)
-                    log('Error performing undo: ' + error.message);
+                    throw new Error('Error performing undo: ' + error.message);
             }
         );
     }
@@ -243,7 +243,7 @@ var DesktopGrid = class {
         DBusUtils.NautilusFileOperationsProxy.RedoRemote(
             (result, error) => {
                 if (error)
-                    log('Error performing redo: ' + error.message);
+                    throw new Error('Error performing redo: ' + error.message);
             }
         );
     }
@@ -259,7 +259,7 @@ var DesktopGrid = class {
                 try {
                     Gio.AppInfo.launch_default_for_uri_finish(res);
                 } catch (e) {
-                    log('Error opening Desktop in Files: ' + e.message);
+                   log('Error opening Desktop in Files: ' + e.message);
                 }
             }
         );

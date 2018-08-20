@@ -349,7 +349,7 @@ var DesktopManager = class {
             try {
                 grid.dropItems(fileItems);
             } catch (e) {
-                log(`${e.message}`);
+                log(`Error while dropping: ${e.message}`);
             }
         }
     }
@@ -396,7 +396,7 @@ var DesktopManager = class {
         DBusUtils.NautilusFileOperationsProxy.TrashFilesRemote([...this._selection].map((x) => { return x.file.get_uri(); }),
             (source, error) => {
                 if (error)
-                    log('Error trashing files on the desktop: ' + error.message);
+                    throw new Error('Error trashing files on the desktop: ' + error.message);
             }
         );
     }
@@ -408,7 +408,7 @@ var DesktopManager = class {
 
         let desktopGrid = this._getContainerWithChild(fileItem.actor);
         if (desktopGrid == null) {
-            log('Error in left click pressed, child not found');
+            throw new Error('Error in left click pressed, child not found');
             return;
         }
         desktopGrid.actor.grab_key_focus();
