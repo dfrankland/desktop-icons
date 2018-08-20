@@ -168,10 +168,10 @@ var DesktopManager = class {
         let desktopGrid = this._desktopGrids[monitorIndex];
         let children = desktopGrid.actor.get_children();
 
-        if (children.indexOf(child) != -1)
+        if (children.some(x => x.child == child))
             return desktopGrid;
-
-        return null;
+        else
+            throw new Error("Missmatch between expected items in a desktop grid not found");
     }
 
     _setupDnD() {
@@ -303,12 +303,10 @@ var DesktopManager = class {
         return true;
     }
 
-    acceptDrop(dragSource, actor, target, xEnd, yEnd, time) {
+    acceptDrop(xEnd, yEnd) {
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
         let itemsToSet = new Set(this._selection);
-        let itemsCount = 0;
         for (let fileItem of itemsToSet) {
-            let info = new Gio.FileInfo();
             let [fileItemX, fileItemY] = fileItem.actor.get_transformed_position();
             let fileX = Math.round(xDiff + fileItemX);
             let fileY = Math.round(yDiff + fileItemY);
@@ -321,147 +319,39 @@ var DesktopManager = class {
     }
 
     _layoutDrop(fileItems) {
-        let fileItemDestinations = [];
-        /* TODO: We should optimize this... */
-        for (let i = 0; i < fileItems.length; i++) {
-            let fileItem = fileItems[i];
-            for (let key in this._desktopGrids) {
-                let desktopGridOrig = this._desktopGrids[key];
-                let [found, leftOrig, topOrig] = desktopGridOrig.getPosOfFileItem(fileItem);
-                if (!found)
-                    log (`not found! ${fileItem.file.get_uri()}`)
+        let itemsGridAssociation = {}
 
-                if (!found)
-                    continue;
-
-                let [containerX, containerY] = fileItem.coordinates;
-                let [placeholder, dropDesktopGrid, left, top] = this._getClosestChildToPos(containerX, containerY);
-                if (placeholder._delegate != undefined &&
-                    placeholder._delegate instanceof FileItem.FileItem) {
-                    if (fileItem.file.equal(placeholder._delegate.file)) {
-                        /* Dropping in the same place as it was, so do nothing. */
-                    } else if (fileItems.some(w => w.file.equal(placeholder._delegate.file))) {
-                        /* Dropping were another dragged item is placed, nothing
-                         * to do except check if there is any collision
-                         */
-                        let collision = fileItemDestinations.filter(w =>
-                            (w[0] == dropDesktopGrid &&
-                             w[2] == left &&
-                             w[3] == top));
-                        if (collision.length > 0) {
-                            log('Error: Cannot place file, collision with\
-                                one of the dragged items '
-                                + placeholder._delegate.file.get_uri() +
-                                ' ' + left + ' ' + top);
-                            break;
-                        }
-                    } else {
-                        /* Dropping were another item is placed, need to search
-                         * for an empty space close by
-                         */
-
-                        [placeholder, left, top] = dropDesktopGrid.findEmptyPlace(left, top);
-                        if (!placeholder) {
-                            log('Error: No empty space in the desktop for another icon');
-                            break;
-                        }
-
-                        /* If a dragged item has been assigned the same
-                         * position as this one means we have a colision,
-                         * either the items were dragged out of the screen
-                         * and they are trying to fill the same position
-                         * on-screen or a resolution for collision in the
-                         * past assigned this place already.
-                         */
-                        let collision = fileItemDestinations.filter(w =>
-                            (w[0] == dropDesktopGrid &&
-                             w[2] == left &&
-                             w[3] == top));
-                        if (collision.length > 0) {
-                            log('Error: Cannot place file, collision with\
-                                one of the dragged items when searching \
-                                for an empty place ' + placeholder._delegate.file.get_uri() +
-                                ' ' + left + ' ' + top);
-                            break;
-                        }
-
-                        placeholder.destroy();
-                    }
-                } else {
-                    placeholder.destroy();
-                }
-                fileItemDestinations.push([dropDesktopGrid, fileItem, left, top]);
-                break;
-            }
-        }
-
-        /* First remove all from the desktop containers to avoid collisions */
-        for (let i = 0; i < fileItemDestinations.length; i++) {
-            let [desktopGrid, fileItem, left, top] = fileItemDestinations[i];
-            desktopGrid.removeFileItem(fileItem);
-        }
-
-        /* Place them in the appropriate places */
-        for (let i = 0; i < fileItemDestinations.length; i++) {
-            let [desktopGrid, fileItem, left, top] = fileItemDestinations[i];
-            desktopGrid.addFileItem(fileItem, left, top);
-        }
-
-        /* Fill the empty places with placeholders */
         for (let key in this._desktopGrids) {
+            let itemsForDesktop = fileItems.filter(
+                (x) => {
+                    let [itemX, itemY] = x.coordinates;
+                    let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({ x: itemX, y: itemY }));
+                    return key == monitorIndex;
+                }
+            );
             let desktopGrid = this._desktopGrids[key];
-
-            let maxColumns = desktopGrid.getMaxColumns();
-            let maxRows = desktopGrid.getMaxRows();
-            for (let column = 0; column < maxColumns; column++) {
-                for (let row = 0; row < maxRows; row++) {
-                    let child = desktopGrid.layout.get_child_at(column, row);
-                    if (child == null) {
-                        let newPlaceholder = new St.Bin({ width: Settings.ICON_MAX_SIZE, height: Settings.ICON_MAX_SIZE });
-                        /* DEBUG
-                        let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
-                        newPlaceholder.add_actor(icon);
-                        */
-                        desktopGrid.layout.attach(newPlaceholder, column, row, 1, 1);
-                    }
-                }
-            }
+            itemsGridAssociation[desktopGrid] = [desktopGrid, itemsForDesktop];
         }
-    }
 
-    _getClosestChildToPos(x, y) {
-        let minDistance = Number.POSITIVE_INFINITY;
-        let closestChild = null;
-        let closestDesktopGrid = null;
-        let left = 0;
-        let top = 0;
-        let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({ x, y }));
-        let desktopGrid = this._desktopGrids[monitorIndex];
-        let maxColumns = desktopGrid.getMaxColumns();
-        let maxRows = desktopGrid.getMaxRows();
-        for (let column = 0; column < maxColumns; column++) {
-            for (let row = 0; row < maxRows; row++) {
-                let child = desktopGrid.layout.get_child_at(column, row);
-                // It's used by other dragged item, so it has been destroyed
-                if (child == null)
-                    continue;
-
-                let [proposedX, proposedY] = child.get_transformed_position();
-                let distance = distanceBetweenPoints(proposedX, proposedY, x, y);
-                if (distance < minDistance) {
-                    closestChild = child;
-                    minDistance = distance;
-                    closestDesktopGrid = desktopGrid;
-                    left = column;
-                    top = row;
-                }
+        /* Remove all actors from their respective parents
+         * so we can place them freely
+         */
+        for (let hashedGrid in itemsGridAssociation) {
+            let [grid, fileItems] = itemsGridAssociation[hashedGrid];
+            for (let i = 0; i < fileItems.length; i++) {
+                let item = fileItems[i];
+                grid.removeFileItem(item);
             }
         }
 
-        if (!closestDesktopGrid)
-            log ("Error getting closest child to position");
-
-        return [closestChild, closestDesktopGrid, left, top];
+        for (let hashedGrid in itemsGridAssociation) {
+            let [grid, fileItems] = itemsGridAssociation[hashedGrid];
+            try {
+                grid.dropItems(fileItems);
+            } catch (e) {
+                log(`${e.message}`);
+            }
+        }
     }
 
     _scheduleLayoutChildren() {
@@ -483,19 +373,13 @@ var DesktopManager = class {
     _layoutChildren() {
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
-            if (fileItem.actor.visible) {
-                let [containerX, containerY] = fileItem.coordinates;
-                let [placeholder, desktopGrid, left, top] = this._getClosestChildToPos(containerX, containerY);
-                if (placeholder._delegate != undefined && placeholder._delegate instanceof FileItem.FileItem) {
-                    [placeholder, left, top] = desktopGrid.findEmptyPlace(left, top);
-                    if (placeholder == null) {
-                        log('WARNING: No empty space in the desktop for another icon');
-                        this._layoutChildrenId = 0;
-                        return GLib.SOURCE_REMOVE;
-                    }
-                }
-                placeholder.destroy();
-                desktopGrid.addFileItem(fileItem, left, top);
+            let [x, y] = fileItem.coordinates;
+            let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
+            let desktopGrid = this._desktopGrids[monitorIndex];
+            try {
+                desktopGrid.addFileItemCloseTo(fileItem, x, y);
+            } catch (e) {
+                log(`Error adding children to desktop: ${e.message}`);
             }
         }
 
@@ -519,7 +403,7 @@ var DesktopManager = class {
 
     fileLeftClickPressed(fileItem) {
         let event = Clutter.get_current_event();
-        let event_state = event.get_state();
+        let eventState = event.get_state();
         let selection = new Set();
 
         let desktopGrid = this._getContainerWithChild(fileItem.actor);
@@ -533,7 +417,7 @@ var DesktopManager = class {
         if (alreadySelected)
             return;
 
-        if (event_state & Clutter.ModifierType.SHIFT_MASK)
+        if (eventState & Clutter.ModifierType.SHIFT_MASK)
             selection = this._selection;
 
         selection.add(fileItem);
@@ -542,8 +426,8 @@ var DesktopManager = class {
 
     fileLeftClickReleased(fileItem) {
         let event = Clutter.get_current_event();
-        let event_state = event.get_state();
-        if (!this._inDrag && !(event_state & Clutter.ModifierType.SHIFT_MASK)) {
+        let eventState = event.get_state();
+        if (!this._inDrag && !(eventState & Clutter.ModifierType.SHIFT_MASK)) {
             this.setSelection(new Set([[...this._selection].pop()]));
         }
     }
@@ -607,10 +491,6 @@ var DesktopManager = class {
     }
 };
 Signals.addSignalMethods(DesktopManager.prototype);
-
-function distanceBetweenPoints(x, y, x2, y2) {
-    return Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2));
-}
 
 function forEachBackgroundManager(func) {
     Main.layoutManager._bgManagers.forEach(func);

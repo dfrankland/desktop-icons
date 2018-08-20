@@ -47,6 +47,12 @@ var UndoStatus = {
     REDO: 2,
 };
 
+class Placeholder extends St.Bin {
+    constructor() {
+        super();
+    }
+}
+
 var DesktopGrid = class {
 
     constructor(bgManager) {
@@ -93,9 +99,9 @@ var DesktopGrid = class {
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
 
-        this._fileItems = [];
-        this._createPlaceholders();
         this.actor.connect('key-press-event', this._onKeyPress.bind(this));
+
+        this.reset();
     }
 
     _onKeyPress(actor, event) {
@@ -135,22 +141,6 @@ var DesktopGrid = class {
         }
 
         return Clutter.EVENT_PROPAGATE;
-    }
-
-    _createPlaceholders() {
-        let maxRows = this.getMaxRows();
-        let maxColumns = this.getMaxColumns();
-
-        for (let i = 0; i < maxColumns; i++) {
-            for (let j = 0; j < maxRows; j++) {
-                let placeholder = new St.Bin({ width: Settings.ICON_MAX_SIZE, height: Settings.ICON_MAX_SIZE });
-                /* DEBUG
-                let icon = new St.Icon({ icon_name: 'window-restore-symbolic' });
-                placeholder.add_actor(icon);
-                */
-                this.layout.attach(placeholder, i, j, 1, 1);
-            }
-        }
     }
 
     _backgroundDestroyed() {
@@ -365,9 +355,68 @@ var DesktopGrid = class {
         Extension.desktopManager.setSelection(new Set(selection));
     }
 
-    addFileItem(fileItem, top, left) {
+    dropItems(fileItems)
+    {
+        let reserved = {};
+        for (let i = 0; i < fileItems.length; i++) {
+            let fileItem = fileItems[i];
+            let [dropX, dropY] = fileItem.coordinates;
+            let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY, reserved);
+            let placeholder = this.layout.get_child_at(column, row);
+            let hashedPosition = `${column},${row}`;
+            if (hashedPosition in reserved)
+                continue;
+
+            reserved[`${column},${row}`] = fileItem;
+            placeholder.child = fileItem.actor;
+            this._addFileItemTo(fileItem, column, row);
+        }
+    }
+
+    _addFileItemTo(fileItem, column, row)
+    {
+        let placeholder = this.layout.get_child_at(column, row);
+        placeholder.child = fileItem.actor;
         this._fileItems.push(fileItem);
-        this.layout.attach(fileItem.actor, top, left, 1, 1);
+    }
+
+    addFileItemCloseTo(fileItem, x, y)
+    {
+        let [column, row] = this._getEmptyPlaceClosestTo(x, y, null);
+        this._addFileItemTo(fileItem, column, row);
+    }
+
+    _getEmptyPlaceClosestTo(x, y, reserved) {
+        let maxColumns = this._getMaxColumns();
+        let maxRows = this._getMaxRows();
+        let found = false;
+        let resColumn = null;
+        let resRow = null;
+        let minDistance = Infinity;
+        for (let column = 0; column < maxColumns; column++) {
+            for (let row = 0; row < maxRows; row++) {
+                let placeholder = this.layout.get_child_at(column, row);
+                if (placeholder.child != null)
+                    continue;
+                
+                if (reserved && `${column},${row}` in reserved)
+                    continue;
+
+                let [proposedX, proposedY] = placeholder.get_transformed_position();
+                let distance = DesktopIconsUtil.distanceBetweenPoints(proposedX, proposedY, x, y);
+                if (distance < minDistance) {
+                    found = true;
+                    minDistance = distance;
+                    resColumn = column;
+                    resRow = row;
+                }
+            }
+        }
+
+        if (!found)
+            throw new Error(`Not enough place at monitor ${this._bgManager._monitorIndex}`);
+
+        return [resColumn, resRow];
     }
 
     removeFileItem(fileItem) {
@@ -375,15 +424,28 @@ var DesktopGrid = class {
         if (index > -1)
             this._fileItems.splice(index, 1);
         else
-            log('Error removing children from container');
+            throw new Error('Error removing children from container');
 
-        this.actor.remove_child(fileItem.actor);
+        let [column, row] = this._getPosOfFileItem(fileItem);
+        let placeholder = this.layout.get_child_at(column, row);
+        placeholder.child = null;
+    }
+
+    _fillPlaceholders()
+    {
+        for (let column = 0; column < this._getMaxColumns(); column++)
+        {
+            for (let row = 0; row < this._getMaxRows(); row++)
+            {
+                this.layout.attach(new Placeholder(), column, row, 1, 1);
+            }
+        }
     }
 
     reset() {
         this._fileItems = [];
         this.actor.remove_all_children();
-        this._createPlaceholders();
+        this._fillPlaceholders();
     }
 
     _onMotion(actor, event) {
@@ -455,78 +517,33 @@ var DesktopGrid = class {
         });
     }
 
-    getMaxColumns() {
+    _getMaxColumns() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
         return Math.ceil(workarea.width / Settings.ICON_MAX_SIZE);
     }
 
-    getMaxRows() {
+    _getMaxRows() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
         return Math.ceil(workarea.height / Settings.ICON_MAX_SIZE);
     }
 
-    findEmptyPlace(originCol, originRow) {
-        let maxRows = this.getMaxRows();
-        let maxColumns = this.getMaxColumns();
-        let bfsQueue = [];
-        bfsQueue.push([originCol, originRow]);
-        let bfsPendingOrVisitedNodes = new Set([`${[originCol, originRow]}`]);
-        let iterations = 0;
-        while (bfsQueue.length != 0) {
-            let [col, row] = bfsQueue.shift();
-            let currentChild = this.layout.get_child_at(col, row);
-            if (currentChild != null &&
-                (currentChild._delegate == undefined ||
-                    !(currentChild._delegate instanceof FileItem.FileItem))) {
-                return [currentChild, col, row];
-            }
-
-            let adjacents = [];
-            if (col + 1 < maxColumns)
-                adjacents.push([col + 1, row]);
-            if (row + 1 < maxRows)
-                adjacents.push([col, row + 1]);
-            if (col - 1 >= 0)
-                adjacents.push([col - 1, row]);
-            if (row - 1 >= 0)
-                adjacents.push([col, row - 1]);
-
-            for (let i = 0; i < adjacents.length; i++) {
-                if (!bfsPendingOrVisitedNodes.has(`${adjacents[i]}`)) {
-                    bfsQueue.push(adjacents[i]);
-                    bfsPendingOrVisitedNodes.add(`${adjacents[i]}`);
-                }
-            }
-            iterations++;
-        }
-
-        return null;
-    }
-
     acceptDrop(source, actor, x, y, time) {
-        return Extension.desktopManager.acceptDrop(source, actor, this, x, y, time);
+        return Extension.desktopManager.acceptDrop(x, y);
     }
 
-    getPosOfFileItem(itemToFind) {
-        if (itemToFind == null) {
-            log('Error at getPosOfFileItem: child cannot be null');
-            return [false, -1, -1];
-        }
+    _getPosOfFileItem(itemToFind) {
+        if (itemToFind == null)
+            throw new Error('Error at _getPosOfFileItem: child cannot be null');
 
         let found = false
-        let maxColumns = this.getMaxColumns();
-        let maxRows = this.getMaxRows();
+        let maxColumns = this._getMaxColumns();
+        let maxRows = this._getMaxRows();
         let column = 0;
         let row = 0;
         for (column = 0; column < maxColumns; column++) {
             for (row = 0; row < maxRows; row++) {
                 let item = this.layout.get_child_at(column, row);
-                // It's used by other dragged item, so it has been destroyed
-                if (item == null)
-                    continue;
-
-                if (item._delegate != undefined &&
-                    item._delegate.file.equal(itemToFind.file)) {
+                if (item.child && item.child._delegate.file.equal(itemToFind.file)) {
                     found = true;
                     break;
                 }
@@ -536,6 +553,9 @@ var DesktopGrid = class {
                 break;
         }
 
-        return [found, column, row];
+        if (!found)
+            throw new Error('Position of file item was not found');
+
+        return [column, row];
     }
 };
