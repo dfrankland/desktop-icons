@@ -231,16 +231,23 @@ var FileItem = class {
     _onPressButton(actor, event) {
         let button = event.get_button();
         if (button == 3) {
-            Extension.desktopManager.fileRightClickClicked(this);
+            if (!this.selected)
+                this.emit('selected', false);
             this._menu.toggle();
             return Clutter.EVENT_STOP;
         } else if (button == 1) {
             if (event.get_click_count() == 1) {
-                Extension.desktopManager.fileLeftClickPressed(this, event);
                 let [x, y] = event.get_coords();
                 this._primaryButtonPressed = true;
                 this._buttonPressInitialX = x;
                 this._buttonPressInitialY = y;
+                let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
+                if (!this.selected) {
+                    if (shiftPressed)
+                        this.emit('selected', true);
+                    else
+                        this.emit('selected', false);
+                }
             } else {
                 this._primaryButtonPressed = false;
                 this.doOpen();
@@ -274,7 +281,8 @@ var FileItem = class {
         let button = event.get_button();
         if (button == 1) {
             this._primaryButtonPressed = false
-            Extension.desktopManager.fileLeftClickReleased(this);
+            let addToSelection = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
+            this.emit('selected', addToSelection);
             return Clutter.EVENT_STOP;
         }
 
@@ -327,13 +335,21 @@ var FileItem = class {
         return intersects;
     }
 
-    setSelected(selected) {
+    set selected(selected) {
+        selected = !!selected;
+        if (selected == this._selected)
+            return;
+
         if (selected)
             this._container.add_style_pseudo_class('selected');
         else
             this._container.remove_style_pseudo_class('selected');
 
         this._selected = selected;
+    }
+
+    get selected() {
+        return this._selected;
     }
 };
 Signals.addSignalMethods(FileItem.prototype);

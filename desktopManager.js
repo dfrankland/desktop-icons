@@ -50,6 +50,8 @@ var DesktopManager = class {
         this._monitorDesktopDir = null;
         this._desktopMonitorCancellable = null;
         this._desktopGrids = {};
+        this._fileItemHandlers = new Map();
+        this._fileItems = [];
         this._dragCancelled = false;
 
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._addDesktopIcons());
@@ -79,11 +81,23 @@ var DesktopManager = class {
     }
 
     async _scanFiles() {
+        for (let i = 0; i < this._fileItems.length; i++) {
+            let fileItem = this._fileItems[i];
+            let id = this._fileItemHandlers.get(fileItem); 
+            fileItem.disconnect(id);
+        }
+        this._fileItemHandlers = new Map();
         this._fileItems = [];
 
         try {
-            for (let [file, info] of await this._enumerateDesktop())
-                this._fileItems.push(new FileItem.FileItem(file, info));
+            for (let [file, info] of await this._enumerateDesktop()) {
+                let fileItem = new FileItem.FileItem(file, info);
+                this._fileItems.push(fileItem);
+                let id = fileItem.connect('selected',
+                                          this._onFileItemSelected.bind(this));
+
+                this._fileItemHandlers.set(fileItem, id);
+            }
         } catch (e) {
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                 log(`Error loading desktop files ${e.message}`);
@@ -401,49 +415,21 @@ var DesktopManager = class {
         );
     }
 
-    fileLeftClickPressed(fileItem) {
-        let event = Clutter.get_current_event();
-        let eventState = event.get_state();
-        let selection = new Set();
+    _onFileItemSelected(fileItem, addToSelection) {
+        if (!addToSelection && !this._inDrag)
+            this.clearSelection();
 
-        let desktopGrid = this._getContainerWithChild(fileItem.actor);
-        if (desktopGrid == null) {
-            throw new Error('Error in left click pressed, child not found');
-            return;
-        }
-        desktopGrid.actor.grab_key_focus();
-        // In this case we just do nothing because it could be the start of a drag.
-        let alreadySelected = [...this._selection].find(x => x.file.get_uri() == fileItem.file.get_uri()) != null;
-        if (alreadySelected)
-            return;
-
-        if (eventState & Clutter.ModifierType.SHIFT_MASK)
-            selection = this._selection;
-
-        selection.add(fileItem);
-        this.setSelection(selection);
+        this._selection.add(fileItem);
+        this._fileItems.forEach(f => f.selected = this._selection.has(f));
     }
 
-    fileLeftClickReleased(fileItem) {
-        let event = Clutter.get_current_event();
-        let eventState = event.get_state();
-        if (!this._inDrag && !(eventState & Clutter.ModifierType.SHIFT_MASK)) {
-            this.setSelection(new Set([[...this._selection].pop()]));
-        }
-    }
-
-    fileRightClickClicked(fileItem) {
-        if ([...this._selection].map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) < 0)
-            this.setSelection([fileItem]);
-    }
-
-    setSelection(selection) {
+    clearSelection() {
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
-            fileItem.setSelected([...selection].map((x) => { return x.file.get_uri(); }).indexOf(fileItem.file.get_uri()) >= 0);
+            fileItem.selected = false;
         }
 
-        this._selection = selection;
+        this._selection = new Set();
     }
 
     doCopy() {

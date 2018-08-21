@@ -58,6 +58,9 @@ var DesktopGrid = class {
     constructor(bgManager) {
         this._bgManager = bgManager;
 
+        this._fileItemHandlers = new Map();
+        this._fileItems = [];
+
         this.layout = new Clutter.GridLayout({
             orientation: Clutter.Orientation.VERTICAL,
             column_homogeneous: true,
@@ -348,11 +351,10 @@ var DesktopGrid = class {
 
     _selectFromRubberband(currentX, currentY) {
         let { x, y, width, height } = this._rubberBand;
-        let selection = this._fileItems.filter(
-            fileItem => fileItem.intersectsWith(x, y, width, height)
-        );
-
-        Extension.desktopManager.setSelection(new Set(selection));
+        this._fileItems.forEach(fileItem => {
+            if (fileItem.intersectsWith(x, y, width, height))
+                fileItem.emit('selected', true);
+        });
     }
 
     dropItems(fileItems)
@@ -378,6 +380,8 @@ var DesktopGrid = class {
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = fileItem.actor;
         this._fileItems.push(fileItem);
+        let id = fileItem.connect('selected', this._onFileItemSelected.bind(this));
+        this._fileItemHandlers.set(fileItem, id);
     }
 
     addFileItemCloseTo(fileItem, x, y)
@@ -429,6 +433,9 @@ var DesktopGrid = class {
         let [column, row] = this._getPosOfFileItem(fileItem);
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = null;
+        let id = this._fileItemHandlers.get(fileItem); 
+        fileItem.disconnect(id);
+        this._fileItemHandlers.delete(fileItem);
     }
 
     _fillPlaceholders()
@@ -443,8 +450,15 @@ var DesktopGrid = class {
     }
 
     reset() {
+        for (let i = 0; i < this._fileItems.length; i++) {
+            let fileItem = this._fileItems[i];
+            let id = this._fileItemHandlers.get(fileItem); 
+            fileItem.disconnect(id);
+        }
+        this._fileItemHandlers = new Map();
         this._fileItems = [];
         this.actor.remove_all_children();
+
         this._fillPlaceholders();
     }
 
@@ -460,7 +474,7 @@ var DesktopGrid = class {
         let button = event.get_button();
         let [x, y] = event.get_coords();
         if (button == 1) {
-            Extension.desktopManager.setSelection([]);
+            Extension.desktopManager.clearSelection();
             this._rubberBandInitialX = x;
             this._rubberBandInitialY = y;
             this._drawingRubberBand = true;
@@ -558,4 +572,9 @@ var DesktopGrid = class {
 
         return [column, row];
     }
+
+    _onFileItemSelected(fileItem, modifySelection) {
+        this.actor.grab_key_focus();
+    }
+
 };
