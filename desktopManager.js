@@ -432,22 +432,21 @@ var DesktopManager = class {
         this._selection = new Set();
     }
 
-    doCopy() {
-        let nautilusClipboard = 'x-special/nautilus-clipboard\n';
-        nautilusClipboard += 'copy\n';
-        for (let fileItem of this._selection)
-            nautilusClipboard += fileItem.file.get_uri() + '\n';
+    _getClipboardText(isCopy) {
+        let action = isCopy ? 'copy' : 'cut'
+        let text = `x-special/nautilus-clipboard\n${action}\n${
+            [...this._selection].map(s => s.file.get_uri()).join('\n')
+        }\n`;
 
-        Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
+        return text
+    }
+
+    doCopy() {
+        Clipboard.set_text(CLIPBOARD_TYPE, this._getClipboardText(true));
     }
 
     doCut() {
-        let nautilusClipboard = 'x-special/nautilus-clipboard\n';
-        nautilusClipboard += 'cut\n';
-        for (let fileItem of this._selection)
-            nautilusClipboard += fileItem.file.get_uri() + '\n';
-
-        Clipboard.set_text(CLIPBOARD_TYPE, nautilusClipboard);
+        Clipboard.set_text(CLIPBOARD_TYPE, this._getClipboardText(false));
     }
 
     destroy() {
