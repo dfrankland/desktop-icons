@@ -1,6 +1,6 @@
 /* Desktop Icons GNOME Shell extension
  *
- * Copyright (C) 2017 Carlos Soriano <csoriano@gnome.org>
+ * Copyright (C) 2017 Carlos Soriano <csoriano@redhat.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
