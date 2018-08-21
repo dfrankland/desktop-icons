@@ -324,7 +324,7 @@ var DesktopManager = class {
             let [fileItemX, fileItemY] = fileItem.actor.get_transformed_position();
             let fileX = Math.round(xDiff + fileItemX);
             let fileY = Math.round(yDiff + fileItemY);
-            fileItem.coordinates = [fileX, fileY];
+            fileItem.savedPositions = [fileX, fileY];
         }
 
         this._layoutDrop([...itemsToSet]);
@@ -338,7 +338,7 @@ var DesktopManager = class {
         for (let key in this._desktopGrids) {
             let itemsForDesktop = fileItems.filter(
                 (x) => {
-                    let [itemX, itemY] = x.coordinates;
+                    let [itemX, itemY] = x.savedPositions;
                     let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({ x: itemX, y: itemY }));
                     return key == monitorIndex;
                 }
@@ -387,7 +387,7 @@ var DesktopManager = class {
     _layoutChildren() {
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
-            let [x, y] = fileItem.coordinates;
+            let [x, y] = fileItem.savedPositions;
             let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
             let desktopGrid = this._desktopGrids[monitorIndex];
             try {

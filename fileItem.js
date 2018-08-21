@@ -49,9 +49,9 @@ var FileItem = class {
         let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
         if (savedCoordinates != null)
-            this._coordinates = savedCoordinates.split(',').map(x => Number(x));
+            this._savedPositions = savedCoordinates.split(',').map(x => Number(x));
         else
-            this._coordinates = [0, 0]
+            this._savedPositions = [0, 0]
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_height(Settings.ICON_MAX_SIZE);
@@ -93,11 +93,6 @@ var FileItem = class {
         this._setMetadataCancellable = null;
         if (this._isDesktopFile)
             this._prepareDesktopFile();
-
-        /* DEBUG
-        this._label = new St.Label({ text: JSON.stringify(this._coordinates),
-                                        style_class: 'name-label' });
-        */
 
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
@@ -289,8 +284,8 @@ var FileItem = class {
         return Clutter.EVENT_PROPAGATE;
     }
 
-    get coordinates() {
-        return this._coordinates;
+    get savedPositions() {
+        return this._savedPositions;
     }
 
     _onSetMetadataFileFinished(source, result) {
@@ -302,24 +297,21 @@ var FileItem = class {
         }
     }
 
-    set coordinates(coords) {
+    set savedPositions(pos) {
         if (this._setMetadataCancellable)
             this._setMetadataCancellable.cancel();
         
         this._setMetadataCancellable = new Gio.Cancellable();
-        this._coordinates = [coords[0], coords[1]];
+        this._savedPositions = [pos[0], pos[1]];
         let info = new Gio.FileInfo();
         info.set_attribute_string('metadata::nautilus-icon-position',
-                                  `${coords[0]},${coords[1]}`);
+                                  `${pos[0]},${pos[1]}`);
         this.file.set_attributes_async(info,
             Gio.FileQueryInfoFlags.NONE,
             GLib.PRIORITY_DEFAULT,
             this._setMetadataCancellable,
             (source, result) => this._onSetMetadataFileFinished(source, result)
         );
-        /* DEBUG
-        this._label.set_text(JSON.stringify(this._coordinates));
-        */
     }
 
     intersectsWith(argX, argY, argWidth, argHeight)
