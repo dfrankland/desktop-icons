@@ -195,7 +195,7 @@ var DesktopGrid = class {
         /* Remove last line */
         files.pop();
 
-        return [true, isCut, lines];
+        return [true, isCut, files];
     }
 
     _doPaste() {
@@ -205,7 +205,7 @@ var DesktopGrid = class {
                 if (!valid)
                     return;
 
-                let desktop_dir = `file://${DesktopIconsUtil.getDesktopDir().get_uri()}`;
+                let desktop_dir = `${DesktopIconsUtil.getDesktopDir().get_uri()}`;
                 if (is_cut) {
                     DBusUtils.NautilusFileOperationsProxy.MoveURIsRemote(files, desktop_dir,
                         (result, error) => {
