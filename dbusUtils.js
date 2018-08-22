@@ -46,8 +46,8 @@ const FreeDesktopFileManagerProxyInterface = Gio.DBusProxy.makeProxyWrapper(Free
 function init() {
     NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
         Gio.DBus.session,
-        'org.gnome.Nautilus',
-        '/org/gnome/Nautilus',
+        'org.gnome.NautilusDevel',
+        '/org/gnome/NautilusDevel',
         (proxy, error) => {
             if (error) {
                 log('Error connecting to Nautilus');
