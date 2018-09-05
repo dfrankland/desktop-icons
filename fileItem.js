@@ -42,6 +42,9 @@ const DRAG_TRESHOLD = 8;
 var FileItem = class {
 
     constructor(file, fileInfo) {
+
+        this._doubleClicked = false;
+
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
         this._file = file;
@@ -125,7 +128,7 @@ var FileItem = class {
                     let [ok, loadedContents, etag_out] = source.load_contents_finish(result);
                     contents = loadedContents;
                 } catch (error) {
-                    if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) 
+                    if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                         log('Error loading Desktop files: ' + error.message);
                     return;
                 }
@@ -244,8 +247,12 @@ var FileItem = class {
                         this.emit('selected', false);
                 }
             } else {
-                this._primaryButtonPressed = false;
-                this.doOpen();
+                if (Settings.CLICK_POLICY_SINGLE) {
+                    this._doubleClicked = true;
+                } else {
+                    this._primaryButtonPressed = false;
+                    this.doOpen();
+                }
             }
             return Clutter.EVENT_STOP;
         }
@@ -275,6 +282,13 @@ var FileItem = class {
     _onReleaseButton(actor, event) {
         let button = event.get_button();
         if (button == 1) {
+            if (Settings.CLICK_POLICY_SINGLE) {
+                // Do open only if the user didn't do a double click,
+                // and isn't doing a rubberband selection
+                if ((!this._doubleClicked) && (this._primaryButtonPressed))
+                    this.doOpen();
+                this._doubleClicked = false;
+            }
             this._primaryButtonPressed = false
             let addToSelection = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
             this.emit('selected', addToSelection);
