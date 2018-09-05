@@ -42,6 +42,14 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
+function findMonitorIndexForPos(x, y) {
+    let dpy;
+    if (global.hasOwnProperty('screen'))
+        dpy = global.screen;
+    else
+        dpy = global.display;
+    return dpy.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
+}
 
 var DesktopManager = class {
     constructor() {
@@ -299,7 +307,10 @@ var DesktopManager = class {
                     }
 
                     this._draggable._dragInProgress = false;
-                    global.screen.set_cursor(Meta.Cursor.DEFAULT);
+                    if (global.hasOwnProperty('screen'))
+                        global.screen.set_cursor(Meta.Cursor.DEFAULT);
+                    else
+                        global.display.set_cursor(Meta.Cursor.DEFAULT);
                     this._draggable.emit('drag-end', event.get_time(), true);
                     if (destroyActor) {
                         this._draggable._dragActor.destroy();
@@ -339,7 +350,7 @@ var DesktopManager = class {
             let itemsForDesktop = fileItems.filter(
                 (x) => {
                     let [itemX, itemY] = x.savedPositions;
-                    let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({ x: itemX, y: itemY }));
+                    let monitorIndex = findMonitorIndexForPos(itemX, itemY);
                     return key == monitorIndex;
                 }
             );
@@ -388,7 +399,7 @@ var DesktopManager = class {
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
             let [x, y] = fileItem.savedPositions;
-            let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
+            let monitorIndex = findMonitorIndexForPos(x, y);
             let desktopGrid = this._desktopGrids[monitorIndex];
             try {
                 desktopGrid.addFileItemCloseTo(fileItem, x, y);

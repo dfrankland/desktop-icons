@@ -20,6 +20,7 @@ const Main = imports.ui.main;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const Settings = Me.imports.settings;
 const { DesktopManager } = Me.imports.desktopManager;
 const DBusUtils = Me.imports.dbusUtils;
 
@@ -32,6 +33,7 @@ function init() {
 
 function enable() {
     DBusUtils.init();
+    Settings.init();
     Main.layoutManager._addBackgroundMenu = function() {};
     desktopManager = new DesktopManager();
 }

@@ -17,6 +17,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//FIXME: would be tweakable later on
+const Gio = imports.gi.Gio;
+
+const SCHEMA_NAUTILUS = "org.gnome.nautilus.preferences";
+
+var nautilusSettings;
+
+function init() {
+    let schemaSource = Gio.SettingsSchemaSource.get_default();
+    let schemaObj = schemaSource.lookup(SCHEMA_NAUTILUS, true);
+    if (!schemaObj) {
+        nautilusSettings = null;
+    } else {
+        nautilusSettings = new Gio.Settings({ settings_schema: schemaObj });;
+        nautilusSettings.connect('changed', _onNautilusSettingsChanged);
+        _onNautilusSettingsChanged();
+    }
+}
+
+function _onNautilusSettingsChanged() {
+    CLICK_POLICY_SINGLE = nautilusSettings.get_string("click-policy") == "single";
+}
+
+// This is already in Nautilus settings, so it should not be made tweakable here
+var CLICK_POLICY_SINGLE = false;
+
+ //FIXME: would be tweakable later on
 var ICON_SIZE = 64;
 var ICON_MAX_SIZE = 130;
+
