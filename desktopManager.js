@@ -43,7 +43,12 @@ const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
 function findMonitorIndexForPos(x, y) {
-    return global.screen.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
+    let dpy;
+    if (global.hasOwnProperty('screen'))
+        dpy = global.screen;
+    else
+        dpy = global.display;
+    return dpy.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
 }
 
 var DesktopManager = class {
@@ -302,7 +307,10 @@ var DesktopManager = class {
                     }
 
                     this._draggable._dragInProgress = false;
-                    global.screen.set_cursor(Meta.Cursor.DEFAULT);
+                    if (global.hasOwnProperty('screen'))
+                        global.screen.set_cursor(Meta.Cursor.DEFAULT);
+                    else
+                        global.display.set_cursor(Meta.Cursor.DEFAULT);
                     this._draggable.emit('drag-end', event.get_time(), true);
                     if (destroyActor) {
                         this._draggable._dragActor.destroy();
