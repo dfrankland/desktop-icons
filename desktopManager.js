@@ -42,6 +42,9 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
+function findMonitorIndexForPos(x, y) {
+    return global.screen.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
+}
 
 var DesktopManager = class {
     constructor() {
@@ -339,7 +342,7 @@ var DesktopManager = class {
             let itemsForDesktop = fileItems.filter(
                 (x) => {
                     let [itemX, itemY] = x.savedPositions;
-                    let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({ x: itemX, y: itemY }));
+                    let monitorIndex = findMonitorIndexForPos(itemX, itemY);
                     return key == monitorIndex;
                 }
             );
@@ -388,7 +391,7 @@ var DesktopManager = class {
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
             let [x, y] = fileItem.savedPositions;
-            let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
+            let monitorIndex = findMonitorIndexForPos(x, y);
             let desktopGrid = this._desktopGrids[monitorIndex];
             try {
                 desktopGrid.addFileItemCloseTo(fileItem, x, y);
