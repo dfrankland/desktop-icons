@@ -34,16 +34,17 @@ const Util = imports.misc.util;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
-const Settings = Me.imports.settings;
+const Prefs = Me.imports.prefs;
 const DBusUtils = Me.imports.dbusUtils;
 
 const DRAG_TRESHOLD = 8;
 
 var FileItem = class {
 
-    constructor(file, fileInfo) {
+    constructor(file, fileInfo, fileExtra) {
 
         this._doubleClicked = false;
+        this._fileExtra = fileExtra;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
@@ -57,8 +58,8 @@ var FileItem = class {
             this._savedPositions = [0, 0]
 
         this.actor = new St.Bin({ visible: true });
-        this.actor.set_height(Settings.ICON_MAX_SIZE);
-        this.actor.set_width(Settings.ICON_MAX_SIZE);
+        this.actor.set_height(Prefs.get_max_height());
+        this.actor.set_width(Prefs.get_max_width());
         this.actor._delegate = this;
 
         this._container = new St.BoxLayout({
@@ -75,7 +76,7 @@ var FileItem = class {
 
         this._icon = new St.Icon({
             gicon: fileInfo.get_icon(),
-            icon_size: Settings.ICON_SIZE
+            icon_size: Prefs.get_icon_size()
         });
         this._iconContainer = new St.Bin({ visible: true });
         this._iconContainer.child = this._icon;
@@ -206,6 +207,10 @@ var FileItem = class {
         Extension.desktopManager.doTrash();
     }
 
+    _onEmptyTrashClicked() {
+        Extension.desktopManager.doEmptyTrash();
+    }
+
     _createMenu() {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
         let side = St.Side.LEFT;
@@ -213,9 +218,19 @@ var FileItem = class {
             side = St.Side.RIGHT;
         this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
         this._menu.addAction(_('Open'), () => this.doOpen());
-        this._menu.addAction(_('Cut'), () => this._onCutClicked());
-        this._menu.addAction(_('Copy'), () => this._onCopyClicked());
-        this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
+        switch (this._fileExtra) {
+        case Prefs.FILE_TYPE.NONE:
+            this._menu.addAction(_('Cut'), () => this._onCutClicked());
+            this._menu.addAction(_('Copy'), () => this._onCopyClicked());
+            this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
+            break;
+        case Prefs.FILE_TYPE.USER_DIRECTORY_TRASH:
+            this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+            this._menu.addAction(_('Empty trash'), () => this._onEmptyTrashClicked());
+            break;
+        default:
+            break;
+        }
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menu.addAction(_('Properties'), () => this._onPropertiesClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -247,7 +262,7 @@ var FileItem = class {
                         this.emit('selected', false);
                 }
             } else {
-                if (Settings.CLICK_POLICY_SINGLE) {
+                if (Prefs.CLICK_POLICY_SINGLE) {
                     this._doubleClicked = true;
                 } else {
                     this._primaryButtonPressed = false;
@@ -282,7 +297,7 @@ var FileItem = class {
     _onReleaseButton(actor, event) {
         let button = event.get_button();
         if ((button == 1) && this._primaryButtonPressed) {
-            if (Settings.CLICK_POLICY_SINGLE) {
+            if (Prefs.CLICK_POLICY_SINGLE) {
                 // Do open only if the user didn't do a double click,
                 // and isn't doing a rubberband selection
                 if ((!this._doubleClicked) && (this._primaryButtonPressed))

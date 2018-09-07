@@ -35,12 +35,14 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const DesktopGrid = Me.imports.desktopGrid;
 const FileItem = Me.imports.fileItem;
-const Settings = Me.imports.settings;
+const Prefs = Me.imports.prefs;
 const DBusUtils = Me.imports.dbusUtils;
 const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
+
+const DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*';
 
 function getDpy() {
     return global.screen || global.display;
@@ -49,6 +51,7 @@ function getDpy() {
 function findMonitorIndexForPos(x, y) {
     return getDpy().get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
 }
+
 
 var DesktopManager = class {
     constructor() {
@@ -66,6 +69,8 @@ var DesktopManager = class {
 
         this._addDesktopIcons();
         this._monitorDesktopFolder();
+
+        Prefs.settings.connect("changed", () => { this._addDesktopIcons(); })
 
         this._selection = new Set();
         this._inDrag = false;
@@ -97,8 +102,8 @@ var DesktopManager = class {
         this._fileItems = [];
 
         try {
-            for (let [file, info] of await this._enumerateDesktop()) {
-                let fileItem = new FileItem.FileItem(file, info);
+            for (let [file, info, extra] of await this._enumerateDesktop()) {
+                let fileItem = new FileItem.FileItem(file, info, extra);
                 this._fileItems.push(fileItem);
                 let id = fileItem.connect('selected',
                                           this._onFileItemSelected.bind(this));
@@ -126,7 +131,7 @@ var DesktopManager = class {
             this._desktopEnumerateCancellable = new Gio.Cancellable();
 
             let desktopDir = DesktopIconsUtil.getDesktopDir();
-            desktopDir.enumerate_children_async('metadata::*,standard::*,access::*',
+            desktopDir.enumerate_children_async(DEFAULT_ATTRIBUTES,
                 Gio.FileQueryInfoFlags.NONE,
                 GLib.PRIORITY_DEFAULT,
                 this._desktopEnumerateCancellable,
@@ -136,8 +141,11 @@ var DesktopManager = class {
                         let resultGenerator = function *() {
                             let info;
                             while ((info = fileEnum.next_file(null)))
-                                yield [fileEnum.get_child(info), info];
-                        };
+                                yield [fileEnum.get_child(info), info, Prefs.FILE_TYPE.NONE];
+                            for (let [newFolder, extras] of DesktopIconsUtil.getExtraFolders()) {
+                                yield [newFolder, newFolder.query_info(DEFAULT_ATTRIBUTES, Gio.FileQueryInfoFlags.NONE, this._desktopEnumerateCancellable), extras];
+                            }
+                        }.bind(this);
                         resolve(resultGenerator());
                     } catch (e) {
                         reject(e);
@@ -155,25 +163,34 @@ var DesktopManager = class {
         let desktopDir = DesktopIconsUtil.getDesktopDir();
         this._monitorDesktopDir = desktopDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
         this._monitorDesktopDir.set_rate_limit(1000);
-        this._monitorDesktopDir.connect('changed',
-            (obj, file, otherFile, eventType) => {
-                // Rate limiting isn't enough, as one action will create different events on the same file.
-                // limit by adding a timeout
-                if (this._scheduleDesktopsRefreshId) {
-                    return;
-                }
-                // Only get a subset of events we are interested in.
-                // Note that CREATED will emit a CHANGES_DONE_HINT
-                let {
-                    CHANGES_DONE_HINT, DELETED, RENAMED, MOVED_IN, MOVED_OUT
-                } = Gio.FileMonitorEvent;
-                if (![CHANGES_DONE_HINT, DELETED, RENAMED,
-                    MOVED_IN, MOVED_OUT].includes(eventType))
-                    return;
+        this._monitorDesktopDir.connect('changed', (obj, file, otherFile, eventType) => this._updateDesktopIfChanged(file, otherFile, eventType));
+        let trashDir = Gio.File.new_for_uri("trash:///");
+        this._monitorTrashDir = trashDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
+        this._monitorTrashDir.set_rate_limit(1000);
+        this._monitorTrashDir.connect('changed', (obj, file, otherFile, eventType) => {
+            if (Prefs.settings.get_boolean("show-trash"))
+                this._updateDesktopIfChanged(file, otherFile, eventType)
+        });
+    }
 
-                this._scheduleDesktopsRefreshId = Mainloop.timeout_add(500,
-                    () => this._refreshDesktops(file, otherFile));
-            });
+    _updateDesktopIfChanged (file, otherFile, eventType) {
+
+        // Rate limiting isn't enough, as one action will create different events on the same file.
+        // limit by adding a timeout
+        if (this._scheduleDesktopsRefreshId) {
+            return;
+        }
+        // Only get a subset of events we are interested in.
+        // Note that CREATED will emit a CHANGES_DONE_HINT
+        let {
+            CHANGES_DONE_HINT, DELETED, RENAMED, MOVED_IN, MOVED_OUT, CREATED
+        } = Gio.FileMonitorEvent;
+        if (![CHANGES_DONE_HINT, DELETED, RENAMED,
+            MOVED_IN, MOVED_OUT, CREATED].includes(eventType))
+            return;
+
+        this._scheduleDesktopsRefreshId = Mainloop.timeout_add(500,
+            () => this._refreshDesktops(file, otherFile));
     }
 
     //FIXME: we don't use file/otherfile for now and stupidely refresh all desktops
@@ -416,6 +433,14 @@ var DesktopManager = class {
     doTrash() {
         DBusUtils.NautilusFileOperationsProxy.TrashFilesRemote([...this._selection].map((x) => { return x.file.get_uri(); }),
             (source, error) => {
+                if (error)
+                    throw new Error('Error trashing files on the desktop: ' + error.message);
+            }
+        );
+    }
+
+    doEmptyTrash() {
+        DBusUtils.NautilusFileOperationsProxy.EmptyTrashRemote( (source, error) => {
                 if (error)
                     throw new Error('Error trashing files on the desktop: ' + error.message);
             }

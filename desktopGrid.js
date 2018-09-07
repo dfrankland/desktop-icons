@@ -31,7 +31,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
 const FileItem = Me.imports.fileItem;
-const Settings = Me.imports.settings;
+const Prefs = Me.imports.prefs;
 const DBusUtils = Me.imports.dbusUtils;
 const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Util = imports.misc.util;
@@ -533,12 +533,12 @@ var DesktopGrid = class {
 
     _getMaxColumns() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        return Math.ceil(workarea.width / Settings.ICON_MAX_SIZE);
+        return Math.ceil(workarea.width / Prefs.get_max_width());
     }
 
     _getMaxRows() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        return Math.ceil(workarea.height / Settings.ICON_MAX_SIZE);
+        return Math.ceil(workarea.height / Prefs.get_max_height());
     }
 
     acceptDrop(source, actor, x, y, time) {

@@ -12,6 +12,8 @@ const NautilusFileOperationsInterface = `<node>
         <arg name='URIs' type='as' direction='in'/> 
         <arg name='Destination' type='s' direction='in'/> 
     </method> 
+    <method name='EmptyTrash'>
+    </method> 
     <method name='TrashFiles'> 
         <arg name='URIs' type='as' direction='in'/> 
     </method> 
@@ -46,8 +48,8 @@ const FreeDesktopFileManagerProxyInterface = Gio.DBusProxy.makeProxyWrapper(Free
 function init() {
     NautilusFileOperationsProxy = new NautilusFileOperationsProxyInterface(
         Gio.DBus.session,
-        'org.gnome.NautilusDevel',
-        '/org/gnome/NautilusDevel',
+        'org.gnome.Nautilus',
+        '/org/gnome/Nautilus',
         (proxy, error) => {
             if (error) {
                 log('Error connecting to Nautilus');

@@ -18,6 +18,9 @@
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Prefs = Me.imports.prefs;
 
 const TERMINAL_SCHEMA = 'org.gnome.desktop.default-applications.terminal';
 const EXEC_KEY = 'exec';
@@ -37,4 +40,15 @@ function getTerminalCommand(workdir) {
 
 function distanceBetweenPoints(x, y, x2, y2) {
     return Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2));
+}
+
+function getExtraFolders() {
+    let extraFolders = new Array();
+    if (Prefs.settings.get_boolean("show-home")) {
+        extraFolders.push([Gio.File.new_for_commandline_arg(GLib.get_home_dir()), Prefs.FILE_TYPE.USER_DIRECTORY_HOME])
+    }
+    if (Prefs.settings.get_boolean("show-trash")) {
+        extraFolders.push([Gio.File.new_for_uri("trash:///"), Prefs.FILE_TYPE.USER_DIRECTORY_TRASH]);
+    }
+    return extraFolders;
 }
