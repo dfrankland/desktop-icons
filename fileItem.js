@@ -281,7 +281,7 @@ var FileItem = class {
 
     _onReleaseButton(actor, event) {
         let button = event.get_button();
-        if (button == 1) {
+        if ((button == 1) && this._primaryButtonPressed) {
             if (Settings.CLICK_POLICY_SINGLE) {
                 // Do open only if the user didn't do a double click,
                 // and isn't doing a rubberband selection
@@ -314,7 +314,7 @@ var FileItem = class {
     set savedPositions(pos) {
         if (this._setMetadataCancellable)
             this._setMetadataCancellable.cancel();
-        
+
         this._setMetadataCancellable = new Gio.Cancellable();
         this._savedPositions = [pos[0], pos[1]];
         let info = new Gio.FileInfo();
