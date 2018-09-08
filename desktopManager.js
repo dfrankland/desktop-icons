@@ -42,13 +42,12 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
+function getDpy() {
+    return global.screen || global.display;
+}
+
 function findMonitorIndexForPos(x, y) {
-    let dpy;
-    if (global.hasOwnProperty('screen'))
-        dpy = global.screen;
-    else
-        dpy = global.display;
-    return dpy.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
+    return getDpy().get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
 }
 
 var DesktopManager = class {
@@ -307,10 +306,7 @@ var DesktopManager = class {
                     }
 
                     this._draggable._dragInProgress = false;
-                    if (global.hasOwnProperty('screen'))
-                        global.screen.set_cursor(Meta.Cursor.DEFAULT);
-                    else
-                        global.display.set_cursor(Meta.Cursor.DEFAULT);
+                    getDpy().set_cursor(Meta.Cursor.DEFAULT);
                     this._draggable.emit('drag-end', event.get_time(), true);
                     if (destroyActor) {
                         this._draggable._dragActor.destroy();
