@@ -387,8 +387,8 @@ var DesktopManager = class {
     _layoutChildren() {
         for (let i = 0; i < this._fileItems.length; i++) {
             let fileItem = this._fileItems[i];
-			let [x, y] = fileItem.savedPositions;
-			let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
+            let [x, y] = fileItem.savedPositions;
+            let monitorIndex = global.screen.get_monitor_index_for_rect(new Meta.Rectangle({x, y}));
             let desktopGrid = this._desktopGrids[monitorIndex];
             try {
                 desktopGrid.addFileItemCloseTo(fileItem, x, y);
