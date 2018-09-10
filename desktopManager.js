@@ -195,6 +195,9 @@ var DesktopManager = class {
 
     //FIXME: we don't use file/otherfile for now and stupidely refresh all desktops
     _refreshDesktops(file, otherFile) {
+        Object.values(this._desktopGrids).forEach(grid => {
+            grid.actor.destroy_all_children();
+        });
         this._scheduleDesktopsRefreshId = 0;
         // TODO: handle DND, opened filecontainer menu…
 
