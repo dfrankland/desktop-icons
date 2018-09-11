@@ -450,11 +450,8 @@ var DesktopGrid = class {
     }
 
     reset() {
-        for (let i = 0; i < this._fileItems.length; i++) {
-            let fileItem = this._fileItems[i];
-            let id = this._fileItemHandlers.get(fileItem); 
+        for (let [fileItem, id] of this._fileItemHandlers)
             fileItem.disconnect(id);
-        }
         this._fileItemHandlers = new Map();
         this._fileItems = [];
         this.actor.remove_all_children();
