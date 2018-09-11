@@ -88,7 +88,7 @@ var DesktopManager = class {
     }
 
     _destroyDesktopIcons() {
-        Object.keys(this._desktopGrids).forEach((l) => this._desktopGrids[l].actor.destroy());
+        Object.values(this._desktopGrids).forEach(grid => grid.actor.destroy());
         this._desktopGrids = {};
     }
 
@@ -116,8 +116,8 @@ var DesktopManager = class {
             return;
         }
 
-        Object.keys(this._desktopGrids).forEach((w) => {
-            this._desktopGrids[w].actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
+        Object.values(this._desktopGrids).forEach(grid => {
+            grid.actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
         });
 
         this._scheduleReLayoutChildren();
@@ -406,7 +406,7 @@ var DesktopManager = class {
         if (this._layoutChildrenId != 0)
             return;
 
-        Object.keys(this._desktopGrids).forEach((w) => this._desktopGrids[w].reset());
+        Object.values(this._desktopGrids).forEach((grid) => grid.reset());
 
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
     }
@@ -500,7 +500,7 @@ var DesktopManager = class {
             Main.layoutManager.disconnect(this._startupPreparedId);
         this._startupPreparedId = 0;
 
-        Object.keys(this._desktopGrids).forEach(w => this._desktopGrids[w].actor.destroy());
+        Object.values(this._desktopGrids).forEach(grid => grid.actor.destroy());
         this._desktopGrids = {}
     }
 };
