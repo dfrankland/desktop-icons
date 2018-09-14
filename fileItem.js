@@ -43,7 +43,6 @@ var FileItem = class {
 
     constructor(file, fileInfo, fileExtra) {
 
-        this._doubleClicked = false;
         this._fileExtra = fileExtra;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
@@ -261,13 +260,6 @@ var FileItem = class {
                     else
                         this.emit('selected', false);
                 }
-            } else {
-                if (Prefs.CLICK_POLICY_SINGLE) {
-                    this._doubleClicked = true;
-                } else {
-                    this._primaryButtonPressed = false;
-                    this.doOpen();
-                }
             }
             return Clutter.EVENT_STOP;
         }
@@ -296,20 +288,20 @@ var FileItem = class {
 
     _onReleaseButton(actor, event) {
         let button = event.get_button();
-        if ((button == 1) && this._primaryButtonPressed) {
-            if (Prefs.CLICK_POLICY_SINGLE) {
-                // Do open only if the user didn't do a double click,
-                // and isn't doing a rubberband selection
-                if ((!this._doubleClicked) && (this._primaryButtonPressed))
+        if (button == 1) {
+            // primaryButtonPressed is TRUE only if the user has pressed the button
+            // over an icon, and if (s)he has not started a drag&drop operation
+            if (this._primaryButtonPressed) {
+                this._primaryButtonPressed = false
+                let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
+                if ((event.get_click_count() == 1) && Prefs.CLICK_POLICY_SINGLE && !shiftPressed)
                     this.doOpen();
-                this._doubleClicked = false;
+                this.emit('selected', shiftPressed);
+                return Clutter.EVENT_STOP;
             }
-            this._primaryButtonPressed = false
-            let addToSelection = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
-            this.emit('selected', addToSelection);
-            return Clutter.EVENT_STOP;
+            if ((event.get_click_count() == 2) && (!Prefs.CLICK_POLICY_SINGLE))
+                this.doOpen();
         }
-
         return Clutter.EVENT_PROPAGATE;
     }
 
