@@ -65,7 +65,6 @@ var DesktopManager = class {
         this._dragCancelled = false;
 
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._addDesktopIcons());
-        this._startupPreparedId = Main.layoutManager.connect('startup-prepared', () => this._addDesktopIcons());
 
         this._addDesktopIcons();
         this._monitorDesktopFolder();
@@ -492,10 +491,6 @@ var DesktopManager = class {
         if (this._monitorsChangedId)
             Main.layoutManager.disconnect(this._monitorsChangedId);
         this._monitorsChangedId = 0;
-
-        if (this._startupPreparedId)
-            Main.layoutManager.disconnect(this._startupPreparedId);
-        this._startupPreparedId = 0;
 
         Object.values(this._desktopGrids).forEach(grid => grid.actor.destroy());
         this._desktopGrids = {}

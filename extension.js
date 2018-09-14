@@ -26,12 +26,23 @@ const DBusUtils = Me.imports.dbusUtils;
 
 var desktopManager = null;
 var addBackgroundMenuOrig = null;
+var _startupPreparedId;
 
 function init() {
     addBackgroundMenuOrig = Main.layoutManager._addBackgroundMenu;
 }
 
 function enable() {
+    // wait until the startup process has ended
+    if (Main.layoutManager._startingUp)
+        _startupPreparedId = Main.layoutManager.connect('startup-complete', () => innerEnable(true));
+    else
+        innerEnable(false);
+}
+
+function innerEnable(disconnectSignal) {
+    if (disconnectSignal)
+        Main.layoutManager.disconnect(_startupPreparedId);
     DBusUtils.init();
     Prefs.init();
     Main.layoutManager._addBackgroundMenu = function() {};
