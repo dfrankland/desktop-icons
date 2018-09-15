@@ -38,6 +38,12 @@ const Util = imports.misc.util;
 
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
+const Gettext = imports.gettext;
+
+Gettext.textdomain("desktop-icons");
+Gettext.bindtextdomain("desktop-icons", ExtensionUtils.getCurrentExtension().path + "/locale");
+
+const _ = Gettext.gettext;
 
 
 /* From NautilusFileUndoManagerState */

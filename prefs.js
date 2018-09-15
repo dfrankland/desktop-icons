@@ -24,6 +24,9 @@ const GioSSS = Gio.SettingsSchemaSource;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Gettext = imports.gettext;
 
+Gettext.textdomain("desktop-icons");
+Gettext.bindtextdomain("desktop-icons", ExtensionUtils.getCurrentExtension().path + "/locale");
+
 var _ = Gettext.gettext;
 
 const SCHEMA_NAUTILUS = "org.gnome.nautilus.preferences";
@@ -83,27 +86,16 @@ function buildPrefsWidget() {
 
     let frame = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, border_width: 10, spacing: 10 });
 
-    frame.add(buildSelector('icon-size', _("Icon size")));
+    frame.add(buildSelector('icon-size', _("Size for the desktop icons"), { "small": _("Small"), "standard": _("Standard"), "large": _("Large"), "huge": _("Huge")}));
     frame.add(buildSwitcher('show-home', _("Show the personal folder in the desktop")));
-    frame.add(buildSwitcher('show-trash', _("Show the trashcan in the desktop")));
+    frame.add(buildSwitcher('show-trash', _("Show the trash icon in the desktop")));
     frame.show_all();
     return frame;
 }
 
-function buildSpinButton(key, labeltext, minimum, maximum) {
+function buildSwitcher(key, labelText) {
     let hbox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
-    let label = new Gtk.Label({ label: labeltext, xalign: 0 });
-    let adjust = new Gtk.Adjustment({ lower: minimum, upper: maximum, value: settings.get_int(key), step_increment: 1 });
-    let spin = new Gtk.SpinButton({ digits: 0, adjustment: adjust });
-    settings.bind(key, adjust, 'value', 3);
-    hbox.pack_start(label, true, true, 0);
-    hbox.add(spin);
-    return hbox;
-}
-
-function buildSwitcher(key, labeltext) {
-    let hbox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
-    let label = new Gtk.Label({ label: labeltext, xalign: 0 });
+    let label = new Gtk.Label({ label: labelText, xalign: 0 });
     let switcher = new Gtk.Switch({ active: settings.get_boolean(key) });
     settings.bind(key, switcher, 'active', 3);
     hbox.pack_start(label, true, true, 0);
@@ -111,22 +103,25 @@ function buildSwitcher(key, labeltext) {
     return hbox;
 }
 
-function buildSelector(key, labeltext) {
+function buildSelector(key, labelText, elements) {
     let listStore = new Gtk.ListStore();
-    listStore.set_column_types ([GObject.TYPE_STRING]);
+    listStore.set_column_types ([GObject.TYPE_STRING, GObject.TYPE_STRING]);
     let schemaKey = settings.settings_schema.get_key(key);
     let values = schemaKey.get_range().get_child_value(1).get_child_value(0).get_strv();
     for(let val in values) {
         let iter = listStore.append();
-        listStore.set (iter, [0], [values[val]]);
+        let visibleText = values[val];
+        if (visibleText in elements)
+            visibleText = elements[visibleText];
+        listStore.set (iter, [0, 1], [visibleText, values[val]]);
     }
     let hbox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
-    let label = new Gtk.Label({ label: labeltext, xalign: 0 });
+    let label = new Gtk.Label({ label: labelText, xalign: 0 });
     let combo = new Gtk.ComboBox({model: listStore});
     let rendererText = new Gtk.CellRendererText();
     combo.pack_start (rendererText, false);
     combo.add_attribute (rendererText, "text", 0);
-    combo.set_id_column(0);
+    combo.set_id_column(1);
     settings.bind(key, combo, 'active-id', 3);
     hbox.pack_start(label, true, true, 0);
     hbox.add(combo);

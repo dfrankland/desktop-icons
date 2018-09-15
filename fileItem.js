@@ -36,6 +36,12 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
 const Prefs = Me.imports.prefs;
 const DBusUtils = Me.imports.dbusUtils;
+const Gettext = imports.gettext;
+
+Gettext.textdomain("desktop-icons");
+Gettext.bindtextdomain("desktop-icons", ExtensionUtils.getCurrentExtension().path + "/locale");
+
+const _ = Gettext.gettext;
 
 const DRAG_TRESHOLD = 8;
 

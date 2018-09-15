@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist>
+<schemalist gettext-domain="desktop-icons">
     <enum id="org.gnome.shell.extension.desktop-icons.ZoomLevel">
         <value value="0" nick="small"/>
         <value value="1" nick="standard"/>
@@ -19,8 +19,8 @@
     </key>
 	<key type="b" name="show-trash">
         <default>true</default>
-        <summary>Show trash can</summary>
-        <description>Show the trash can in the desktop.</description>
+        <summary>Show trash icon</summary>
+        <description>Show the trash icon in the desktop.</description>
     </key>
   </schema>
 </schemalist>
