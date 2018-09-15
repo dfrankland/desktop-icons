@@ -57,6 +57,7 @@ var FileItem = class {
             this._savedPositions = [0, 0]
 
         this.actor = new St.Bin({ visible: true });
+        this.actor.set_fill(true, true);
         this.actor.set_height(Prefs.get_max_height());
         this.actor.set_width(Prefs.get_max_width());
         this.actor._delegate = this;
