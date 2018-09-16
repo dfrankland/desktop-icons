@@ -361,7 +361,7 @@ var DesktopManager = class {
         for (let key in this._desktopGrids) {
             let itemsForDesktop = fileItems.filter(
                 (x) => {
-                    let [itemX, itemY] = x.savedPositions;
+                    let [itemX, itemY] = (x.savedPositions == null) ? [0, 0] : x.savedPositions;
                     let monitorIndex = findMonitorIndexForPos(itemX, itemY);
                     return key == monitorIndex;
                 }
@@ -407,17 +407,33 @@ var DesktopManager = class {
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
     }
 
+    _addFileItemCloseTo(item) {
+        let [x, y] = (item.savedPositions == null) ? [0, 0] : item.savedPositions;
+        let monitorIndex = findMonitorIndexForPos(x, y);
+        let desktopGrid = this._desktopGrids[monitorIndex];
+        try {
+            desktopGrid.addFileItemCloseTo(item, x, y);
+        } catch (e) {
+            log(`Error adding children to desktop: ${e.message}`);
+        }
+    }
+
     _layoutChildren() {
-        for (let i = 0; i < this._fileItems.length; i++) {
-            let fileItem = this._fileItems[i];
-            let [x, y] = fileItem.savedPositions;
-            let monitorIndex = findMonitorIndexForPos(x, y);
-            let desktopGrid = this._desktopGrids[monitorIndex];
-            try {
-                desktopGrid.addFileItemCloseTo(fileItem, x, y);
-            } catch (e) {
-                log(`Error adding children to desktop: ${e.message}`);
-            }
+        /*
+         * Paint the icons in two passes:
+         * * first pass paints those that have their coordinates defined in the metadata
+         * * second pass paints those new files that still don't have their definitive coordinates
+         */
+        for (let fileItem of this._fileItems) {
+            if (fileItem.savedPositions == null)
+                continue;
+            this._addFileItemCloseTo(fileItem);
+        }
+
+        for (let fileItem of this._fileItems) {
+            if (fileItem.savedPositions !== null)
+                continue;
+            this._addFileItemCloseTo(fileItem);
         }
 
         this._layoutChildrenId = 0;

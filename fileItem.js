@@ -55,12 +55,12 @@ var FileItem = class {
 
         this._file = file;
         this._fileInfo = fileInfo;
-        let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
+        let savedPositions = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
-        if (savedCoordinates != null)
-            this._savedPositions = savedCoordinates.split(',').map(x => Number(x));
+        if (savedPositions != null)
+            this._savedPositions = savedPositions.split(',').map(x => Number(x));
         else
-            this._savedPositions = [0, 0]
+            this._savedPositions = null;
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
