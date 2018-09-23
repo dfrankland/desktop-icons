@@ -32,6 +32,7 @@ var _ = Gettext.gettext;
 const SCHEMA_NAUTILUS = "org.gnome.nautilus.preferences";
 const SCHEMA = 'org.gnome.shell.extensions.desktop-icons';
 
+// Sizes in pixels for "small", "standard", "large" and "huge" icon size
 const ICON_SIZE = [48, 64, 96, 128];
 const ICON_WIDTH = [120, 130, 130, 130];
 const ICON_HEIGHT = [120, 130, 164, 220];

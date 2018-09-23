@@ -116,7 +116,7 @@ var DesktopGrid = class {
     _onKeyPress(actor, event) {
         if (global.stage.get_key_focus() != actor)
             return Clutter.EVENT_PROPAGATE;
-            
+
         let symbol = event.get_key_symbol();
         let isCtrl = (event.get_state() & Clutter.ModifierType.CONTROL_MASK) != 0;
         let isShift = (event.get_state() & Clutter.ModifierType.SHIFT_MASK) != 0;
@@ -194,7 +194,7 @@ var DesktopGrid = class {
         if (!(['copy', 'cut'].includes(action)))
             return [false, false, null];
         let isCut = action == 'cut';
-        
+
         /* Last line is empty due to the split */
         if (files.length <= 1)
             return [false, false, null];
@@ -363,8 +363,7 @@ var DesktopGrid = class {
         });
     }
 
-    dropItems(fileItems)
-    {
+    dropItems(fileItems) {
         let reserved = {};
         for (let fileItem of fileItems) {
             let [dropX, dropY] = (fileItem.savedPositions == null) ? [0, 0] : fileItem.savedPositions;
@@ -380,8 +379,7 @@ var DesktopGrid = class {
         }
     }
 
-    _addFileItemTo(fileItem, column, row)
-    {
+    _addFileItemTo(fileItem, column, row) {
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = fileItem.actor;
         this._fileItems.push(fileItem);
@@ -389,8 +387,7 @@ var DesktopGrid = class {
         this._fileItemHandlers.set(fileItem, id);
     }
 
-    addFileItemCloseTo(fileItem, x, y)
-    {
+    addFileItemCloseTo(fileItem, x, y) {
         let [column, row] = this._getEmptyPlaceClosestTo(x, y, null);
         this._addFileItemTo(fileItem, column, row);
         /* If this file is new in the Desktop and hasn't yet
@@ -415,7 +412,7 @@ var DesktopGrid = class {
                 let placeholder = this.layout.get_child_at(column, row);
                 if (placeholder.child != null)
                     continue;
-                
+
                 if (reserved && `${column},${row}` in reserved)
                     continue;
 
@@ -446,17 +443,14 @@ var DesktopGrid = class {
         let [column, row] = this._getPosOfFileItem(fileItem);
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = null;
-        let id = this._fileItemHandlers.get(fileItem); 
+        let id = this._fileItemHandlers.get(fileItem);
         fileItem.disconnect(id);
         this._fileItemHandlers.delete(fileItem);
     }
 
-    _fillPlaceholders()
-    {
-        for (let column = 0; column < this._getMaxColumns(); column++)
-        {
-            for (let row = 0; row < this._getMaxRows(); row++)
-            {
+    _fillPlaceholders() {
+        for (let column = 0; column < this._getMaxColumns(); column++) {
+            for (let row = 0; row < this._getMaxRows(); row++) {
                 this.layout.attach(new Placeholder(), column, row, 1, 1);
             }
         }

@@ -342,8 +342,7 @@ var FileItem = class {
         );
     }
 
-    intersectsWith(argX, argY, argWidth, argHeight)
-    {
+    intersectsWith(argX, argY, argWidth, argHeight) {
         let rect = new Meta.Rectangle({ x: argX, y: argY, width: argWidth, height: argHeight });
         let [containerX, containerY] = this._container.get_transformed_position();
         let boundingBox = new Meta.Rectangle({ x: containerX,

@@ -456,10 +456,9 @@ var DesktopManager = class {
 
     doEmptyTrash() {
         DBusUtils.NautilusFileOperationsProxy.EmptyTrashRemote( (source, error) => {
-                if (error)
-                    throw new Error('Error trashing files on the desktop: ' + error.message);
-            }
-        );
+            if (error)
+                throw new Error('Error trashing files on the desktop: ' + error.message);
+        });
     }
 
     _onFileItemSelected(fileItem, addToSelection) {
