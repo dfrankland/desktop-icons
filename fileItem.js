@@ -151,8 +151,8 @@ var FileItem = class {
                     return;
 
                 if (GLib.path_is_absolute(iconStr)) {
-                    let iconfile = Gio.File.new_for_commandline_arg(iconStr);
-                    this._icon.gicon = new Gio.FileIcon(iconFile);
+                    let iconFile = Gio.File.new_for_commandline_arg(iconStr);
+                    this._icon.gicon = new Gio.FileIcon({ file: iconFile });
                 } else {
                     this._icon.gicon = Gio.ThemedIcon.new_with_default_fallbacks(iconStr);
                 }
