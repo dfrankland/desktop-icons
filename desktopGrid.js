@@ -185,7 +185,7 @@ var DesktopGrid = class {
     }
 
     _parseClipboardText(text) {
-        let lines = text.split('\n')
+        let lines = text.split('\n');
         let [mime, action, ...files] = lines;
 
         if (mime != 'x-special/nautilus-clipboard')
@@ -553,7 +553,7 @@ var DesktopGrid = class {
         if (itemToFind == null)
             throw new Error('Error at _getPosOfFileItem: child cannot be null');
 
-        let found = false
+        let found = false;
         let maxColumns = this._getMaxColumns();
         let maxRows = this._getMaxRows();
         let column = 0;

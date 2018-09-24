@@ -108,7 +108,7 @@ var FileItem = class {
         let clutterText = this._label.get_clutter_text();
         /* TODO: Convert to gobject.set for 3.30 */
         clutterText.set_line_wrap(true);
-        clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+        clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR);
         clutterText.set_ellipsize(Pango.EllipsizeMode.END);
 
         this._container.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
@@ -118,7 +118,7 @@ var FileItem = class {
         this._createMenu();
 
         this._selected = false;
-        this._primaryButtonPressed = false
+        this._primaryButtonPressed = false;
         if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
     }
@@ -157,7 +157,7 @@ var FileItem = class {
                     this._icon.gicon = Gio.ThemedIcon.new_with_default_fallbacks(iconStr);
                 }
             }
-        )
+        );
     }
 
     doOpen() {
@@ -283,7 +283,7 @@ var FileItem = class {
             if (distance > DRAG_TRESHOLD) {
                 // Don't need to track anymore this if we start drag, and also
                 // avoids reentrance here
-                this._primaryButtonPressed = false
+                this._primaryButtonPressed = false;
                 let event = Clutter.get_current_event();
                 let [x, y] = event.get_coords();
                 Extension.desktopManager.dragStart();
@@ -299,7 +299,7 @@ var FileItem = class {
             // primaryButtonPressed is TRUE only if the user has pressed the button
             // over an icon, and if (s)he has not started a drag&drop operation
             if (this._primaryButtonPressed) {
-                this._primaryButtonPressed = false
+                this._primaryButtonPressed = false;
                 let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
                 if ((event.get_click_count() == 1) && Prefs.CLICK_POLICY_SINGLE && !shiftPressed)
                     this.doOpen();

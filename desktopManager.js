@@ -56,7 +56,7 @@ function findMonitorIndexForPos(x, y) {
 var DesktopManager = class {
     constructor() {
         this._layoutChildrenId = 0;
-        this._scheduleDesktopsRefreshId = 0
+        this._scheduleDesktopsRefreshId = 0;
         this._monitorDesktopDir = null;
         this._desktopMonitorCancellable = null;
         this._desktopGrids = {};
@@ -69,7 +69,7 @@ var DesktopManager = class {
         this._addDesktopIcons();
         this._monitorDesktopFolder();
 
-        Prefs.settings.connect("changed", () => { this._addDesktopIcons(); })
+        Prefs.settings.connect("changed", () => { this._addDesktopIcons(); });
 
         this._selection = new Set();
         this._inDrag = false;
@@ -165,7 +165,7 @@ var DesktopManager = class {
         this._monitorTrashDir.set_rate_limit(1000);
         this._monitorTrashDir.connect('changed', (obj, file, otherFile, eventType) => {
             if (Prefs.settings.get_boolean("show-trash"))
-                this._updateDesktopIfChanged(file, otherFile, eventType)
+                this._updateDesktopIfChanged(file, otherFile, eventType);
         });
     }
 
@@ -479,12 +479,12 @@ var DesktopManager = class {
     }
 
     _getClipboardText(isCopy) {
-        let action = isCopy ? 'copy' : 'cut'
+        let action = isCopy ? 'copy' : 'cut';
         let text = `x-special/nautilus-clipboard\n${action}\n${
             [...this._selection].map(s => s.file.get_uri()).join('\n')
         }\n`;
 
-        return text
+        return text;
     }
 
     doCopy() {
