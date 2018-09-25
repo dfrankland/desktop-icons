@@ -32,10 +32,9 @@ var _ = Gettext.gettext;
 const SCHEMA_NAUTILUS = "org.gnome.nautilus.preferences";
 const SCHEMA = 'org.gnome.shell.extensions.desktop-icons';
 
-// Sizes in pixels for "small", "standard", "large" and "huge" icon size
-const ICON_SIZE = [48, 64, 96, 128];
-const ICON_WIDTH = [120, 130, 130, 130];
-const ICON_HEIGHT = [120, 130, 164, 220];
+const ICON_SIZE = { "small": 48, "standard": 64, "large": 96, "huge": 128 };
+const ICON_WIDTH = { "small": 120, "standard": 130, "large": 130, "huge": 130 };
+const ICON_HEIGHT = { "small": 120, "standard": 130, "large": 164, "huge": 220 };
 
 var FILE_TYPE = {
     NONE: null,
@@ -134,13 +133,13 @@ function _onNautilusSettingsChanged() {
 }
 
 function get_icon_size() {
-    return ICON_SIZE[settings.get_enum("icon-size")];
+    return ICON_SIZE[settings.get_string("icon-size")];
 }
 
 function get_max_width() {
-    return ICON_WIDTH[settings.get_enum("icon-size")];
+    return ICON_WIDTH[settings.get_string("icon-size")];
 }
 
 function get_max_height() {
-    return ICON_HEIGHT[settings.get_enum("icon-size")];
+    return ICON_HEIGHT[settings.get_string("icon-size")];
 }
