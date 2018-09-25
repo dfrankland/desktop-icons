@@ -109,12 +109,12 @@ function buildSelector(key, labelText, elements) {
     listStore.set_column_types ([GObject.TYPE_STRING, GObject.TYPE_STRING]);
     let schemaKey = settings.settings_schema.get_key(key);
     let values = schemaKey.get_range().get_child_value(1).get_child_value(0).get_strv();
-    for(let val in values) {
+    for (let val of values) {
         let iter = listStore.append();
-        let visibleText = values[val];
+        let visibleText = val;
         if (visibleText in elements)
             visibleText = elements[visibleText];
-        listStore.set (iter, [0, 1], [visibleText, values[val]]);
+        listStore.set (iter, [0, 1], [visibleText, val]);
     }
     let hbox = new Gtk.Box({ orientation: Gtk.Orientation.HORIZONTAL, spacing: 10 });
     let label = new Gtk.Label({ label: labelText, xalign: 0 });

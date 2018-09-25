@@ -282,8 +282,8 @@ var DesktopManager = class {
             targetActor: target,
             clutterEvent: event
         };
-        for (let i = 0; i < DND.dragMonitors.length; i++) {
-            let dropFunc = DND.dragMonitors[i].dragDrop;
+        for (let dragMonitor of DND.dragMonitors) {
+            let dropFunc = dragMonitor.dragDrop;
             if (dropFunc)
                 switch (dropFunc(dropEvent)) {
                     case DragDropResult.FAILURE:
@@ -375,8 +375,7 @@ var DesktopManager = class {
          */
         for (let hashedGrid in itemsGridAssociation) {
             let [grid, fileItems] = itemsGridAssociation[hashedGrid];
-            for (let i = 0; i < fileItems.length; i++) {
-                let item = fileItems[i];
+            for (let item of fileItems) {
                 grid.removeFileItem(item);
             }
         }
@@ -470,8 +469,7 @@ var DesktopManager = class {
     }
 
     clearSelection() {
-        for (let i = 0; i < this._fileItems.length; i++) {
-            let fileItem = this._fileItems[i];
+        for (let fileItem of this._fileItems) {
             fileItem.selected = false;
         }
 
