@@ -39,7 +39,7 @@ function getTerminalCommand(workdir) {
 }
 
 function distanceBetweenPoints(x, y, x2, y2) {
-    return Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2));
+    return (Math.pow(x - x2, 2) + Math.pow(y - y2, 2));
 }
 
 function getExtraFolders() {
