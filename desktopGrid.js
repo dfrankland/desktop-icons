@@ -366,7 +366,7 @@ var DesktopGrid = class {
     dropItems(fileItems) {
         let reserved = {};
         for (let fileItem of fileItems) {
-            let [dropX, dropY] = (fileItem.savedPositions == null) ? [0, 0] : fileItem.savedPositions;
+            let [dropX, dropY] = (fileItem.savedCoordinates == null) ? [0, 0] : fileItem.savedCoordinates;
             let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY, reserved);
             let placeholder = this.layout.get_child_at(column, row);
             let hashedPosition = `${column},${row}`;
@@ -394,9 +394,9 @@ var DesktopGrid = class {
          * fixed coordinates, store the new possition to ensure
          * that the next time it will be shown in the same possition
          */
-        if (fileItem.savedPositions == null) {
+        if (fileItem.savedCoordinates == null) {
             let [fileX, fileY] = fileItem.actor.get_transformed_position();
-            fileItem.savedPositions = [Math.round(fileX), Math.round(fileY)];
+            fileItem.savedCoordinates = [Math.round(fileX), Math.round(fileY)];
         }
     }
 

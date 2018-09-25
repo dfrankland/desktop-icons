@@ -347,7 +347,7 @@ var DesktopManager = class {
             let [fileItemX, fileItemY] = fileItem.actor.get_transformed_position();
             let fileX = Math.round(xDiff + fileItemX);
             let fileY = Math.round(yDiff + fileItemY);
-            fileItem.savedPositions = [fileX, fileY];
+            fileItem.savedCoordinates = [fileX, fileY];
         }
 
         this._layoutDrop([...itemsToSet]);
@@ -361,7 +361,7 @@ var DesktopManager = class {
         for (let key in this._desktopGrids) {
             let itemsForDesktop = fileItems.filter(
                 (x) => {
-                    let [itemX, itemY] = (x.savedPositions == null) ? [0, 0] : x.savedPositions;
+                    let [itemX, itemY] = (x.savedCoordinates == null) ? [0, 0] : x.savedCoordinates;
                     let monitorIndex = findMonitorIndexForPos(itemX, itemY);
                     return key == monitorIndex;
                 }
@@ -407,7 +407,7 @@ var DesktopManager = class {
     }
 
     _addFileItemCloseTo(item) {
-        let [x, y] = (item.savedPositions == null) ? [0, 0] : item.savedPositions;
+        let [x, y] = (item.savedCoordinates == null) ? [0, 0] : item.savedCoordinates;
         let monitorIndex = findMonitorIndexForPos(x, y);
         let desktopGrid = this._desktopGrids[monitorIndex];
         try {
@@ -424,13 +424,13 @@ var DesktopManager = class {
          * * second pass paints those new files that still don't have their definitive coordinates
          */
         for (let fileItem of this._fileItems) {
-            if (fileItem.savedPositions == null)
+            if (fileItem.savedCoordinates == null)
                 continue;
             this._addFileItemCloseTo(fileItem);
         }
 
         for (let fileItem of this._fileItems) {
-            if (fileItem.savedPositions !== null)
+            if (fileItem.savedCoordinates !== null)
                 continue;
             this._addFileItemCloseTo(fileItem);
         }

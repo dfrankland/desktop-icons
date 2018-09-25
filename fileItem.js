@@ -55,12 +55,12 @@ var FileItem = class {
 
         this._file = file;
         this._fileInfo = fileInfo;
-        let savedPositions = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
+        let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
-        if (savedPositions != null)
-            this._savedPositions = savedPositions.split(',').map(x => Number(x));
+        if (savedCoordinates != null)
+            this._savedCoordinates = savedCoordinates.split(',').map(x => Number(x));
         else
-            this._savedPositions = null;
+            this._savedCoordinates = null;
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
@@ -312,8 +312,8 @@ var FileItem = class {
         return Clutter.EVENT_PROPAGATE;
     }
 
-    get savedPositions() {
-        return this._savedPositions;
+    get savedCoordinates() {
+        return this._savedCoordinates;
     }
 
     _onSetMetadataFileFinished(source, result) {
@@ -325,12 +325,12 @@ var FileItem = class {
         }
     }
 
-    set savedPositions(pos) {
+    set savedCoordinates(pos) {
         if (this._setMetadataCancellable)
             this._setMetadataCancellable.cancel();
 
         this._setMetadataCancellable = new Gio.Cancellable();
-        this._savedPositions = [pos[0], pos[1]];
+        this._savedCoordinates = [pos[0], pos[1]];
         let info = new Gio.FileInfo();
         info.set_attribute_string('metadata::nautilus-icon-position',
                                   `${pos[0]},${pos[1]}`);
