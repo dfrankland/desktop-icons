@@ -33,8 +33,8 @@ const SCHEMA_NAUTILUS = "org.gnome.nautilus.preferences";
 const SCHEMA = 'org.gnome.shell.extensions.desktop-icons';
 
 const ICON_SIZE = { "small": 48, "standard": 64, "large": 96, "huge": 128 };
-const ICON_WIDTH = { "small": 120, "standard": 130, "large": 130, "huge": 130 };
-const ICON_HEIGHT = { "small": 120, "standard": 130, "large": 164, "huge": 220 };
+const ICON_WIDTH = { "small": [120, 240], "standard": [130, 260], "large": [130, 260], "huge": [130, 260] };
+const ICON_HEIGHT = { "small": [120, 260], "standard": [130, 280], "large": [164, 340], "huge": [220, 460] };
 
 var FILE_TYPE = {
     NONE: null,
@@ -133,13 +133,34 @@ function _onNautilusSettingsChanged() {
 }
 
 function get_icon_size() {
+    // this one doesn't need scaling because Gnome Shell automagically scales the icons
     return ICON_SIZE[settings.get_string("icon-size")];
 }
 
-function get_max_width() {
-    return ICON_WIDTH[settings.get_string("icon-size")];
+function get_max_width(scale_factor) {
+    let widths = ICON_WIDTH[settings.get_string("icon-size")];
+    if (widths.len < scale_factor) {
+        // if there isn't a value for this scale factor
+        // interpolate the biggest one
+        let v = widths[widths.len - 1];
+        v /= widths.len;
+        v *= scale_factor;
+        return Math.round(v);
+    } else {
+        return widths[scale_factor - 1];
+    }
 }
 
-function get_max_height() {
-    return ICON_HEIGHT[settings.get_string("icon-size")];
+function get_max_height(scale_factor) {
+    let heights = ICON_HEIGHT[settings.get_string("icon-size")];
+    if (heights.len < scale_factor) {
+        // if there isn't a value for this scale factor
+        // interpolate the biggest one
+        let v = heights[heights.len - 1];
+        v /= heights.len;
+        v *= scale_factor;
+        return Math.round(v);
+    } else {
+        return heights[scale_factor - 1];
+    }
 }

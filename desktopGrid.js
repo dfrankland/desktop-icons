@@ -537,12 +537,12 @@ var DesktopGrid = class {
 
     _getMaxColumns() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        return Math.ceil(workarea.width / Prefs.get_max_width());
+        return Math.ceil(workarea.width / Prefs.get_max_width(St.ThemeContext.get_for_stage(global.stage).scale_factor));
     }
 
     _getMaxRows() {
         let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        return Math.ceil(workarea.height / Prefs.get_max_height());
+        return Math.ceil(workarea.height / Prefs.get_max_height(St.ThemeContext.get_for_stage(global.stage).scale_factor));
     }
 
     acceptDrop(source, actor, x, y, time) {
