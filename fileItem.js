@@ -75,7 +75,7 @@ var FileItem = class {
             style_class: 'file-item',
             x_expand: true,
             y_expand: true,
-            x_align: Clutter.ActorAlign.CENTER,
+            x_align: Clutter.ActorAlign.FILL,
             vertical: true
         });
         this.actor.add_actor(this._container);
