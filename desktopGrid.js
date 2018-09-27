@@ -394,10 +394,11 @@ var DesktopGrid = class {
          * fixed coordinates, store the new possition to ensure
          * that the next time it will be shown in the same possition
          */
-        if (fileItem.savedCoordinates == null) {
-            let [fileX, fileY] = fileItem.actor.get_transformed_position();
-            fileItem.savedCoordinates = [Math.round(fileX), Math.round(fileY)];
-        }
+        let [fileX, fileY] = fileItem.actor.get_transformed_position();
+        fileX = Math.round(fileX);
+        fileY = Math.round(fileY);
+        if ((fileItem.savedCoordinates == null) || (fileItem.savedCoordinates[0] != fileX) || (fileItem.savedCoordinates[1] != fileY))
+            fileItem.savedCoordinates = [fileX, fileY];
     }
 
     _getEmptyPlaceClosestTo(x, y, reserved) {
