@@ -62,6 +62,7 @@ var FileItem = class {
         else
             this._savedCoordinates = null;
 
+        global.log("Desktop-icons (1): icon "+this._file.get_basename() + " located at " + this._savedCoordinates);
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
         this.actor.set_height(Prefs.get_max_height());
@@ -329,6 +330,7 @@ var FileItem = class {
         if (this._setMetadataCancellable)
             this._setMetadataCancellable.cancel();
 
+        global.log("Desktop-icons (2): icon "+this._file.get_basename()+" located at " + this._savedCoordinates + " moved to " + pos);
         this._setMetadataCancellable = new Gio.Cancellable();
         this._savedCoordinates = [pos[0], pos[1]];
         let info = new Gio.FileInfo();

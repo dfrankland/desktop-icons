@@ -98,6 +98,7 @@ var DesktopManager = class {
         this._fileItems = [];
 
         try {
+            global.log("Desktop-icons (0): scanning files");
             for (let [file, info, extra] of await this._enumerateDesktop()) {
                 let fileItem = new FileItem.FileItem(file, info, extra);
                 this._fileItems.push(fileItem);
