@@ -403,6 +403,15 @@ var DesktopGrid = class {
     _getEmptyPlaceClosestTo(x, y, reserved) {
         let maxColumns = this._getMaxColumns();
         let maxRows = this._getMaxRows();
+
+        let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
+        let [actorX, actorY] = this.actor.get_transformed_position();
+        let placeX = Math.round((x - actorX) * maxColumns / workarea.width); // = x / (workarea.width / maxColumns)
+        let placeY = Math.round((y - actorY) * maxRows / workarea.height); // = y / (workarea.height / maxRows)
+        placeX = DesktopIconsUtil.clamp(placeX, 0, maxColumns - 1);
+        placeY = DesktopIconsUtil.clamp(placeY, 0, maxRows - 1);
+        if (this.layout.get_child_at(placeX, placeY).child == null)
+            return [placeX, placeY];
         let found = false;
         let resColumn = null;
         let resRow = null;

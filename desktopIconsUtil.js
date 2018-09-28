@@ -30,6 +30,10 @@ function getDesktopDir() {
     return Gio.File.new_for_commandline_arg(desktopPath);
 }
 
+function clamp(value, min, max) {
+    return Math.max(Math.min(value, max), min);
+};
+
 function getTerminalCommand(workdir) {
     let terminalSettings = new Gio.Settings({ schema_id: TERMINAL_SCHEMA });
     let exec = terminalSettings.get_string(EXEC_KEY);
