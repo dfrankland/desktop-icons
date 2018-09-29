@@ -80,7 +80,17 @@ var DesktopManager = class {
     _addDesktopIcons() {
         this._destroyDesktopIcons();
         forEachBackgroundManager(bgManager => {
-            this._desktopGrids[bgManager._monitorIndex] = new DesktopGrid.DesktopGrid(bgManager);
+            let newGrid = new DesktopGrid.DesktopGrid(bgManager);
+            newGrid.actor.connect("destroy", (actor) => {
+                // if a grid loses its actor, remove it from the grid list
+                for(let grid in this._desktopGrids)
+                    if (this._desktopGrids[grid].actor == actor) {
+                        delete this._desktopGrids[grid];
+                        break;
+                    }
+                this._addDesktopIcons();
+            });
+            this._desktopGrids[bgManager._monitorIndex] = newGrid;
         });
 
         this._scanFiles();
