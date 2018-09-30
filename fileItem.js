@@ -64,8 +64,8 @@ var FileItem = class {
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
-        this.actor.set_height(Prefs.get_max_height(scaleFactor));
-        this.actor.set_width(Prefs.get_max_width(scaleFactor));
+        this.actor.set_height(Prefs.get_desired_height(scaleFactor));
+        this.actor.set_width(Prefs.get_desired_width(scaleFactor));
         this.actor._delegate = this;
 
         this._container = new St.BoxLayout({
