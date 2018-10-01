@@ -42,7 +42,7 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
-const DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*';
+const DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*,time::modified';
 
 function getDpy() {
     return global.screen || global.display;
