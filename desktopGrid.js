@@ -166,7 +166,7 @@ var DesktopGrid = class {
     }
 
     _onDestroy() {
-        if (this._bgDestroyedId && (this._bgManager.backgroundActor != null))
+        if (this._bgDestroyedId && this._bgManager.backgroundActor != null)
             this._bgManager.backgroundActor.disconnect(this._bgDestroyedId);
 
         this._bgDestroyedId = 0;
