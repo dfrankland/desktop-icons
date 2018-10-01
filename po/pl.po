@@ -1,0 +1,137 @@
+# Polish translation for desktop-icons.
+# Copyright © 2018 the desktop-icons authors.
+# This file is distributed under the same license as the desktop-icons package.
+# Piotr Drąg <piotrdrag@gmail.com>, 2018.
+# Aviary.pl <community-poland@mozilla.org>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: desktop-icons\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
+"icons/issues\n"
+"POT-Creation-Date: 2018-10-01 15:08+0000\n"
+"PO-Revision-Date: 2018-10-01 17:49+0200\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"Language-Team: Polish <community-poland@mozilla.org>\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#: prefs.js:89
+msgid "Size for the desktop icons"
+msgstr "Rozmiar ikon na pulpicie"
+
+#: prefs.js:89
+msgid "Small"
+msgstr "Mały"
+
+#: prefs.js:89
+msgid "Standard"
+msgstr "Standardowy"
+
+#: prefs.js:89
+msgid "Large"
+msgstr "Duży"
+
+#: prefs.js:89
+msgid "Huge"
+msgstr "Wielki"
+
+#: prefs.js:90
+msgid "Show the personal folder in the desktop"
+msgstr "Katalog domowy na pulpicie"
+
+#: prefs.js:91
+msgid "Show the trash icon in the desktop"
+msgstr "Kosz na pulpicie"
+
+#: desktopGrid.js:178 desktopGrid.js:297
+msgid "New Folder"
+msgstr "Nowy katalog"
+
+#: desktopGrid.js:299
+msgid "Paste"
+msgstr "Wklej"
+
+#: desktopGrid.js:300
+msgid "Undo"
+msgstr "Cofnij"
+
+#: desktopGrid.js:301
+msgid "Redo"
+msgstr "Ponów"
+
+#: desktopGrid.js:303
+msgid "Open Desktop in Files"
+msgstr "Otwórz pulpit w menedżerze plików"
+
+#: desktopGrid.js:304
+msgid "Open Terminal"
+msgstr "Otwórz terminal"
+
+#: desktopGrid.js:306
+msgid "Change Background…"
+msgstr "Zmień tło…"
+
+#: desktopGrid.js:307
+msgid "Display Settings"
+msgstr "Ustawienia ekranu"
+
+#: desktopGrid.js:308
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: fileItem.js:226
+msgid "Open"
+msgstr "Otwórz"
+
+#: fileItem.js:229
+msgid "Cut"
+msgstr "Wytnij"
+
+#: fileItem.js:230
+msgid "Copy"
+msgstr "Skopiuj"
+
+#: fileItem.js:231
+msgid "Move to Trash"
+msgstr "Przenieś do kosza"
+
+#: fileItem.js:235
+msgid "Empty trash"
+msgstr "Opróżnij kosz"
+
+#: fileItem.js:241
+msgid "Properties"
+msgstr "Właściwości"
+
+#: fileItem.js:243
+msgid "Show in Files"
+msgstr "Wyświetl w menedżerze plików"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+msgid "Icon size"
+msgstr "Rozmiar ikon"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+msgid "Set the size for the desktop icons."
+msgstr "Ustawia rozmiar ikon na pulpicie."
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+msgid "Show personal folder"
+msgstr "Katalog domowy"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+msgid "Show the personal folder in the desktop."
+msgstr "Wyświetla katalog domowy na pulpicie."
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+msgid "Show trash icon"
+msgstr "Kosz"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+msgid "Show the trash icon in the desktop."
+msgstr "Wyświetla kosz na pulpicie."
