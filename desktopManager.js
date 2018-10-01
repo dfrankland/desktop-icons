@@ -23,6 +23,7 @@ const Lang = imports.lang;
 const St = imports.gi.St;
 const Mainloop = imports.mainloop;
 const Meta = imports.gi.Meta;
+const GnomeDesktop = imports.gi.GnomeDesktop;
 
 const Signals = imports.signals;
 
@@ -42,7 +43,7 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
-const DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*';
+const DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*,time::modified';
 
 function getDpy() {
     return global.screen || global.display;
@@ -64,6 +65,7 @@ var DesktopManager = class {
         this._fileItems = [];
         this._dragCancelled = false;
 
+        this._thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.NORMAL);
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._recreateDesktopIcons());
 
         this._addDesktopIcons();
@@ -113,7 +115,7 @@ var DesktopManager = class {
 
         try {
             for (let [file, info, extra] of await this._enumerateDesktop()) {
-                let fileItem = new FileItem.FileItem(file, info, extra);
+                let fileItem = new FileItem.FileItem(file, info, extra, this._thumbnailFactory);
                 this._fileItems.push(fileItem);
                 let id = fileItem.connect('selected',
                                           this._onFileItemSelected.bind(this));

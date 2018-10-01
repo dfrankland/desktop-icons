@@ -23,6 +23,8 @@ const Lang = imports.lang;
 const St = imports.gi.St;
 const Pango = imports.gi.Pango;
 const Meta = imports.gi.Meta;
+const GdkPixbuf = imports.gi.GdkPixbuf;
+const Cogl = imports.gi.Cogl;
 
 const Signals = imports.signals;
 
@@ -47,9 +49,11 @@ const DRAG_TRESHOLD = 8;
 
 var FileItem = class {
 
-    constructor(file, fileInfo, fileExtra) {
+    constructor(file, fileInfo, fileExtra, thumbnailFactory) {
 
         this._fileExtra = fileExtra;
+        this._hasThumb = false;
+        this._thumbnailFactory = thumbnailFactory;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
@@ -103,6 +107,53 @@ var FileItem = class {
 
         this._loadContentsCancellable = new Gio.Cancellable();
         this._setMetadataCancellable = null;
+
+        let fileUri = this._file.get_uri();
+        let accessTime = fileInfo.get_attribute_uint64("time::modified");
+        let thumbnailPixbuf = null;
+
+        // Prepare thumbnail
+        if (thumbnailFactory.can_thumbnail(fileUri, this._attributeContentType, accessTime)) {
+            let thumb = thumbnailFactory.lookup(fileUri, accessTime);
+            if (thumb == null) {
+                /*
+                if (!thumbnailFactory.has_valid_failed_thumbnail(fileUri, accessTime)) {
+                    thumbnailPixbuf = thumbnailFactory.generate_thumbnail(fileUri, this._attributeContentType);
+                    if (thumbnailPixbuf == null)
+                        thumbnailFactory.create_failed_thumbnail(fileUri, accessTime);
+                    else
+                        thumbnailFactory.save_thumbnail(thumbnailPixbuf, fileUri, accessTime);
+                }*/
+            } else {
+                thumbnailPixbuf = GdkPixbuf.Pixbuf.new_from_file(thumb);
+            }
+
+            if (thumbnailPixbuf != null) {
+                let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+                this._hasThumb = true;
+                let thumbnail = new Clutter.Image();
+                thumbnail.set_data(thumbnailPixbuf.get_pixels(),
+                                   thumbnailPixbuf.has_alpha ? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888,
+                                   thumbnailPixbuf.width,
+                                   thumbnailPixbuf.height,
+                                   thumbnailPixbuf.rowstride
+                );
+                this._icon = new St.Bin();
+                this._icon.set_height(Prefs.get_icon_size() * scaleFactor);
+                this._innerIcon = new Clutter.Actor();
+                this._icon.child = this._innerIcon;
+                this._innerIcon.set_content(thumbnail);
+                let width = Prefs.get_desired_width(scaleFactor);
+                let height = Prefs.get_icon_size() * scaleFactor;
+                let aspect_ratio = thumbnailPixbuf.width / thumbnailPixbuf.height;
+                if ((width / height) > aspect_ratio)
+                    this._innerIcon.set_size(height * aspect_ratio, height);
+                else
+                    this._innerIcon.set_size(width, width / aspect_ratio);
+                this._iconContainer.child = this._icon;
+            }
+        }
+
         if (this._isDesktopFile)
             this._prepareDesktopFile();
 
@@ -131,7 +182,7 @@ var FileItem = class {
 
     _prepareDesktopFile() {
         this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
-        if (this._desktopFile.has_key("Icon"))
+        if (this._desktopFile.has_key("Icon") && !this._hasThumb)
             this._icon.gicon = this._createItemFIcon(null, this._desktopFile.get_string('Icon'));
     }
 
