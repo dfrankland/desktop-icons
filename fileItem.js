@@ -23,6 +23,9 @@ const Lang = imports.lang;
 const St = imports.gi.St;
 const Pango = imports.gi.Pango;
 const Meta = imports.gi.Meta;
+const GdkPixbuf = imports.gi.GdkPixbuf;
+const Cogl = imports.gi.Cogl;
+const GnomeDesktop = imports.gi.GnomeDesktop;
 
 const Signals = imports.signals;
 
@@ -50,6 +53,7 @@ var FileItem = class {
     constructor(file, fileInfo, fileExtra) {
 
         this._fileExtra = fileExtra;
+        this._loadThumbnailDataCancellable = null;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
@@ -69,6 +73,8 @@ var FileItem = class {
         this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
         this._attributeHidden = fileInfo.get_is_hidden();
         this._isSymlink = fileInfo.get_is_symlink();
+        this._fileUri = this._file.get_uri();
+        this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
@@ -87,11 +93,9 @@ var FileItem = class {
             vertical: true
         });
         this.actor.add_actor(this._container);
+        this._icon = new St.Bin();
+        this._icon.set_height(Prefs.get_icon_size() * scaleFactor);
 
-        this._icon = new St.Icon({
-            gicon: this._createItemFIcon(fileInfo.get_icon(), null),
-            icon_size: Prefs.get_icon_size()
-        });
         this._iconContainer = new St.Bin({ visible: true });
         this._iconContainer.child = this._icon;
         this._container.add_actor(this._iconContainer);
@@ -103,8 +107,11 @@ var FileItem = class {
 
         this._loadContentsCancellable = new Gio.Cancellable();
         this._setMetadataCancellable = null;
+
         if (this._isDesktopFile)
-            this._prepareDesktopFile();
+            this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
+
+        this._setFileIcon();
 
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
@@ -125,14 +132,68 @@ var FileItem = class {
             this._execLine = this.file.get_path();
     }
 
-    get file() {
-        return this._file;
+    _setFileIcon() {
+        let thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
+        if (thumbnailFactory.can_thumbnail(this._fileUri, this._attributeContentType, this._modifiedTime)) {
+            let thumbnail = thumbnailFactory.lookup(this._fileUri, this._modifiedTime);
+            if (thumbnail != null) {
+                if (this._loadThumbnailDataCancellable)
+                    this._loadThumbnailDataCancellable.cancel();
+                this._loadThumbnailDataCancellable = new Gio.Cancellable();
+                let thumbnailFile = Gio.File.new_for_path(thumbnail);
+                thumbnailFile.load_bytes_async(this._loadThumbnailDataCancellable,
+                    (obj, res) => {
+                        try {
+                            let [thumbnailData, etag_out] = obj.load_bytes_finish(res);
+                            let thumbnailStream = Gio.MemoryInputStream.new_from_bytes(thumbnailData);
+                            let thumbnailPixbuf = GdkPixbuf.Pixbuf.new_from_stream(thumbnailStream, null);
+
+                            if (thumbnailPixbuf != null) {
+                                let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+                                let thumbnailImage = new Clutter.Image();
+                                thumbnailImage.set_data(thumbnailPixbuf.get_pixels(),
+                                                        thumbnailPixbuf.has_alpha ? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888,
+                                                        thumbnailPixbuf.width,
+                                                        thumbnailPixbuf.height,
+                                                        thumbnailPixbuf.rowstride
+                                );
+                                let icon = new Clutter.Actor();
+                                icon.set_content(thumbnailImage);
+                                let width = Prefs.get_desired_width(scaleFactor);
+                                let height = Prefs.get_icon_size() * scaleFactor;
+                                let aspectRatio = thumbnailPixbuf.width / thumbnailPixbuf.height;
+                                if ((width / height) > aspectRatio)
+                                    icon.set_size(height * aspectRatio, height);
+                                else
+                                    icon.set_size(width, width / aspectRatio);
+                                this._icon.child = icon;
+                            }
+                        } catch (error) {
+                            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
+                                global.log("Error while loading thumbnail: " + error);
+                                this._icon.child = new St.Icon({ gicon: this._createItemFIcon(this._fileInfo.get_icon(), null),
+                                                                 icon_size: Prefs.get_icon_size()
+                                });
+                            }
+                        }
+                    }
+                );
+            }
+        }
+
+        if (this._isDesktopFile && (this._desktopFile.has_key("Icon"))) {
+            this._icon.child = new St.Icon({ gicon: this._createItemFIcon(null, this._desktopFile.get_string('Icon')),
+                                             icon_size: Prefs.get_icon_size()
+            });
+        } else {
+            this._icon.child = new St.Icon({ gicon: this._createItemFIcon(this._fileInfo.get_icon(), null),
+                                             icon_size: Prefs.get_icon_size()
+            });
+        }
     }
 
-    _prepareDesktopFile() {
-        this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
-        if (this._desktopFile.has_key("Icon"))
-            this._icon.gicon = this._createItemFIcon(null, this._desktopFile.get_string('Icon'));
+    get file() {
+        return this._file;
     }
 
     _createItemFIcon(icon, iconName) {
