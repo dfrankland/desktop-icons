@@ -64,12 +64,12 @@ var DesktopManager = class {
         this._fileItems = [];
         this._dragCancelled = false;
 
-        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._addDesktopIcons());
+        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._recreateDesktopIcons());
 
         this._addDesktopIcons();
         this._monitorDesktopFolder();
 
-        Prefs.settings.connect("changed", () => { this._addDesktopIcons(); });
+        Prefs.settings.connect("changed", () => { this._recreateDesktopIcons(); });
 
         this._selection = new Set();
         this._inDrag = false;
@@ -77,8 +77,12 @@ var DesktopManager = class {
         this._dragYStart = Number.POSITIVE_INFINITY;
     }
 
-    _addDesktopIcons() {
+    _recreateDesktopIcons() {
         this._destroyDesktopIcons();
+        this._addDesktopIcons();
+    }
+
+    _addDesktopIcons() {
         forEachBackgroundManager(bgManager => {
             let newGrid = new DesktopGrid.DesktopGrid(bgManager);
             newGrid.actor.connect("destroy", (actor) => {
@@ -88,7 +92,7 @@ var DesktopManager = class {
                         delete this._desktopGrids[grid];
                         break;
                     }
-                this._addDesktopIcons();
+                this._recreateDesktopIcons();
             });
             this._desktopGrids[bgManager._monitorIndex] = newGrid;
         });
