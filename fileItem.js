@@ -123,6 +123,96 @@ var FileItem = class {
         this._primaryButtonPressed = false;
         if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
+        if (fileExtra == Prefs.FILE_TYPE.USER_DIRECTORY_TRASH) {
+            // if this icon is the trash, monitor the state of the directory to update the icon
+            this._trashInitialized = false;
+            this._monitorTrashDir = this._file.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
+            this._monitorTrashId = this._monitorTrashDir.connect('changed', (obj, file, otherFile, eventType) => {
+                this._updateTrashIconIfChanged(eventType);
+            });
+            this._initializeTrashData();
+        }
+        this.actor.connect("destroy", () => this._onActorDestroy());
+    }
+
+    _onActorDestroy() {
+        if (this._fileExtra == Prefs.FILE_TYPE.USER_DIRECTORY_TRASH) {
+            this._monitorTrashDir.disconnect(this._monitorTrashId);
+            if (this._queryTrashInfoCancellable)
+                this._queryTrashInfoCancellable.cancel();
+        }
+    }
+
+    _initializeTrashData() {
+
+        if (this._trashInitializeCancellable)
+            this._trashInitializeCancellable.cancel();
+        this._trashInitializeCancellable = new Gio.Cancellable();
+
+        this._file.query_info_async(Gio.FILE_ATTRIBUTE_TRASH_ITEM_COUNT,
+                                    Gio.FileQueryInfoFlags.NONE,
+                                    GLib.PRIORITY_DEFAULT,
+                                    this._trashInitializeCancellable,
+                                    (object, res) => {
+                                        try {
+                                        let tmpFileInfo = object.query_info_finish(res);
+                                        this._trashItemsCount = tmpFileInfo.get_attribute_uint32(Gio.FILE_ATTRIBUTE_TRASH_ITEM_COUNT);
+                                        this._trashInitialized = true;
+                                        this._trashInitializeCancellable = null;
+                                        } catch(e) {
+                                            global.log("Error getting the number of files in the trash: " + e);
+                                        }
+                                    });
+    }
+
+    _updateTrashIconIfChanged(eventType) {
+
+        if (!this._trashInitialized) {
+            // if there is a change inside the TRASH folder before
+            // we got the number of elements, retry it
+            this._initializeTrashData();
+            return;
+        }
+
+        let {
+            DELETED, CREATED, MOVED_IN, MOVED_OUT
+        } = Gio.FileMonitorEvent;
+
+        switch(eventType) {
+            case DELETED:
+            case MOVED_OUT:
+                this._trashItemsCount -= 1;
+                if (this._trashItemsCount != 0)
+                    return;
+            break;
+            case CREATED:
+            case MOVED_IN:
+                this._trashItemsCount += 1;
+                if (this._trashItemsCount != 1)
+                    return;
+            break;
+            default:
+                return;
+        }
+
+        if (this._queryTrashInfoCancellable)
+            this._queryTrashInfoCancellable.cancel();
+
+        this._queryTrashInfoCancellable = new Gio.Cancellable();
+        this._file.query_info_async(Gio.FILE_ATTRIBUTE_STANDARD_ICON,
+                                    Gio.FileQueryInfoFlags.NONE,
+                                    GLib.PRIORITY_DEFAULT,
+                                    this._queryTrashInfoCancellable,
+                                    (source_object, res) => {
+                try {
+                    let fileInfo = source_object.query_info_finish(res);
+                    this._icon.gicon = fileInfo.get_icon();
+                    this._queryTrashInfoCancellable = null;
+                } catch(e) {
+                    global.log("Error updating the trash icon: " + e);
+                }
+            }
+        );
     }
 
     get file() {

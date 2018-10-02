@@ -174,13 +174,6 @@ var DesktopManager = class {
         this._monitorDesktopDir = desktopDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
         this._monitorDesktopDir.set_rate_limit(1000);
         this._monitorDesktopDir.connect('changed', (obj, file, otherFile, eventType) => this._updateDesktopIfChanged(file, otherFile, eventType));
-        let trashDir = Gio.File.new_for_uri("trash:///");
-        this._monitorTrashDir = trashDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
-        this._monitorTrashDir.set_rate_limit(1000);
-        this._monitorTrashDir.connect('changed', (obj, file, otherFile, eventType) => {
-            if (Prefs.settings.get_boolean("show-trash"))
-                this._updateDesktopIfChanged(file, otherFile, eventType);
-        });
     }
 
     _updateDesktopIfChanged (file, otherFile, eventType) {
