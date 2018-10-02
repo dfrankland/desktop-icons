@@ -154,15 +154,16 @@ var FileItem = class {
                                     GLib.PRIORITY_DEFAULT,
                                     this._trashInitializeCancellable,
                                     (object, res) => {
-                                        try {
-                                        let tmpFileInfo = object.query_info_finish(res);
-                                        this._trashItemsCount = tmpFileInfo.get_attribute_uint32(Gio.FILE_ATTRIBUTE_TRASH_ITEM_COUNT);
-                                        this._trashInitialized = true;
-                                        this._trashInitializeCancellable = null;
-                                        } catch(e) {
-                                            global.log("Error getting the number of files in the trash: " + e);
-                                        }
-                                    });
+            try {
+                let tmpFileInfo = object.query_info_finish(res);
+                this._trashItemsCount = tmpFileInfo.get_attribute_uint32(Gio.FILE_ATTRIBUTE_TRASH_ITEM_COUNT);
+                this._trashInitialized = true;
+                this._trashInitializeCancellable = null;
+                } catch(e) {
+                    global.log("Error getting the number of files in the trash: " + e);
+                }
+            }
+        );
     }
 
     _updateTrashIconIfChanged(eventType) {
