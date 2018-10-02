@@ -42,8 +42,6 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
-const DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*,time::modified';
-
 function getDpy() {
     return global.screen || global.display;
 }
@@ -141,7 +139,7 @@ var DesktopManager = class {
             this._desktopEnumerateCancellable = new Gio.Cancellable();
 
             let desktopDir = DesktopIconsUtil.getDesktopDir();
-            desktopDir.enumerate_children_async(DEFAULT_ATTRIBUTES,
+            desktopDir.enumerate_children_async(DesktopIconsUtil.DEFAULT_ATTRIBUTES,
                 Gio.FileQueryInfoFlags.NONE,
                 GLib.PRIORITY_DEFAULT,
                 this._desktopEnumerateCancellable,
@@ -153,7 +151,7 @@ var DesktopManager = class {
                             while ((info = fileEnum.next_file(null)))
                                 yield [fileEnum.get_child(info), info, Prefs.FILE_TYPE.NONE];
                             for (let [newFolder, extras] of DesktopIconsUtil.getExtraFolders()) {
-                                yield [newFolder, newFolder.query_info(DEFAULT_ATTRIBUTES, Gio.FileQueryInfoFlags.NONE, this._desktopEnumerateCancellable), extras];
+                                yield [newFolder, newFolder.query_info(DesktopIconsUtil.DEFAULT_ATTRIBUTES, Gio.FileQueryInfoFlags.NONE, this._desktopEnumerateCancellable), extras];
                             }
                         }.bind(this);
                         resolve(resultGenerator());
@@ -174,13 +172,6 @@ var DesktopManager = class {
         this._monitorDesktopDir = desktopDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
         this._monitorDesktopDir.set_rate_limit(1000);
         this._monitorDesktopDir.connect('changed', (obj, file, otherFile, eventType) => this._updateDesktopIfChanged(file, otherFile, eventType));
-        let trashDir = Gio.File.new_for_uri("trash:///");
-        this._monitorTrashDir = trashDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
-        this._monitorTrashDir.set_rate_limit(1000);
-        this._monitorTrashDir.connect('changed', (obj, file, otherFile, eventType) => {
-            if (Prefs.settings.get_boolean("show-trash"))
-                this._updateDesktopIfChanged(file, otherFile, eventType);
-        });
     }
 
     _updateDesktopIfChanged (file, otherFile, eventType) {

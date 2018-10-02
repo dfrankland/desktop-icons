@@ -27,6 +27,7 @@ const GdkPixbuf = imports.gi.GdkPixbuf;
 const Cogl = imports.gi.Cogl;
 const GnomeDesktop = imports.gi.GnomeDesktop;
 
+const Mainloop = imports.mainloop;
 const Signals = imports.signals;
 
 const Background = imports.ui.background;
@@ -39,6 +40,8 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
 const Prefs = Me.imports.prefs;
 const DBusUtils = Me.imports.dbusUtils;
+const DesktopIconsUtil = Me.imports.desktopIconsUtil;
+
 const Gettext = imports.gettext;
 
 Gettext.textdomain("desktop-icons");
@@ -128,7 +131,30 @@ var FileItem = class {
         this._primaryButtonPressed = false;
         if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
-        this.actor.connect('destroy', () => this._onDestroy());
+        if (fileExtra == Prefs.FILE_TYPE.USER_DIRECTORY_TRASH) {
+            // if this icon is the trash, monitor the state of the directory to update the icon
+            this._trashChanged = false;
+            this._trashInitializeCancellable = null;
+            this._scheduleTrashRefreshId = 0;
+            this._monitorTrashDir = this._file.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
+            this._monitorTrashId = this._monitorTrashDir.connect('changed', (obj, file, otherFile, eventType) => {
+                switch(eventType) {
+                    case Gio.FileMonitorEvent.DELETED:
+                    case Gio.FileMonitorEvent.MOVED_OUT:
+                    case Gio.FileMonitorEvent.CREATED:
+                    case Gio.FileMonitorEvent.MOVED_IN:
+                        if (this._queryTrashInfoCancellable || this._scheduleTrashRefreshId) {
+                            if (this._scheduleTrashRefreshId)
+                                GLib.source_remove(this._scheduleTrashRefreshId);
+                            this._scheduleTrashRefreshId = Mainloop.timeout_add(200, () => this._refreshTrashIcon());
+                        } else {
+                            this._refreshTrashIcon()
+                        }
+                    break;
+                }
+            });
+        }
+        this.actor.connect("destroy", () => this._onDestroy());
     }
 
     _onDestroy() {
@@ -141,9 +167,24 @@ var FileItem = class {
             GLib.source_remove(this._thumbnailScriptWatch);
         if (this._loadThumbnailDataCancellable)
             this._loadThumbnailDataCancellable.cancel();
+
+        /* Trash */
+        if (this._monitorTrashDirId)
+            this._monitorTrashDir.disconnect(this._monitorTrashId);
+        if (this._queryTrashInfoCancellable)
+            this._queryTrashInfoCancellable.cancel();
+        if (this._scheduleTrashRefreshId)
+            GLib.source_remove(this._scheduleTrashRefreshId);
     }
 
     _updateIcon() {
+        if (this._fileExtra == Prefs.FILE_TYPE.USER_DIRECTORY_TRASH) {
+            this._icon.child = new St.Icon({ gicon: this._createEmblemIcon(this._fileInfo.get_icon(), null),
+                icon_size: Prefs.get_icon_size()
+            });
+            return;
+        }
+
         let thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
         if (thumbnailFactory.can_thumbnail(this._fileUri,
                                            this._attributeContentType,
@@ -226,6 +267,30 @@ var FileItem = class {
                                              icon_size: Prefs.get_icon_size()
             });
         }
+    }
+
+    _refreshTrashIcon() {
+        if (this._queryTrashInfoCancellable)
+            this._queryTrashInfoCancellable.cancel();
+        this._queryTrashInfoCancellable = new Gio.Cancellable();
+
+        this._file.query_info_async(DesktopIconsUtil.DEFAULT_ATTRIBUTES,
+                                    Gio.FileQueryInfoFlags.NONE,
+                                    GLib.PRIORITY_DEFAULT,
+                                    this._queryTrashInfoCancellable,
+            (source, res) => {
+                try {
+                    this._fileInfo = source_object.query_info_finish(res);
+                    this._queryTrashInfoCancellable = null;
+                    this._updateIcon();
+                } catch(error) {
+                    if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                        global.log("Error getting the number of files in the trash: " + e);
+                }
+            });
+
+        this._scheduleTrashRefreshId = 0;
+        return false;
     }
 
     get file() {
