@@ -1,0 +1,136 @@
+# Czech translation for desktop-icons.
+# Copyright (C) 2018 desktop-icons's COPYRIGHT HOLDER
+# This file is distributed under the same license as the desktop-icons package.
+# Marek Černocký <marek@manet.cz>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: desktop-icons master\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
+"icons/issues\n"
+"POT-Creation-Date: 2018-10-01 20:15+0000\n"
+"PO-Revision-Date: 2018-10-02 11:10+0200\n"
+"Last-Translator: Marek Černocký <marek@manet.cz>\n"
+"Language-Team: čeština <gnome-cs-list@gnome.org>\n"
+"Language: cs\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Gtranslator 2.91.7\n"
+
+#: prefs.js:89
+msgid "Size for the desktop icons"
+msgstr "Velikost ikon na pracovní ploše"
+
+#: prefs.js:89
+msgid "Small"
+msgstr "malé"
+
+#: prefs.js:89
+msgid "Standard"
+msgstr "standardní"
+
+#: prefs.js:89
+msgid "Large"
+msgstr "velké"
+
+#: prefs.js:89
+msgid "Huge"
+msgstr "obrovské"
+
+#: prefs.js:90
+msgid "Show the personal folder in the desktop"
+msgstr "Zobrazovat osobní složku na pracovní ploše"
+
+#: prefs.js:91
+msgid "Show the trash icon in the desktop"
+msgstr "Zobrazovat ikonu koše na pracovní ploše"
+
+#: desktopGrid.js:178 desktopGrid.js:297
+msgid "New Folder"
+msgstr "Nová složka"
+
+#: desktopGrid.js:299
+msgid "Paste"
+msgstr "Vložit"
+
+#: desktopGrid.js:300
+msgid "Undo"
+msgstr "Zpět"
+
+#: desktopGrid.js:301
+msgid "Redo"
+msgstr "Znovu"
+
+#: desktopGrid.js:303
+msgid "Open Desktop in Files"
+msgstr "Otevřít plochu v Souborech"
+
+#: desktopGrid.js:304
+msgid "Open Terminal"
+msgstr "Otevřít terminál"
+
+#: desktopGrid.js:306
+msgid "Change Background…"
+msgstr "Změnit pozadí…"
+
+#: desktopGrid.js:307
+msgid "Display Settings"
+msgstr "Zobrazit nastavení"
+
+#: desktopGrid.js:308
+msgid "Settings"
+msgstr "Nastavení"
+
+#: fileItem.js:226
+msgid "Open"
+msgstr "Otevřít"
+
+#: fileItem.js:229
+msgid "Cut"
+msgstr "Vyjmout"
+
+#: fileItem.js:230
+msgid "Copy"
+msgstr "Kopírovat"
+
+#: fileItem.js:231
+msgid "Move to Trash"
+msgstr "Přesunout do koše"
+
+#: fileItem.js:235
+msgid "Empty trash"
+msgstr "Vyprázdnit koš"
+
+#: fileItem.js:241
+msgid "Properties"
+msgstr "Vlastnosti"
+
+#: fileItem.js:243
+msgid "Show in Files"
+msgstr "Zobrazit v Souborech"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+msgid "Icon size"
+msgstr "Velikost ikon"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+msgid "Set the size for the desktop icons."
+msgstr "Nastavit velikost pro ikony na pracovní ploše."
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+msgid "Show personal folder"
+msgstr "Zobrazovat osobní složku"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+msgid "Show the personal folder in the desktop."
+msgstr "Zobrazovat osobní složku na pracovní ploše."
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+msgid "Show trash icon"
+msgstr "Zobrazovat koš"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+msgid "Show the trash icon in the desktop."
+msgstr "Zobrazovat ikonu koše na pracovní ploše."
