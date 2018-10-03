@@ -1,0 +1,136 @@
+# German translation for desktop-icons.
+# Copyright (C) 2018 desktop-icons's COPYRIGHT HOLDER
+# This file is distributed under the same license as the desktop-icons package.
+# Mario Blättermann <mario.blaettermann@gmail.com>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: desktop-icons master\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
+"icons/issues\n"
+"POT-Creation-Date: 2018-10-02 21:39+0000\n"
+"PO-Revision-Date: 2018-10-03 21:28+0200\n"
+"Last-Translator: Mario Blättermann <mario.blaettermann@gmail.com>\n"
+"Language-Team: German <gnome-de@gnome.org>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.1.1\n"
+
+#: prefs.js:89
+msgid "Size for the desktop icons"
+msgstr "Größe der Arbeitsflächensymbole"
+
+#: prefs.js:89
+msgid "Small"
+msgstr "Klein"
+
+#: prefs.js:89
+msgid "Standard"
+msgstr "Standard"
+
+#: prefs.js:89
+msgid "Large"
+msgstr "Groß"
+
+#: prefs.js:89
+msgid "Huge"
+msgstr "Riesig"
+
+#: prefs.js:90
+msgid "Show the personal folder in the desktop"
+msgstr "Den persönlichen Ordner auf der Arbeitsfläche anzeigen"
+
+#: prefs.js:91
+msgid "Show the trash icon in the desktop"
+msgstr "Papierkorb-Symbol auf der Arbeitsfläche anzeigen"
+
+#: desktopGrid.js:178 desktopGrid.js:297
+msgid "New Folder"
+msgstr "Neuer Ordner"
+
+#: desktopGrid.js:299
+msgid "Paste"
+msgstr "Einfügen"
+
+#: desktopGrid.js:300
+msgid "Undo"
+msgstr "Rückgängig"
+
+#: desktopGrid.js:301
+msgid "Redo"
+msgstr "Wiederholen"
+
+#: desktopGrid.js:303
+msgid "Open Desktop in Files"
+msgstr "Arbeitsfläche in Dateiverwaltung öffnen"
+
+#: desktopGrid.js:304
+msgid "Open Terminal"
+msgstr "Terminal öffnen"
+
+#: desktopGrid.js:306
+msgid "Change Background…"
+msgstr "Hintergrund ändern …"
+
+#: desktopGrid.js:307
+msgid "Display Settings"
+msgstr "Anzeigeeinstellungen"
+
+#: desktopGrid.js:308
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: fileItem.js:226
+msgid "Open"
+msgstr "Öffnen"
+
+#: fileItem.js:229
+msgid "Cut"
+msgstr "Ausschneiden"
+
+#: fileItem.js:230
+msgid "Copy"
+msgstr "Kopieren"
+
+#: fileItem.js:231
+msgid "Move to Trash"
+msgstr "In den Papierkorb verschieben"
+
+#: fileItem.js:235
+msgid "Empty trash"
+msgstr "Papierkorb leeren"
+
+#: fileItem.js:241
+msgid "Properties"
+msgstr "Eigenschaften"
+
+#: fileItem.js:243
+msgid "Show in Files"
+msgstr "In Dateiverwaltung anzeigen"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+msgid "Icon size"
+msgstr "Symbolgröße"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+msgid "Set the size for the desktop icons."
+msgstr "Die Größe der Arbeitsflächensymbole festlegen."
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+msgid "Show personal folder"
+msgstr "Persönlichen Ordner anzeigen"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+msgid "Show the personal folder in the desktop."
+msgstr "Den persönlichen Ordner auf der Arbeitsfläche anzeigen."
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+msgid "Show trash icon"
+msgstr "Papierkorb-Symbol anzeigen"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+msgid "Show the trash icon in the desktop."
+msgstr "Das Papierkorb-Symbol auf der Arbeitsfläche anzeigen."
