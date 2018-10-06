@@ -166,6 +166,8 @@ var DesktopGrid = class {
     }
 
     _onDestroy() {
+        for(let fileItem of this._fileItems)
+            fileItem.insertInContainer(null);
         if (this._bgDestroyedId && this._bgManager.backgroundActor != null)
             this._bgManager.backgroundActor.disconnect(this._bgDestroyedId);
 
@@ -374,20 +376,21 @@ var DesktopGrid = class {
                 continue;
 
             reserved[`${column},${row}`] = fileItem;
-            placeholder.child = fileItem.actor;
             this._addFileItemTo(fileItem, column, row);
         }
     }
 
     _addFileItemTo(fileItem, column, row) {
         let placeholder = this.layout.get_child_at(column, row);
-        placeholder.child = fileItem.actor;
+        fileItem.insertInContainer(placeholder);
         this._fileItems.push(fileItem);
         let id = fileItem.connect('selected', this._onFileItemSelected.bind(this));
         this._fileItemHandlers.set(fileItem, id);
     }
 
     addFileItemCloseTo(fileItem, x, y) {
+        if (fileItem in this._fileItems)
+            return
         let [column, row] = this._getEmptyPlaceClosestTo(x, y, null);
         this._addFileItemTo(fileItem, column, row);
         /* If this file is new in the Desktop and hasn't yet
@@ -449,9 +452,7 @@ var DesktopGrid = class {
         else
             throw new Error('Error removing children from container');
 
-        let [column, row] = this._getPosOfFileItem(fileItem);
-        let placeholder = this.layout.get_child_at(column, row);
-        placeholder.child = null;
+        fileItem.insertInContainer(null);
         let id = this._fileItemHandlers.get(fileItem);
         fileItem.disconnect(id);
         this._fileItemHandlers.delete(fileItem);
@@ -559,34 +560,6 @@ var DesktopGrid = class {
 
     acceptDrop(source, actor, x, y, time) {
         return Extension.desktopManager.acceptDrop(x, y);
-    }
-
-    _getPosOfFileItem(itemToFind) {
-        if (itemToFind == null)
-            throw new Error('Error at _getPosOfFileItem: child cannot be null');
-
-        let found = false;
-        let maxColumns = this._getMaxColumns();
-        let maxRows = this._getMaxRows();
-        let column = 0;
-        let row = 0;
-        for (column = 0; column < maxColumns; column++) {
-            for (row = 0; row < maxRows; row++) {
-                let item = this.layout.get_child_at(column, row);
-                if (item.child && item.child._delegate.file.equal(itemToFind.file)) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (found)
-                break;
-        }
-
-        if (!found)
-            throw new Error('Position of file item was not found');
-
-        return [column, row];
     }
 
     _onFileItemSelected(fileItem, modifySelection) {

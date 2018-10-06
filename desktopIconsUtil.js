@@ -25,6 +25,8 @@ const Prefs = Me.imports.prefs;
 const TERMINAL_SCHEMA = 'org.gnome.desktop.default-applications.terminal';
 const EXEC_KEY = 'exec';
 
+var DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*';
+
 function getDesktopDir() {
     let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);
     return Gio.File.new_for_commandline_arg(desktopPath);
@@ -49,10 +51,10 @@ function distanceBetweenPoints(x, y, x2, y2) {
 function getExtraFolders() {
     let extraFolders = new Array();
     if (Prefs.settings.get_boolean("show-home")) {
-        extraFolders.push([Gio.File.new_for_commandline_arg(GLib.get_home_dir()), Prefs.FILE_TYPE.USER_DIRECTORY_HOME]);
+        extraFolders.push([Gio.File.new_for_commandline_arg(GLib.get_home_dir()), Prefs.FILE_TYPE.USER_DIRECTORY_HOME, "show-home"]);
     }
     if (Prefs.settings.get_boolean("show-trash")) {
-        extraFolders.push([Gio.File.new_for_uri("trash:///"), Prefs.FILE_TYPE.USER_DIRECTORY_TRASH]);
+        extraFolders.push([Gio.File.new_for_uri("trash:///"), Prefs.FILE_TYPE.USER_DIRECTORY_TRASH, "show-trash"]);
     }
     return extraFolders;
 }

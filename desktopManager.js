@@ -42,8 +42,6 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
-const DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*';
-
 function getDpy() {
     return global.screen || global.display;
 }
@@ -55,21 +53,25 @@ function findMonitorIndexForPos(x, y) {
 
 var DesktopManager = class {
     constructor() {
+        this._desktopDir = DesktopIconsUtil.getDesktopDir();
         this._layoutChildrenId = 0;
         this._scheduleDesktopsRefreshId = 0;
         this._monitorDesktopDir = null;
         this._desktopMonitorCancellable = null;
         this._desktopGrids = {};
         this._fileItemHandlers = new Map();
-        this._fileItems = [];
+        this._fileItems = new Map();
         this._dragCancelled = false;
 
-        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._recreateDesktopIcons());
+        this._desktopFilesRead = false;
 
-        this._addDesktopIcons();
+        this._createDesktops();
         this._monitorDesktopFolder();
+        this._fillFiles();
 
-        Prefs.settings.connect("changed", () => this._recreateDesktopIcons());
+        this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._createDesktops());
+
+        this._prefsChangedId = Prefs.settings.connect("changed", (s, key) => { this._settingsChanged(key); });
 
         this._selection = new Set();
         this._inDrag = false;
@@ -77,12 +79,102 @@ var DesktopManager = class {
         this._dragYStart = Number.POSITIVE_INFINITY;
     }
 
-    _recreateDesktopIcons() {
-        this._destroyDesktopIcons();
-        this._addDesktopIcons();
+    _settingsChanged(key) {
+        if (key == "icon-size") {
+            for(let [fileName, fileItem] of this._fileItems)
+                fileItem.changedIconSize();
+            this._createDesktops();
+            return;
+        }
+        let newState = Prefs.settings.get_boolean(key);
+        if (newState) {
+            for(let [fileName, fileItem] of this._fileItems) {
+                if (fileItem.settingsKey == key)
+                    return; // it is already enabled
+            }
+            let fileItem;
+            for (let [newFolder, extras, settingsKey] of DesktopIconsUtil.getExtraFolders()) {
+                if (settingsKey == key) {
+                    fileItem = this._addFile(newFolder, null, extras, settingsKey);
+                    this._addToDesktopCloseTo(fileItem);
+                }
+            }
+        } else {
+            // Remove that element
+            for(let [fileName, fileItem] of this._fileItems) {
+                if (fileItem.settingsKey == key) {
+                    this._removeFileItem(fileName);
+                    break;
+                }
+            }
+        }
     }
 
-    _addDesktopIcons() {
+    _monitorDesktopFolder() {
+
+        let desktopDir = DesktopIconsUtil.getDesktopDir();
+        this._monitorDesktopDir = desktopDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
+        this._monitorDesktopDir.set_rate_limit(1000);
+        this._monitorDesktopDir.connect('changed', (obj, file, otherFile, eventType) => this._updateDesktopIfChanged(file, otherFile, eventType));
+    }
+
+    _removeFileItem(fileName) {
+        let fileItem = this._fileItems.get(fileName);
+        Object.values(this._desktopGrids).forEach(grid => {
+            try {
+                grid.removeFileItem(fileItem);
+            } catch(e) {
+            }
+        });
+        this._fileItems.delete(fileName);
+        fileItem.actor.destroy();
+    }
+
+    _updateDesktopIfChanged (file, otherFile, eventType) {
+
+        if (!this._desktopFilesRead) {
+            // if there is a change while still reading the desktop files during bootup, try again
+            this._fillFiles();
+            return;
+        }
+        // Only get a subset of events we are interested in.
+        // Note that CREATED will emit a CHANGES_DONE_HINT
+        //global.log("Fichero " + file + "; otro fichero " + otherFile + "; evento "+ eventType);
+        let {
+            CHANGED, DELETED, CREATED, RENAMED, MOVED_IN, MOVED_OUT
+        } = Gio.FileMonitorEvent;
+
+        if (![CHANGED, DELETED, CREATED, RENAMED, MOVED_IN, MOVED_OUT].includes(eventType))
+            return;
+
+        let fileItem;
+        switch(eventType) {
+        case CHANGED:
+            this._fileItems.get(file.get_uri()).contentChanged();
+            break;
+        case DELETED:
+        case MOVED_OUT:
+            this._removeFileItem(file.get_uri());
+        break;
+        case CREATED:
+        case MOVED_IN:
+            fileItem = this._addFile(file, null, null);
+            this._addToDesktopCloseTo(fileItem);
+            break;
+        case RENAMED:
+            fileItem = this._fileItems.get(file.get_uri());
+            this._fileItems.delete(file.get_uri());
+            this._fileItems.set(otherFile.get_uri(), fileItem);
+            fileItem.fileRenamed(otherFile);
+        break;
+        }
+    }
+
+    _createDesktops() {
+        // destroy the current grids
+        Object.values(this._desktopGrids).forEach(grid => grid.actor.destroy());
+        this._desktopGrids = {};
+        // and recreate them, one for each monitor
         forEachBackgroundManager(bgManager => {
             let newGrid = new DesktopGrid.DesktopGrid(bgManager);
             newGrid.actor.connect("destroy", (actor) => {
@@ -92,130 +184,76 @@ var DesktopManager = class {
                         delete this._desktopGrids[grid];
                         break;
                     }
-                this._recreateDesktopIcons();
             });
             this._desktopGrids[bgManager._monitorIndex] = newGrid;
         });
-
-        this._scanFiles();
+        if (this._desktopFilesRead)
+            GLib.idle_add(GLib.PRIORITY_LOW, () => this._fillDesktopsWithIcons());
+            // Must be done in an idle task to ensure that the grids have been created
     }
 
-    _destroyDesktopIcons() {
-        Object.values(this._desktopGrids).forEach(grid => grid.actor.destroy());
-        this._desktopGrids = {};
-    }
+    _fillFiles() {
+        if (this._desktopEnumerateCancellable)
+            this._desktopEnumerateCancellable.cancel();
 
-    async _scanFiles() {
-        for (let [fileItem, id] of this._fileItemHandlers)
-            fileItem.disconnect(id);
-        this._fileItemHandlers = new Map();
-        this._fileItems = [];
-
-        try {
-            for (let [file, info, extra] of await this._enumerateDesktop()) {
-                let fileItem = new FileItem.FileItem(file, info, extra);
-                this._fileItems.push(fileItem);
-                let id = fileItem.connect('selected',
-                                          this._onFileItemSelected.bind(this));
-
-                this._fileItemHandlers.set(fileItem, id);
-            }
-        } catch (e) {
-            if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                log(`Error loading desktop files ${e.message}`);
-            return;
-        }
-
-        Object.values(this._desktopGrids).forEach(grid => {
-            grid.actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
-        });
-
-        this._scheduleReLayoutChildren();
-    }
-
-    _enumerateDesktop() {
-        return new Promise((resolve, reject) => {
-            if (this._desktopEnumerateCancellable)
-                this._desktopEnumerateCancellable.cancel();
-
-            this._desktopEnumerateCancellable = new Gio.Cancellable();
-
-            let desktopDir = DesktopIconsUtil.getDesktopDir();
-            desktopDir.enumerate_children_async(DEFAULT_ATTRIBUTES,
-                Gio.FileQueryInfoFlags.NONE,
-                GLib.PRIORITY_DEFAULT,
-                this._desktopEnumerateCancellable,
-                (o, res) => {
-                    try {
-                        let fileEnum = desktopDir.enumerate_children_finish(res);
-                        let resultGenerator = function *() {
-                            let info;
-                            while ((info = fileEnum.next_file(null)))
-                                yield [fileEnum.get_child(info), info, Prefs.FILE_TYPE.NONE];
-                            for (let [newFolder, extras] of DesktopIconsUtil.getExtraFolders()) {
-                                yield [newFolder, newFolder.query_info(DEFAULT_ATTRIBUTES, Gio.FileQueryInfoFlags.NONE, this._desktopEnumerateCancellable), extras];
-                            }
-                        }.bind(this);
-                        resolve(resultGenerator());
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
-        });
-    }
-
-    _monitorDesktopFolder() {
-        if (this._monitorDesktopDir) {
-            this._monitorDesktopDir.cancel();
-            this._monitorDesktopDir = null;
-        }
+        this._desktopEnumerateCancellable = new Gio.Cancellable();
 
         let desktopDir = DesktopIconsUtil.getDesktopDir();
-        this._monitorDesktopDir = desktopDir.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, null);
-        this._monitorDesktopDir.set_rate_limit(1000);
-        this._monitorDesktopDir.connect('changed', (obj, file, otherFile, eventType) => this._updateDesktopIfChanged(file, otherFile, eventType));
+        desktopDir.enumerate_children_async(DesktopIconsUtil.DEFAULT_ATTRIBUTES,
+            Gio.FileQueryInfoFlags.NONE,
+            GLib.PRIORITY_DEFAULT,
+            this._desktopEnumerateCancellable,
+            (o, res) => {
+                let fileEnum = desktopDir.enumerate_children_finish(res);
+                let info;
+                while ((info = fileEnum.next_file(null))) {
+                    this._addFile(fileEnum.get_child(info), info, null, null);
+                }
+                for (let [newFolder, extras, settingsKey] of DesktopIconsUtil.getExtraFolders()) {
+                    this._addFile(newFolder, null, extras, settingsKey)
+                }
+                this._desktopEnumerateCancellable = null;
+                this._desktopFilesRead = true;
+                GLib.idle_add(GLib.PRIORITY_LOW, () => this._fillDesktopsWithIcons());
+                // Must be done in an idle task to ensure that the grids have been created
+            }
+        );
     }
 
-    _updateDesktopIfChanged (file, otherFile, eventType) {
-
-        // Rate limiting isn't enough, as one action will create different events on the same file.
-        // limit by adding a timeout
-        if (this._scheduleDesktopsRefreshId) {
-            return;
-        }
-        // Only get a subset of events we are interested in.
-        // Note that CREATED will emit a CHANGES_DONE_HINT
-        let {
-            CHANGES_DONE_HINT, DELETED, RENAMED, MOVED_IN, MOVED_OUT, CREATED
-        } = Gio.FileMonitorEvent;
-        if (![CHANGES_DONE_HINT, DELETED, RENAMED,
-            MOVED_IN, MOVED_OUT, CREATED].includes(eventType))
-            return;
-
-        this._scheduleDesktopsRefreshId = Mainloop.timeout_add(500,
-            () => this._refreshDesktops(file, otherFile));
+    _addFile(newFile, info, type, settingsKey) {
+        if (!info)
+            info = newFile.query_info(DesktopIconsUtil.DEFAULT_ATTRIBUTES, Gio.FileQueryInfoFlags.NONE, this._desktopEnumerateCancellable);
+        if (!type)
+            type = Prefs.FILE_TYPE.NONE
+        let fileItem = new FileItem.FileItem(newFile, info, type, settingsKey);
+        this._fileItems.set(newFile.get_uri(), fileItem);
+        this._fileItemHandlers.set(fileItem, fileItem.connect('selected', this._onFileItemSelected.bind(this)));
+        return fileItem;
     }
 
-    //FIXME: we don't use file/otherfile for now and stupidely refresh all desktops
-    _refreshDesktops(file, otherFile) {
-        Object.values(this._desktopGrids).forEach(grid => {
-            grid.actor.destroy_all_children();
-        });
-        this._scheduleDesktopsRefreshId = 0;
-        // TODO: handle DND, opened filecontainer menu…
+    _fillDesktopsWithIcons() {
 
-        this._scanFiles();
+        for(let [fileName, fileItem] of this._fileItems) {
+            if (fileItem.savedCoordinates !== null)
+               this._addToDesktopCloseTo(fileItem);
+        };
+
+        for(let [fileName, fileItem] of this._fileItems) {
+            if (fileItem.savedCoordinates == null)
+                this._addToDesktopCloseTo(fileItem);
+        };
+        return GLib.SOURCE_REMOVE;
     }
 
-    _getContainerWithChild(child) {
-        let monitorIndex = Main.layoutManager.findIndexForActor(child);
+    _addToDesktopCloseTo(item) {
+        let [x, y] = (item.savedCoordinates == null) ? [0, 0] : item.savedCoordinates;
+        let monitorIndex = findMonitorIndexForPos(x, y);
         let desktopGrid = this._desktopGrids[monitorIndex];
-        let children = desktopGrid.actor.get_children();
-
-        if (children.some(x => x.child == child))
-            return desktopGrid;
-        else
-            throw new Error("Missmatch between expected items in a desktop grid not found");
+        try {
+            desktopGrid.addFileItemCloseTo(item, x, y);
+        } catch (e) {
+            log(`Error adding children to desktop: ${e.message}`);
+        }
     }
 
     _setupDnD() {
@@ -397,55 +435,6 @@ var DesktopManager = class {
         }
     }
 
-    _scheduleLayoutChildren() {
-        if (this._layoutChildrenId != 0)
-            return;
-
-        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
-    }
-
-    _scheduleReLayoutChildren() {
-        if (this._layoutChildrenId != 0)
-            return;
-
-        Object.values(this._desktopGrids).forEach((grid) => grid.reset());
-
-        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
-    }
-
-    _addFileItemCloseTo(item) {
-        let [x, y] = (item.savedCoordinates == null) ? [0, 0] : item.savedCoordinates;
-        let monitorIndex = findMonitorIndexForPos(x, y);
-        let desktopGrid = this._desktopGrids[monitorIndex];
-        try {
-            desktopGrid.addFileItemCloseTo(item, x, y);
-        } catch (e) {
-            log(`Error adding children to desktop: ${e.message}`);
-        }
-    }
-
-    _layoutChildren() {
-        /*
-         * Paint the icons in two passes:
-         * * first pass paints those that have their coordinates defined in the metadata
-         * * second pass paints those new files that still don't have their definitive coordinates
-         */
-        for (let fileItem of this._fileItems) {
-            if (fileItem.savedCoordinates == null)
-                continue;
-            this._addFileItemCloseTo(fileItem);
-        }
-
-        for (let fileItem of this._fileItems) {
-            if (fileItem.savedCoordinates !== null)
-                continue;
-            this._addFileItemCloseTo(fileItem);
-        }
-
-        this._layoutChildrenId = 0;
-        return GLib.SOURCE_REMOVE;
-    }
-
     doOpen() {
         for (let fileItem of this._selection)
             fileItem.doOpen();
@@ -472,13 +461,13 @@ var DesktopManager = class {
             this.clearSelection();
 
         this._selection.add(fileItem);
-        this._fileItems.forEach(f => f.selected = this._selection.has(f));
+        for(let [fileName, f] of this._fileItems)
+            f.selected = this._selection.has(f);
     }
 
     clearSelection() {
-        for (let fileItem of this._fileItems) {
+        for(let [fileName, fileItem] of this._fileItems)
             fileItem.selected = false;
-        }
 
         this._selection = new Set();
     }
@@ -511,6 +500,9 @@ var DesktopManager = class {
         if (this._monitorsChangedId)
             Main.layoutManager.disconnect(this._monitorsChangedId);
         this._monitorsChangedId = 0;
+        if (this._prefsChangedId)
+            Prefs.settings.disconnect(this._prefsChangedId);
+        this._prefsChangedId = 0;
 
         Object.values(this._desktopGrids).forEach(grid => grid.actor.destroy());
         this._desktopGrids = {}

@@ -36,6 +36,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Extension = Me.imports.extension;
 const Prefs = Me.imports.prefs;
 const DBusUtils = Me.imports.dbusUtils;
+const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Gettext = imports.gettext;
 
 Gettext.textdomain("desktop-icons");
@@ -47,13 +48,15 @@ const DRAG_TRESHOLD = 8;
 
 var FileItem = class {
 
-    constructor(file, fileInfo, fileExtra) {
+    constructor(file, fileInfo, fileExtra, settingsKey) {
 
         this._fileExtra = fileExtra;
+        this._settingsKey = settingsKey;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
         this._file = file;
+        this._parentContainer = null;
         this._fileInfo = fileInfo;
         let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
@@ -166,6 +169,47 @@ var FileItem = class {
         );
     }
 
+    changedIconSize() {
+        this._icon.icon_size = Prefs.get_icon_size();
+    }
+
+    insertInContainer(container) {
+        if (this._parentContainer)
+            this._parentContainer.child = null;
+        this._parentContainer = container;
+        if (container)
+            container.child = this.actor;
+    }
+
+    get file() {
+        return this._file;
+    }
+
+    get fileInfo() {
+        return this._fileInfo;
+    }
+
+    get fileExtra() {
+        return this._fileExtra;
+    }
+
+    get settingsKey() {
+        return this._settingsKey;
+    }
+
+    contentChanged() {
+        if (this._isDesktopFile)
+            this._prepareDesktopFile();
+    }
+
+    fileRenamed(newFile) {
+        this._file = newFile;
+        this._fileInfo = newFile.query_info(DesktopIconsUtil.DEFAULT_ATTRIBUTES, Gio.FileQueryInfoFlags.NONE, null);
+        this._label.set_text(this._fileInfo.get_attribute_as_string('standard::display-name'));
+        this._doSaveCoordinates(this._savedCoordinates);
+        this._icon.gicon = this._fileInfo.get_icon();
+    }
+
     _updateTrashIconIfChanged(eventType) {
 
         if (!this._trashInitialized) {
@@ -196,6 +240,7 @@ var FileItem = class {
                 return;
         }
 
+
         if (this._queryTrashInfoCancellable)
             this._queryTrashInfoCancellable.cancel();
 
@@ -214,10 +259,6 @@ var FileItem = class {
                 }
             }
         );
-    }
-
-    get file() {
-        return this._file;
     }
 
     _prepareDesktopFile() {
@@ -413,11 +454,15 @@ var FileItem = class {
     }
 
     set savedCoordinates(pos) {
+        this._savedCoordinates = [pos[0], pos[1]];
+        this._doSaveCoordinates(pos);
+    }
+
+    _doSaveCoordinates(pos) {
         if (this._setMetadataCancellable)
             this._setMetadataCancellable.cancel();
 
         this._setMetadataCancellable = new Gio.Cancellable();
-        this._savedCoordinates = [pos[0], pos[1]];
         let info = new Gio.FileInfo();
         info.set_attribute_string('metadata::nautilus-icon-position',
                                   `${pos[0]},${pos[1]}`);
