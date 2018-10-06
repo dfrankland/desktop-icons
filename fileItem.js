@@ -128,40 +128,25 @@ var FileItem = class {
     }
 
     _prepareDesktopFile() {
-        this.file.load_contents_async(this._loadContentsCancellable,
-            (source, result) => {
-                let contents;
-                try {
-                    let [ok, loadedContents, etag_out] = source.load_contents_finish(result);
-                    contents = loadedContents;
-                } catch (error) {
-                    if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                        log('Error loading Desktop files: ' + error.message);
-                    return;
-                }
-
-                let keyfile = new GLib.KeyFile();
-                keyfile.load_from_bytes(contents, GLib.KeyFileFlags.NONE);
-                log(keyfile.get_groups());
-
-                this._execLine = keyfile.get_locale_string('Desktop Entry', 'Exec', null);
-
-                let iconStr = keyfile.get_locale_string('Desktop Entry', 'Icon', null);
-                if (iconStr == null)
-                    return;
-
-                if (GLib.path_is_absolute(iconStr)) {
-                    let iconFile = Gio.File.new_for_commandline_arg(iconStr);
-                    this._icon.gicon = new Gio.FileIcon({ file: iconFile });
-                } else {
-                    this._icon.gicon = Gio.ThemedIcon.new_with_default_fallbacks(iconStr);
-                }
+        this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this.file.get_path());
+        if (this._desktopFile.has_key("Icon")) {
+            let iconStr = this._desktopFile.get_string('Icon');
+            if (GLib.path_is_absolute(iconStr)) {
+                let iconFile = Gio.File.new_for_commandline_arg(iconStr);
+                this._icon.gicon = new Gio.FileIcon({ file: iconFile });
+            } else {
+                this._icon.gicon = Gio.ThemedIcon.new_with_default_fallbacks(iconStr);
             }
-        );
+        }
     }
 
     doOpen() {
         if (this._attributeCanExecute && !this._isDirectory) {
+            if (this._isDesktopFile) {
+                this._desktopFile.launch_uris_as_manager([], null, GLib.SpawnFlags.SEARCH_PATH, null, null);
+                return;
+            }
+
             if (!this._execLine)
                 return;
 
