@@ -488,7 +488,8 @@ var DesktopGrid = class {
         let [x, y] = event.get_coords();
         if (button == 1) {
             let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
-            if (!shiftPressed)
+            let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
+            if (!shiftPressed && !controlPressed)
                 Extension.desktopManager.clearSelection();
             this._rubberBandInitialX = x;
             this._rubberBandInitialY = y;

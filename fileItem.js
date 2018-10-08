@@ -261,11 +261,9 @@ var FileItem = class {
                 this._buttonPressInitialX = x;
                 this._buttonPressInitialY = y;
                 let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
+                let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
                 if (!this.selected) {
-                    if (shiftPressed)
-                        this.emit('selected', true);
-                    else
-                        this.emit('selected', false);
+                    this.emit('selected', shiftPressed || controlPressed);
                 }
             }
             return Clutter.EVENT_STOP;
@@ -301,9 +299,10 @@ var FileItem = class {
             if (this._primaryButtonPressed) {
                 this._primaryButtonPressed = false;
                 let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
-                if ((event.get_click_count() == 1) && Prefs.CLICK_POLICY_SINGLE && !shiftPressed)
+                let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
+                if ((event.get_click_count() == 1) && Prefs.CLICK_POLICY_SINGLE && !shiftPressed && !controlPressed)
                     this.doOpen();
-                this.emit('selected', shiftPressed);
+                this.emit('selected', shiftPressed || controlPressed);
                 return Clutter.EVENT_STOP;
             }
             if ((event.get_click_count() == 2) && (!Prefs.CLICK_POLICY_SINGLE))
