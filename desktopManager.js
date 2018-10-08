@@ -69,7 +69,7 @@ var DesktopManager = class {
         this._addDesktopIcons();
         this._monitorDesktopFolder();
 
-        Prefs.settings.connect("changed", () => { this._recreateDesktopIcons(); });
+        Prefs.settings.connect("changed", () => this._recreateDesktopIcons());
 
         this._selection = new Set();
         this._inDrag = false;
