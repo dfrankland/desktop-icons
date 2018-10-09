@@ -112,18 +112,47 @@ var FileItem = class {
         let accessTime = fileInfo.get_attribute_uint64("time::modified");
         let thumbnailPixbuf = null;
 
+        this._updateThumbnail();
+
+        if (this._isDesktopFile)
+            this._prepareDesktopFile();
+
+        this._container.add_actor(this._label);
+        let clutterText = this._label.get_clutter_text();
+        /* TODO: Convert to gobject.set for 3.30 */
+        clutterText.set_line_wrap(true);
+        clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR);
+        clutterText.set_ellipsize(Pango.EllipsizeMode.END);
+
+        this._container.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
+        this._container.connect('motion-event', (actor, event) => this._onMotion(actor, event));
+        this._container.connect('button-release-event', (actor, event) => this._onReleaseButton(actor, event));
+
+        this._createMenu();
+
+        this._selected = false;
+        this._primaryButtonPressed = false;
+        if (this._attributeCanExecute && !this._isDesktopFile)
+            this._execLine = this.file.get_path();
+    }
+
+    _updateThumbnail() {
         // Prepare thumbnail
-        if (thumbnailFactory.can_thumbnail(fileUri, this._attributeContentType, accessTime)) {
-            let thumb = thumbnailFactory.lookup(fileUri, accessTime);
+        let fileUri = this._file.get_uri();
+        let accessTime = this._fileInfo.get_attribute_uint64("time::modified");
+        let thumbnailPixbuf = null;
+        if (this._thumbnailFactory.can_thumbnail(fileUri, this._attributeContentType, accessTime)) {
+            let thumb = this._thumbnailFactory.lookup(fileUri, accessTime);
             if (thumb == null) {
-                /*
-                if (!thumbnailFactory.has_valid_failed_thumbnail(fileUri, accessTime)) {
-                    thumbnailPixbuf = thumbnailFactory.generate_thumbnail(fileUri, this._attributeContentType);
-                    if (thumbnailPixbuf == null)
-                        thumbnailFactory.create_failed_thumbnail(fileUri, accessTime);
-                    else
-                        thumbnailFactory.save_thumbnail(thumbnailPixbuf, fileUri, accessTime);
-                }*/
+                let argv = [];
+                argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, "createthumbnail.js"]));
+                argv.push(this._file.get_path());
+                let [success, pid] = GLib.spawn_async(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+                GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, (pid, exitCode) => {
+                    if (exitCode == 0)
+                        this._updateThumbnail();
+                });
+                return;
             } else {
                 thumbnailPixbuf = GdkPixbuf.Pixbuf.new_from_file(thumb);
             }
@@ -153,27 +182,6 @@ var FileItem = class {
                 this._iconContainer.child = this._icon;
             }
         }
-
-        if (this._isDesktopFile)
-            this._prepareDesktopFile();
-
-        this._container.add_actor(this._label);
-        let clutterText = this._label.get_clutter_text();
-        /* TODO: Convert to gobject.set for 3.30 */
-        clutterText.set_line_wrap(true);
-        clutterText.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR);
-        clutterText.set_ellipsize(Pango.EllipsizeMode.END);
-
-        this._container.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
-        this._container.connect('motion-event', (actor, event) => this._onMotion(actor, event));
-        this._container.connect('button-release-event', (actor, event) => this._onReleaseButton(actor, event));
-
-        this._createMenu();
-
-        this._selected = false;
-        this._primaryButtonPressed = false;
-        if (this._attributeCanExecute && !this._isDesktopFile)
-            this._execLine = this.file.get_path();
     }
 
     get file() {
