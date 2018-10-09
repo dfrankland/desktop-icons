@@ -53,8 +53,8 @@ var FileItem = class {
     constructor(file, fileInfo, fileExtra) {
 
         this._fileExtra = fileExtra;
-        this._hasThumbnail = false;
         this._thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.NORMAL);
+        this._thumbnailScriptWatch = 0;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
@@ -92,8 +92,11 @@ var FileItem = class {
             vertical: true
         });
         this.actor.add_actor(this._container);
-        this._icon = null;
+        this._icon = new St.Bin();
+        this._icon.set_height(Prefs.get_icon_size() * scaleFactor);
+
         this._iconContainer = new St.Bin({ visible: true });
+        this._iconContainer.child = this._icon;
         this._container.add_actor(this._iconContainer);
 
         this._label = new St.Label({
@@ -104,53 +107,10 @@ var FileItem = class {
         this._loadContentsCancellable = new Gio.Cancellable();
         this._setMetadataCancellable = null;
 
-        let fileUri = this._file.get_uri();
-        let accessTime = fileInfo.get_attribute_uint64("time::modified");
-        let thumbnailPixbuf = null;
-
-        // Prepare thumbnail
-        if (this._thumbnailFactory.can_thumbnail(fileUri, this._attributeContentType, accessTime)) {
-            let thumbnail = this._thumbnailFactory.lookup(fileUri, accessTime);
-            if (thumbnail != null) {
-                thumbnailPixbuf = GdkPixbuf.Pixbuf.new_from_file(thumbnail);
-            }
-
-            if (thumbnailPixbuf != null) {
-                let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-                this._hasThumbnail = true;
-                let thumbnailImage = new Clutter.Image();
-                thumbnailImage.set_data(thumbnailPixbuf.get_pixels(),
-                    thumbnailPixbuf.has_alpha ? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888,
-                    thumbnailPixbuf.width,
-                    thumbnailPixbuf.height,
-                    thumbnailPixbuf.rowstride
-                );
-                this._icon = new St.Bin();
-                this._icon.set_height(Prefs.get_icon_size() * scaleFactor);
-                this._innerIcon = new Clutter.Actor();
-                this._icon.child = this._innerIcon;
-                this._innerIcon.set_content(thumbnailImage);
-                let width = Prefs.get_desired_width(scaleFactor);
-                let height = Prefs.get_icon_size() * scaleFactor;
-                let aspect_ratio = thumbnailPixbuf.width / thumbnailPixbuf.height;
-                if ((width / height) > aspect_ratio)
-                    this._innerIcon.set_size(height * aspect_ratio, height);
-                else
-                    this._innerIcon.set_size(width, width / aspect_ratio);
-                this._iconContainer.child = this._icon;
-            }
-        }
-
-        if (this._icon == null) {
-            this._icon = new St.Icon({
-                gicon: this._createItemFIcon(fileInfo.get_icon(), null),
-                icon_size: Prefs.get_icon_size()
-            });
-            this._iconContainer.child = this._icon;
-        }
-
         if (this._isDesktopFile)
-            this._prepareDesktopFile();
+            this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
+
+        this._icon.child = this._getIcon();
 
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
@@ -169,16 +129,83 @@ var FileItem = class {
         this._primaryButtonPressed = false;
         if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
+        this.actor.connect('destroy', () => this._onDestroy());
+    }
+
+    _onDestroy() {
+        if (this._thumbnailScriptWatch)
+            GLib.source_remove(this._thumbnailScriptWatch);
+    }
+
+    _updateThumbnail() {
+        this._icon.child = this._getIcon();
+    }
+
+    _getIcon() {
+        let fileUri = this._file.get_uri();
+        let accessTime = this._fileInfo.get_attribute_uint64("time::modified");
+        let thumbnailPixbuf = null;
+        let thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.NORMAL);
+        if (thumbnailFactory.can_thumbnail(fileUri, this._attributeContentType, accessTime)) {
+            let thumbnail = thumbnailFactory.lookup(fileUri, accessTime);
+            if (thumbnail == null) {
+                if (!thumbnailFactory.has_valid_failed_thumbnail(fileUri, accessTime)) {
+                    let argv = [];
+                    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, "createthumbnail.js"]));
+                    argv.push(this._file.get_path());
+                    let [success, pid] = GLib.spawn_async(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+                    if (this._thumbnailScriptWatch)
+                        GLib.source_remove(this._thumbnailScriptWatch);
+                    this._thumbnailScriptWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT,
+                                                                      pid,
+                        (pid, exitCode) => {
+                            if (exitCode == 0)
+                                this._updateThumbnail();
+                            GLib.spawn_close_pid(pid);
+                            return false;
+                        }
+                    );
+                }
+            } else {
+                thumbnailPixbuf = GdkPixbuf.Pixbuf.new_from_file(thumbnail);
+                if (thumbnailPixbuf != null) {
+                    let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+                    let thumbnailImage = new Clutter.Image();
+                    thumbnailImage.set_data(thumbnailPixbuf.get_pixels(),
+                                            thumbnailPixbuf.has_alpha ? Cogl.PixelFormat.RGBA_8888 : Cogl.PixelFormat.RGB_888,
+                                            thumbnailPixbuf.width,
+                                            thumbnailPixbuf.height,
+                                            thumbnailPixbuf.rowstride
+                    );
+                    let icon = new Clutter.Actor();
+                    icon.set_content(thumbnailImage);
+                    let width = Prefs.get_desired_width(scaleFactor);
+                    let height = Prefs.get_icon_size() * scaleFactor;
+                    let aspect_ratio = thumbnailPixbuf.width / thumbnailPixbuf.height;
+                    if ((width / height) > aspect_ratio)
+                        icon.set_size(height * aspect_ratio, height);
+                    else
+                        icon.set_size(width, width / aspect_ratio);
+                    return icon;
+                }
+            }
+        }
+
+        if (this._isDesktopFile && (this._desktopFile.has_key("Icon"))) {
+            return new St.Icon({
+                gicon: this._createItemFIcon(null, this._desktopFile.get_string('Icon')),
+                icon_size: Prefs.get_icon_size()
+            });
+        } else {
+            return new St.Icon({
+                gicon: this._createItemFIcon(this._fileInfo.get_icon(), null),
+                icon_size: Prefs.get_icon_size()
+            });
+        }
     }
 
     get file() {
         return this._file;
-    }
-
-    _prepareDesktopFile() {
-        this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
-        if (this._desktopFile.has_key("Icon") && !this._hasThumbnail)
-            this._icon.gicon = this._createItemFIcon(null, this._desktopFile.get_string('Icon'));
     }
 
     _createItemFIcon(icon, iconName) {
