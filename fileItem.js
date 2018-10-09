@@ -54,6 +54,7 @@ var FileItem = class {
 
         this._fileExtra = fileExtra;
         this._loadThumbnailDataCancellable = null;
+        this._thumbnailScriptWatch = 0;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
@@ -74,6 +75,7 @@ var FileItem = class {
         this._attributeHidden = fileInfo.get_is_hidden();
         this._isSymlink = fileInfo.get_is_symlink();
         this._fileUri = this._file.get_uri();
+        this._filePath = this._file.get_path();
         this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
 
         this.actor = new St.Bin({ visible: true });
@@ -130,13 +132,39 @@ var FileItem = class {
         this._primaryButtonPressed = false;
         if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
+        this.actor.connect('destroy', () => this._onDestroy());
+    }
+
+    _onDestroy() {
+        if (this._thumbnailScriptWatch)
+            GLib.source_remove(this._thumbnailScriptWatch);
     }
 
     _setFileIcon() {
         let thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
         if (thumbnailFactory.can_thumbnail(this._fileUri, this._attributeContentType, this._modifiedTime)) {
             let thumbnail = thumbnailFactory.lookup(this._fileUri, this._modifiedTime);
-            if (thumbnail != null) {
+            if (thumbnail == null) {
+                if (!thumbnailFactory.has_valid_failed_thumbnail(this._fileUri, this._modifiedTime)) {
+                    let argv = [];
+                    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, "createthumbnail.js"]));
+                    argv.push(this._filePath);
+                    let [success, pid] = GLib.spawn_async(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+                    if (this._thumbnailScriptWatch)
+                        GLib.source_remove(this._thumbnailScriptWatch);
+                    this._thumbnailScriptWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT,
+                                                                      pid,
+                        (pid, exitCode) => {
+                            if (exitCode == 0)
+                                this._setFileIcon();
+                            else
+                                global.log("Failed to generate thumbnail for " + this._filePath);
+                            GLib.spawn_close_pid(pid);
+                            return false;
+                        }
+                    );
+                }
+            } else {
                 if (this._loadThumbnailDataCancellable)
                     this._loadThumbnailDataCancellable.cancel();
                 this._loadThumbnailDataCancellable = new Gio.Cancellable();
