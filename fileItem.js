@@ -62,6 +62,14 @@ var FileItem = class {
         else
             this._savedCoordinates = null;
 
+        this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
+        this._fileType = fileInfo.get_file_type();
+        this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
+        this._attributeContentType = fileInfo.get_content_type();
+        this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
+        this._attributeHidden = fileInfo.get_is_hidden();
+        this._isSymlink = fileInfo.get_is_symlink();
+
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
         this.actor.set_height(Prefs.get_desired_height(scaleFactor));
@@ -81,7 +89,7 @@ var FileItem = class {
         this.actor.add_actor(this._container);
 
         this._icon = new St.Icon({
-            gicon: fileInfo.get_icon(),
+            gicon: this._createItemFIcon(fileInfo.get_icon(), null),
             icon_size: Prefs.get_icon_size()
         });
         this._iconContainer = new St.Bin({ visible: true });
@@ -92,12 +100,6 @@ var FileItem = class {
             text: fileInfo.get_attribute_as_string('standard::display-name'),
             style_class: 'name-label'
         });
-        this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
-        this._fileType = fileInfo.get_file_type();
-        this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
-        this._attributeContentType = fileInfo.get_content_type();
-        this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
-        this._attributeHidden = fileInfo.get_is_hidden();
 
         this._loadContentsCancellable = new Gio.Cancellable();
         this._setMetadataCancellable = null;
@@ -128,16 +130,26 @@ var FileItem = class {
     }
 
     _prepareDesktopFile() {
-        this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this.file.get_path());
-        if (this._desktopFile.has_key("Icon")) {
-            let iconStr = this._desktopFile.get_string('Icon');
-            if (GLib.path_is_absolute(iconStr)) {
-                let iconFile = Gio.File.new_for_commandline_arg(iconStr);
-                this._icon.gicon = new Gio.FileIcon({ file: iconFile });
+        this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
+        if (this._desktopFile.has_key("Icon"))
+            this._icon.gicon = this._createItemFIcon(null, this._desktopFile.get_string('Icon'));
+    }
+
+    _createItemFIcon(icon, iconName) {
+        let itemIcon = null;
+        if (icon == null) {
+            if (GLib.path_is_absolute(iconName)) {
+                let iconFile = Gio.File.new_for_commandline_arg(iconName);
+                itemIcon = Gio.EmblemedIcon.new(new Gio.FileIcon({ file: iconFile }), null);
             } else {
-                this._icon.gicon = Gio.ThemedIcon.new_with_default_fallbacks(iconStr);
+                itemIcon = Gio.EmblemedIcon.new(Gio.ThemedIcon.new_with_default_fallbacks(iconName), null)
             }
+        } else {
+            itemIcon = Gio.EmblemedIcon.new(icon, null);
         }
+        if (this._isSymlink)
+            itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new("emblem-symbolic-link")));
+        return itemIcon;
     }
 
     doOpen() {
