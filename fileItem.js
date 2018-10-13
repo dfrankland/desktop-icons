@@ -410,7 +410,7 @@ var FileItem = class {
         let button = event.get_button();
         if (button == 3) {
             if (!this.isSelected)
-                this.emit('selected', false);
+                this.emit('selected', false, true);
             this._menu.toggle();
             return Clutter.EVENT_STOP;
         } else if (button == 1) {
@@ -422,7 +422,7 @@ var FileItem = class {
                 let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
                 let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
                 if (!this.isSelected) {
-                    this.emit('selected', shiftPressed || controlPressed);
+                    this.emit('selected', shiftPressed || controlPressed, true);
                 }
             }
             return Clutter.EVENT_STOP;
@@ -465,7 +465,7 @@ var FileItem = class {
                 let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
                 if ((event.get_click_count() == 1) && Prefs.CLICK_POLICY_SINGLE && !shiftPressed && !controlPressed)
                     this.doOpen();
-                this.emit('selected', shiftPressed || controlPressed);
+                this.emit('selected', shiftPressed || controlPressed, true);
                 return Clutter.EVENT_STOP;
             }
             if ((event.get_click_count() == 2) && (!Prefs.CLICK_POLICY_SINGLE))

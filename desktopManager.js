@@ -463,11 +463,15 @@ var DesktopManager = class {
         });
     }
 
-    _onFileItemSelected(fileItem, addToSelection) {
-        if (!addToSelection && !this._inDrag)
+    _onFileItemSelected(fileItem, keepCurrentSelection, addToSelection) {
+        if (!keepCurrentSelection && !this._inDrag)
             this.clearSelection();
 
-        this._selection.add(fileItem);
+        if (addToSelection)
+            this._selection.add(fileItem);
+        else
+            this._selection.delete(fileItem);
+
         this._fileItems.forEach(f => f.isSelected = this._selection.has(f));
     }
 

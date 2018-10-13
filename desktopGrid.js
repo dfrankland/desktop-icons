@@ -361,8 +361,7 @@ var DesktopGrid = class {
     _selectFromRubberband(currentX, currentY) {
         let { x, y, width, height } = this._rubberBand;
         this._fileItems.forEach(fileItem => {
-            if (fileItem.intersectsWith(x, y, width, height))
-                fileItem.emit('selected', true);
+            fileItem.emit('selected', true, fileItem.intersectsWith(x, y, width, height));
         });
     }
 
@@ -603,7 +602,7 @@ var DesktopGrid = class {
         return [column, row];
     }
 
-    _onFileItemSelected(fileItem, modifySelection) {
+    _onFileItemSelected(fileItem, keepCurrentSelection, addToSelection) {
         this.actor.grab_key_focus();
     }
 
