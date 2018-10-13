@@ -26,6 +26,7 @@ const Layout = imports.ui.layout;
 const Main = imports.ui.main;
 const BoxPointer = imports.ui.boxpointer;
 const PopupMenu = imports.ui.popupMenu;
+const GrabHelper = imports.ui.grabHelper;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -82,6 +83,7 @@ var DesktopGrid = class {
             can_focus: true,
             opacity: 255
         });
+        this._grabHelper = new GrabHelper.GrabHelper(global.stage);
         this.actor._delegate = this;
 
         this._bgManager._container.add_actor(this.actor);
@@ -101,8 +103,8 @@ var DesktopGrid = class {
             () => this._backgroundDestroyed());
 
         this.actor.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
-        this.actor.connect('button-release-event', (actor, event) => this._onReleaseButton(actor, event));
-        this.actor.connect('motion-event', (actor, event) => this._onMotion(actor, event));
+        this._stageReleaseEventId = global.stage.connect('button-release-event', (actor, event) => this._onStageReleaseButton(actor, event));
+        this._stageMotionEventId = global.stage.connect('motion-event', (actor, event) => this._onStageMotion(actor, event));
         this.actor.connect('leave-event', (actor, event) => this._onLeave(actor, event));
         this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
         this._rubberBand.hide();
@@ -168,7 +170,8 @@ var DesktopGrid = class {
     _onDestroy() {
         if (this._bgDestroyedId && this._bgManager.backgroundActor != null)
             this._bgManager.backgroundActor.disconnect(this._bgDestroyedId);
-
+        global.stage.disconnect(this._stageReleaseEventId);
+        global.stage.disconnect(this._stageMotionEventId);
         this._bgDestroyedId = 0;
         this._bgManager = null;
         this._rubberBand.destroy();
@@ -473,12 +476,30 @@ var DesktopGrid = class {
         this._fillPlaceholders();
     }
 
-    _onMotion(actor, event) {
-        let [x, y] = event.get_coords();
+    _onStageMotion(actor, event) {
         if (this._drawingRubberBand) {
+            let [x, y] = event.get_coords();
             this._updateRubberBand(x, y);
             this._selectFromRubberband(x, y);
         }
+        return Clutter.EVENT_PROPAGATE;
+    }
+
+    _startRubberband(x, y) {
+        this._rubberBandInitialX = x;
+        this._rubberBandInitialY = y;
+        this._drawingRubberBand = true;
+        this._updateRubberBand(x, y);
+        this._rubberBand.show();
+        this._grabHelper.grab({ actor: global.stage });
+        Extension.lockActivitiesButton = true;
+    }
+
+    _endRubberband() {
+        Extension.lockActivitiesButton = false;
+        this._grabHelper.ungrab();
+        this._drawingRubberBand = false;
+        this._rubberBand.hide();
     }
 
     _onPressButton(actor, event) {
@@ -489,12 +510,7 @@ var DesktopGrid = class {
             let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
             if (!shiftPressed && !controlPressed)
                 Extension.desktopManager.clearSelection();
-            this._rubberBandInitialX = x;
-            this._rubberBandInitialY = y;
-            this._drawingRubberBand = true;
-            this._updateRubberBand(x, y);
-            this._rubberBand.show();
-
+            this._startRubberband(x, y);
             return Clutter.EVENT_STOP;
         }
 
@@ -507,17 +523,15 @@ var DesktopGrid = class {
         return Clutter.EVENT_PROPAGATE;
     }
 
-    _onReleaseButton(actor, event) {
+    _onStageReleaseButton(actor, event) {
+
         this.actor.grab_key_focus();
 
         let button = event.get_button();
-        if (button == 1) {
-            this._drawingRubberBand = false;
-            this._rubberBand.hide();
-
+        if ((button == 1) && this._drawingRubberBand) {
+            this._endRubberband();
             return Clutter.EVENT_STOP;
         }
-
         return Clutter.EVENT_PROPAGATE;
     }
 
@@ -525,10 +539,8 @@ var DesktopGrid = class {
         let containerMap = this._fileItems.map(function (container) { return container._container });
         let relatedActor = event.get_related();
 
-        if (!containerMap.includes(relatedActor) && relatedActor !== this.actor) {
-            this._drawingRubberBand = false;
-            this._rubberBand.hide();
-        }
+        if (!containerMap.includes(relatedActor) && (relatedActor !== this.actor) && (relatedActor.name == 'DesktopGrid') && this._drawingRubberBand)
+            this._endRubberband();
 
         return Clutter.EVENT_PROPAGATE;
     }

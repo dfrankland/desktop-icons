@@ -27,12 +27,25 @@ const DBusUtils = Me.imports.dbusUtils;
 var desktopManager = null;
 var addBackgroundMenuOrig = null;
 var _startupPreparedId;
+var lockActivitiesButton = false;
+
+var oldShouldToggleByCornerOrButtonFunction = null;
 
 function init() {
     addBackgroundMenuOrig = Main.layoutManager._addBackgroundMenu;
 }
 
+function newShouldToggleByCornerOrButton() {
+    if (lockActivitiesButton)
+        return false;
+    else
+        return oldShouldToggleByCornerOrButtonFunction.bind(Main.overview);
+}
+
 function enable() {
+    // register a new function to allow to lock the Activities button when doing a rubberband selection
+    oldShouldToggleByCornerOrButtonFunction = Main.overview.shouldToggleByCornerOrButton;
+    Main.overview.shouldToggleByCornerOrButton = newShouldToggleByCornerOrButton;
     // wait until the startup process has ended
     if (Main.layoutManager._startingUp)
         _startupPreparedId = Main.layoutManager.connect('startup-complete', () => innerEnable(true));
@@ -52,4 +65,5 @@ function innerEnable(disconnectSignal) {
 function disable() {
     desktopManager.destroy();
     Main.layoutManager._addBackgroundMenu = addBackgroundMenuOrig;
+    Main.overview.shouldToggleByCornerOrButton = oldShouldToggleByCornerOrButtonFunction;
 }
