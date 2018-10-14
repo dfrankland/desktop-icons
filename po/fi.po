@@ -1,0 +1,136 @@
+# Finnish translation for desktop-icons.
+# Copyright (C) 2018 desktop-icons's COPYRIGHT HOLDER
+# This file is distributed under the same license as the desktop-icons package.
+# Jiri Grönroos <jiri.gronroos@iki.fi>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: desktop-icons master\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
+"icons/issues\n"
+"POT-Creation-Date: 2018-10-14 08:09+0000\n"
+"PO-Revision-Date: 2018-10-14 12:44+0300\n"
+"Language-Team: Finnish <lokalisointi-lista@googlegroups.com>\n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Last-Translator: Jiri Grönroos <jiri.gronroos+l10n@iki.fi>\n"
+"X-Generator: Poedit 2.0.6\n"
+
+#: prefs.js:89
+msgid "Size for the desktop icons"
+msgstr "Työpöytäkuvakkeiden koko"
+
+#: prefs.js:89
+msgid "Small"
+msgstr "Pieni"
+
+#: prefs.js:89
+msgid "Standard"
+msgstr "Normaali"
+
+#: prefs.js:89
+msgid "Large"
+msgstr "Suuri"
+
+#: prefs.js:89
+msgid "Huge"
+msgstr "Valtava"
+
+#: prefs.js:90
+msgid "Show the personal folder in the desktop"
+msgstr "Näytä kotikansio työpöydällä"
+
+#: prefs.js:91
+msgid "Show the trash icon in the desktop"
+msgstr "Näytä roskakorin kuvake työpöydällä"
+
+#: desktopGrid.js:178 desktopGrid.js:297
+msgid "New Folder"
+msgstr "Uusi kansio"
+
+#: desktopGrid.js:299
+msgid "Paste"
+msgstr "Liitä"
+
+#: desktopGrid.js:300
+msgid "Undo"
+msgstr "Kumoa"
+
+#: desktopGrid.js:301
+msgid "Redo"
+msgstr "Tee uudeleen"
+
+#: desktopGrid.js:303
+msgid "Open Desktop in Files"
+msgstr "Avaa työpöytä tiedostonhallinnassa"
+
+#: desktopGrid.js:304
+msgid "Open Terminal"
+msgstr "Avaa pääte"
+
+#: desktopGrid.js:306
+msgid "Change Background…"
+msgstr "Vaihda taustakuvaa…"
+
+#: desktopGrid.js:307
+msgid "Display Settings"
+msgstr "Näytön asetukset"
+
+#: desktopGrid.js:308
+msgid "Settings"
+msgstr "Asetukset"
+
+#: fileItem.js:211
+msgid "Open"
+msgstr "Avaa"
+
+#: fileItem.js:214
+msgid "Cut"
+msgstr "Leikkaa"
+
+#: fileItem.js:215
+msgid "Copy"
+msgstr "Kopioi"
+
+#: fileItem.js:216
+msgid "Move to Trash"
+msgstr "Siirrä roskakoriin"
+
+#: fileItem.js:220
+msgid "Empty trash"
+msgstr "Tyhjennä roskakori"
+
+#: fileItem.js:226
+msgid "Properties"
+msgstr "Ominaisuudet"
+
+#: fileItem.js:228
+msgid "Show in Files"
+msgstr "Näytä tiedostonhallinnassa"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+msgid "Icon size"
+msgstr "Kuvakekoko"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+msgid "Set the size for the desktop icons."
+msgstr "Aseta työpöytäkuvakkeiden koko."
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+msgid "Show personal folder"
+msgstr "Näytä kotikansio"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+msgid "Show the personal folder in the desktop."
+msgstr "Näytä kotikansio työpöydällä."
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+msgid "Show trash icon"
+msgstr "Näytä roskakorin kuvake"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+msgid "Show the trash icon in the desktop."
+msgstr "Näytä roskakorin kuvake työpöydällä."
