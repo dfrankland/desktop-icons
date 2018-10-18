@@ -512,7 +512,7 @@ var DesktopManager = class {
             this._monitorDesktopDir.cancel();
         this._monitorDesktopDir = null;
         if (this._scheduleDesktopsRefreshId)
-            Main.layoutManager.disconnect(this._scheduleDesktopsRefreshId);
+            GLib.source_remove(this._scheduleDesktopsRefreshId);
         this._scheduleDesktopsRefreshId = 0;
 
         if (this._monitorsChangedId)
