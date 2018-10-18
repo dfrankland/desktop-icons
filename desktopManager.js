@@ -212,6 +212,7 @@ var DesktopManager = class {
         // TODO: handle DND, opened filecontainer menu…
 
         this._scanFiles();
+        return false;
     }
 
     _getContainerWithChild(child) {
