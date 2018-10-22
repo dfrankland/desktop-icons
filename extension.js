@@ -23,6 +23,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Prefs = Me.imports.prefs;
 const { DesktopManager } = Me.imports.desktopManager;
 const DBusUtils = Me.imports.dbusUtils;
+const ThumbnailManager = Me.imports.thumbnailManager;
 
 var desktopManager = null;
 var addBackgroundMenuOrig = null;
@@ -51,5 +52,6 @@ function innerEnable(disconnectSignal) {
 
 function disable() {
     desktopManager.destroy();
+    ThumbnailManager.thumbnailManagerInstance.destroy();
     Main.layoutManager._addBackgroundMenu = addBackgroundMenuOrig;
 }
