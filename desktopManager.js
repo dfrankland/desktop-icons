@@ -317,11 +317,10 @@ var DesktopManager = class {
         let destroyActor = false;
         while (target) {
             if (target._delegate && target._delegate.acceptDrop) {
-                let [r, targX, targY] = target.transform_stage_point(dropX, dropY);
                 if (target._delegate.acceptDrop(this._draggable.actor._delegate,
                     this._draggable._dragActor,
-                    targX,
-                    targY,
+                    dropX,
+                    dropY,
                     event.get_time())) {
                     // If it accepted the drop without taking the actor,
                     // handle it ourselves.
