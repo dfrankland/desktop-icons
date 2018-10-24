@@ -356,53 +356,38 @@ var DesktopManager = class {
     }
 
     acceptDrop(xEnd, yEnd) {
+        let savedCoordinates = new Map();
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
-        let itemsToSet = new Set(this._selection);
-        for (let fileItem of itemsToSet) {
-            let [fileItemX, fileItemY] = fileItem.actor.get_transformed_position();
-            let fileX = Math.round(xDiff + fileItemX);
-            let fileY = Math.round(yDiff + fileItemY);
-            fileItem.savedCoordinates = [fileX, fileY];
+        /* Remove all items before dropping new ones, so we can freely reposition
+         * them.
+         */
+        for (let item of this._selection) {
+            let [itemX, itemY] = (item.savedCoordinates == null) ? [0, 0] : item.savedCoordinates;
+            let monitorIndex = findMonitorIndexForPos(itemX, itemY);
+            savedCoordinates.set(item, item.actor.get_transformed_position());
+            this._desktopGrids[monitorIndex].removeFileItem(item);
+            /* Set the new ideal position where the item drop should happen */
+            let newfileX = Math.round(xDiff + itemX);
+            let newfileY = Math.round(yDiff + itemY);
+            item.savedCoordinates = [newfileX, newfileY];
         }
 
-        this._layoutDrop([...itemsToSet]);
-
-        return true;
-    }
-
-    _layoutDrop(fileItems) {
-        let itemsGridAssociation = {}
-
         for (let key in this._desktopGrids) {
-            let itemsForDesktop = fileItems.filter(
+            /* Create list of items to drop per desktop. We want to drop them at
+             * once so calculations for the dropping per grid are smoother
+             */
+            let itemsForDropDesktop = [...this._selection].filter(
                 (x) => {
                     let [itemX, itemY] = (x.savedCoordinates == null) ? [0, 0] : x.savedCoordinates;
                     let monitorIndex = findMonitorIndexForPos(itemX, itemY);
                     return key == monitorIndex;
                 }
             );
-            let desktopGrid = this._desktopGrids[key];
-            itemsGridAssociation[desktopGrid] = [desktopGrid, itemsForDesktop];
+
+            this._desktopGrids[key].dropItems(itemsForDropDesktop);
         }
 
-        /* Remove all actors from their respective parents
-         * so we can place them freely
-         */
-        for (let hashedGrid in itemsGridAssociation) {
-            let [grid, fileItems] = itemsGridAssociation[hashedGrid];
-            for (let item of fileItems) {
-                grid.removeFileItem(item);
-            }
-        }
-
-        for (let hashedGrid in itemsGridAssociation) {
-            let [grid, fileItems] = itemsGridAssociation[hashedGrid];
-            try {
-                grid.dropItems(fileItems);
-            } catch (e) {
-                log(`Error while dropping: ${e.message}`);
-            }
-        }
+        return true;
     }
 
     _scheduleLayoutChildren() {

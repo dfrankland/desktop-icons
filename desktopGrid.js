@@ -558,8 +558,11 @@ var DesktopGrid = class {
     }
 
     acceptDrop(source, actor, x, y, time) {
-        let [actorX, actorY] = this.actor.get_transformed_position();
-        return Extension.desktopManager.acceptDrop(x + actorX, y + actorY);
+        /* Coordinates are relative to the grid, we want to transform them to
+         * absolute coordinates to work across monitors */
+        let [gridX, gridY] = this.actor.get_transformed_position();
+        let [absoluteX, absoluteY] = [x + gridX, y + gridY];
+        return Extension.desktopManager.acceptDrop(absoluteX, absoluteY);
     }
 
     _getPosOfFileItem(itemToFind) {
