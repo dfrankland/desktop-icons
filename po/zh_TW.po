@@ -1,0 +1,135 @@
+# Chinese (Taiwan) translation for desktop-icons.
+# Copyright (C) 2018 desktop-icons's COPYRIGHT HOLDER
+# This file is distributed under the same license as the desktop-icons package.
+# Yi-Jyun Pan <pan93412@gmail.com>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: desktop-icons master\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
+"icons/issues\n"
+"POT-Creation-Date: 2018-10-22 14:12+0000\n"
+"PO-Revision-Date: 2018-10-24 21:31+0800\n"
+"Language-Team: Chinese (Taiwan) <chinese-l10n@googlegroups.com>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Last-Translator: pan93412 <pan93412@gmail.com>\n"
+"X-Generator: Poedit 2.2\n"
+
+#: prefs.js:89
+msgid "Size for the desktop icons"
+msgstr "桌面圖示的大小"
+
+#: prefs.js:89
+msgid "Small"
+msgstr "小圖示"
+
+#: prefs.js:89
+msgid "Standard"
+msgstr "標準大小圖示"
+
+#: prefs.js:89
+msgid "Large"
+msgstr "大圖示"
+
+#: prefs.js:89
+msgid "Huge"
+msgstr "巨大圖示"
+
+#: prefs.js:90
+msgid "Show the personal folder in the desktop"
+msgstr "在桌面顯示個人資料夾"
+
+#: prefs.js:91
+msgid "Show the trash icon in the desktop"
+msgstr "在桌面顯示垃圾桶圖示"
+
+#: desktopGrid.js:178 desktopGrid.js:297
+msgid "New Folder"
+msgstr "新增資料夾"
+
+#: desktopGrid.js:299
+msgid "Paste"
+msgstr "貼上"
+
+#: desktopGrid.js:300
+msgid "Undo"
+msgstr "復原"
+
+#: desktopGrid.js:301
+msgid "Redo"
+msgstr "重做"
+
+#: desktopGrid.js:303
+msgid "Open Desktop in Files"
+msgstr "在《檔案》中開啟桌面"
+
+#: desktopGrid.js:304
+msgid "Open Terminal"
+msgstr "開啟終端器"
+
+#: desktopGrid.js:306
+msgid "Change Background…"
+msgstr "變更背景圖片…"
+
+#: desktopGrid.js:307
+msgid "Display Settings"
+msgstr "顯示設定"
+
+#: desktopGrid.js:308
+msgid "Settings"
+msgstr "設定"
+
+#: fileItem.js:223
+msgid "Open"
+msgstr "開啟"
+
+#: fileItem.js:226
+msgid "Cut"
+msgstr "剪下"
+
+#: fileItem.js:227
+msgid "Copy"
+msgstr "複製"
+
+#: fileItem.js:228
+msgid "Move to Trash"
+msgstr "移動到垃圾桶"
+
+#: fileItem.js:232
+msgid "Empty trash"
+msgstr "清空回收桶"
+
+#: fileItem.js:238
+msgid "Properties"
+msgstr "屬性"
+
+#: fileItem.js:240
+msgid "Show in Files"
+msgstr "在《檔案》中顯示"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+msgid "Icon size"
+msgstr "圖示大小"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+msgid "Set the size for the desktop icons."
+msgstr "設定桌面圖示的大小。"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+msgid "Show personal folder"
+msgstr "顯示個人資料夾"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+msgid "Show the personal folder in the desktop."
+msgstr "在桌面顯示個人資料夾。"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+msgid "Show trash icon"
+msgstr "顯示垃圾桶圖示"
+
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+msgid "Show the trash icon in the desktop."
+msgstr "在桌面顯示垃圾桶圖示。"
