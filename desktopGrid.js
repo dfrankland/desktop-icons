@@ -558,7 +558,8 @@ var DesktopGrid = class {
     }
 
     acceptDrop(source, actor, x, y, time) {
-        return Extension.desktopManager.acceptDrop(x, y);
+        let [actorX, actorY] = this.actor.get_transformed_position();
+        return Extension.desktopManager.acceptDrop(x + actorX, y + actorY);
     }
 
     _getPosOfFileItem(itemToFind) {
