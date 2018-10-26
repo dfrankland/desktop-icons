@@ -105,7 +105,6 @@ var FileItem = class {
             style_class: 'name-label'
         });
 
-        this._loadContentsCancellable = new Gio.Cancellable();
         this._setMetadataCancellable = null;
 
         if (this._isDesktopFile)
