@@ -84,16 +84,14 @@ var FileItem = class {
         this.actor.set_width(Prefs.get_desired_width(scaleFactor));
         this.actor._delegate = this;
 
-        this._container = new St.BoxLayout({
-            reactive: true,
-            track_hover: true,
-            can_focus: true,
-            style_class: 'file-item',
-            x_expand: true,
-            y_expand: true,
-            x_align: Clutter.ActorAlign.FILL,
-            vertical: true
-        });
+        this._container = new St.BoxLayout({ reactive: true,
+                                             track_hover: true,
+                                             can_focus: true,
+                                             style_class: 'file-item',
+                                             x_expand: true,
+                                             y_expand: true,
+                                             x_align: Clutter.ActorAlign.FILL,
+                                             vertical: true });
         this.actor.add_actor(this._container);
         this._icon = new St.Bin();
         this._icon.set_height(Prefs.get_icon_size() * scaleFactor);
