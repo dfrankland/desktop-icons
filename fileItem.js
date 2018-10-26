@@ -109,7 +109,7 @@ var FileItem = class {
         if (this._isDesktopFile)
             this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
 
-        this._setFileIcon();
+        this._updateIcon();
 
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
@@ -140,7 +140,7 @@ var FileItem = class {
             this._loadThumbnailDataCancellable.cancel();
     }
 
-    _setFileIcon() {
+    _updateIcon() {
         let thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
         if (thumbnailFactory.can_thumbnail(this._fileUri,
                                            this._attributeContentType,
@@ -161,7 +161,7 @@ var FileItem = class {
                                                                       pid,
                         (pid, exitCode) => {
                             if (exitCode == 0)
-                                this._setFileIcon();
+                                this._updateIcon();
                             else
                                 global.log("Failed to generate thumbnail for " + this._filePath);
                             GLib.spawn_close_pid(pid);
