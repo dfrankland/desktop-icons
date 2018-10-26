@@ -132,10 +132,13 @@ var FileItem = class {
     }
 
     _onDestroy() {
-        if (this._thumbnailScriptWatch)
-            GLib.source_remove(this._thumbnailScriptWatch);
+        /* Regular file data */
         if (this._setMetadataCancellable)
             this._setMetadataCancellable.cancel();
+
+        /* Thumbnailing */
+        if (this._thumbnailScriptWatch)
+            GLib.source_remove(this._thumbnailScriptWatch);
         if (this._loadThumbnailDataCancellable)
             this._loadThumbnailDataCancellable.cancel();
     }
