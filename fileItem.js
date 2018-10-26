@@ -142,14 +142,19 @@ var FileItem = class {
 
     _setFileIcon() {
         let thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
-        if (thumbnailFactory.can_thumbnail(this._fileUri, this._attributeContentType, this._modifiedTime)) {
+        if (thumbnailFactory.can_thumbnail(this._fileUri,
+                                           this._attributeContentType,
+                                           this._modifiedTime)) {
             let thumbnail = thumbnailFactory.lookup(this._fileUri, this._modifiedTime);
             if (thumbnail == null) {
-                if (!thumbnailFactory.has_valid_failed_thumbnail(this._fileUri, this._modifiedTime)) {
+                if (!thumbnailFactory.has_valid_failed_thumbnail(this._fileUri,
+                                                                 this._modifiedTime)) {
                     let argv = [];
-                    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, "createThumbnail.js"]));
+                    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path,
+                                                   "createThumbnail.js"]));
                     argv.push(this._filePath);
-                    let [success, pid] = GLib.spawn_async(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
+                    let [success, pid] = GLib.spawn_async(null, argv, null,
+                                                          GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
                     if (this._thumbnailScriptWatch)
                         GLib.source_remove(this._thumbnailScriptWatch);
                     this._thumbnailScriptWatch = GLib.child_watch_add(GLib.PRIORITY_DEFAULT,
