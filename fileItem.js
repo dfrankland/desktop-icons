@@ -280,12 +280,12 @@ var FileItem = class {
                                     this._queryTrashInfoCancellable,
             (source, res) => {
                 try {
-                    this._fileInfo = source_object.query_info_finish(res);
+                    this._fileInfo = source.query_info_finish(res);
                     this._queryTrashInfoCancellable = null;
                     this._updateIcon();
                 } catch(error) {
                     if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                        global.log("Error getting the number of files in the trash: " + e);
+                        global.log("Error getting the number of files in the trash: " + error);
                 }
             });
 
