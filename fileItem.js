@@ -204,7 +204,7 @@ var FileItem = class {
                         } catch (error) {
                             if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
                                 global.log("Error while loading thumbnail: " + error);
-                                this._icon.child = new St.Icon({ gicon: this._createItemFIcon(this._fileInfo.get_icon(), null),
+                                this._icon.child = new St.Icon({ gicon: this._createEmblemIcon(this._fileInfo.get_icon(), null),
                                                                  icon_size: Prefs.get_icon_size()
                                 });
                             }
@@ -215,11 +215,11 @@ var FileItem = class {
         }
 
         if (this._isDesktopFile && (this._desktopFile.has_key("Icon"))) {
-            this._icon.child = new St.Icon({ gicon: this._createItemFIcon(null, this._desktopFile.get_string('Icon')),
+            this._icon.child = new St.Icon({ gicon: this._createEmblemIcon(null, this._desktopFile.get_string('Icon')),
                                              icon_size: Prefs.get_icon_size()
             });
         } else {
-            this._icon.child = new St.Icon({ gicon: this._createItemFIcon(this._fileInfo.get_icon(), null),
+            this._icon.child = new St.Icon({ gicon: this._createEmblemIcon(this._fileInfo.get_icon(), null),
                                              icon_size: Prefs.get_icon_size()
             });
         }
@@ -229,7 +229,7 @@ var FileItem = class {
         return this._file;
     }
 
-    _createItemFIcon(icon, iconName) {
+    _createEmblemIcon(icon, iconName) {
         let itemIcon = null;
         if (icon == null) {
             if (GLib.path_is_absolute(iconName)) {
