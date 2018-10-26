@@ -134,6 +134,10 @@ var FileItem = class {
     _onDestroy() {
         if (this._thumbnailScriptWatch)
             GLib.source_remove(this._thumbnailScriptWatch);
+        if (this._setMetadataCancellable)
+            this._setMetadataCancellable.cancel();
+        if (this._loadThumbnailDataCancellable)
+            this._loadThumbnailDataCancellable.cancel();
     }
 
     _setFileIcon() {
