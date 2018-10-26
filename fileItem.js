@@ -147,7 +147,7 @@ var FileItem = class {
             if (thumbnail == null) {
                 if (!thumbnailFactory.has_valid_failed_thumbnail(this._fileUri, this._modifiedTime)) {
                     let argv = [];
-                    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, "createthumbnail.js"]));
+                    argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path, "createThumbnail.js"]));
                     argv.push(this._filePath);
                     let [success, pid] = GLib.spawn_async(null, argv, null, GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
                     if (this._thumbnailScriptWatch)
