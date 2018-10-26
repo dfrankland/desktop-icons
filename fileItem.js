@@ -55,6 +55,7 @@ var FileItem = class {
         this._fileExtra = fileExtra;
         this._loadThumbnailDataCancellable = null;
         this._thumbnailScriptWatch = 0;
+        this._setMetadataCancellable = null;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
@@ -104,8 +105,6 @@ var FileItem = class {
             text: fileInfo.get_attribute_as_string('standard::display-name'),
             style_class: 'name-label'
         });
-
-        this._setMetadataCancellable = null;
 
         if (this._isDesktopFile)
             this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
