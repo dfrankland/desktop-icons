@@ -385,19 +385,19 @@ var DesktopGrid = class {
         this._fileItems.push(fileItem);
         let id = fileItem.connect('selected', this._onFileItemSelected.bind(this));
         this._fileItemHandlers.set(fileItem, id);
-    }
-
-    addFileItemCloseTo(fileItem, x, y) {
-        let [column, row] = this._getEmptyPlaceClosestTo(x, y, null);
-        this._addFileItemTo(fileItem, column, row);
         /* If this file is new in the Desktop and hasn't yet
          * fixed coordinates, store the new possition to ensure
          * that the next time it will be shown in the same possition
          */
         if (fileItem.savedCoordinates == null) {
-            let [fileX, fileY] = fileItem.actor.get_transformed_position();
+            let [fileX, fileY] = placeholder.get_transformed_position();
             fileItem.savedCoordinates = [Math.round(fileX), Math.round(fileY)];
         }
+    }
+
+    addFileItemCloseTo(fileItem, x, y) {
+        let [column, row] = this._getEmptyPlaceClosestTo(x, y, null);
+        this._addFileItemTo(fileItem, column, row);
     }
 
     _getEmptyPlaceClosestTo(x, y, reserved) {
