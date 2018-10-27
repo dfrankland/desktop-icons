@@ -90,7 +90,6 @@ var DesktopManager = class {
                         delete this._desktopGrids[grid];
                         break;
                     }
-                this._recreateDesktopIcons();
             });
             this._desktopGrids[bgManager._monitorIndex] = newGrid;
         });
