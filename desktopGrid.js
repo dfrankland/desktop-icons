@@ -174,6 +174,7 @@ var DesktopGrid = class {
     }
 
     _onDestroy() {
+        this._removeAllFileItems();
         if (this._bgDestroyedId && this._bgManager.backgroundActor != null)
             this._bgManager.backgroundActor.disconnect(this._bgDestroyedId);
         this._bgDestroyedId = 0;
@@ -370,9 +371,15 @@ var DesktopGrid = class {
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = fileItem.actor;
         this._fileItems.push(fileItem);
+
         let selectedId = fileItem.connect('selected', this._onFileItemSelected.bind(this));
         let renameId = fileItem.connect('rename-clicked', this._onFileItemRenameClicked.bind(this));
-        this._fileItemHandlers.set(fileItem, [selectedId, renameId]);
+        this._fileItemHandlers.set(fileItem, [selectedId, renameId, placeholder]);
+    }
+
+    addFileItemCloseTo(fileItem, x, y) {
+        let [column, row] = this._getEmptyPlaceClosestTo(x, y, null);
+        this._addFileItemTo(fileItem, column, row);
         /* If this file is new in the Desktop and hasn't yet
          * fixed coordinates, store the new possition to ensure
          * that the next time it will be shown in the same possition
@@ -436,11 +443,8 @@ var DesktopGrid = class {
             this._fileItems.splice(index, 1);
         else
             throw new Error('Error removing children from container');
-
-        let [column, row] = this._getPosOfFileItem(fileItem);
-        let placeholder = this.layout.get_child_at(column, row);
+        let [selectedId, renameId, placeholder] = this._fileItemHandlers.get(fileItem);
         placeholder.child = null;
-        let [selectedId, renameId] = this._fileItemHandlers.get(fileItem);
         fileItem.disconnect(selectedId);
         fileItem.disconnect(renameId);
         this._fileItemHandlers.delete(fileItem);
@@ -454,12 +458,25 @@ var DesktopGrid = class {
         }
     }
 
-    reset() {
-        for (let fileItem of this._fileItems)
-            this.removeFileItem(fileItem);
-        this._grid.remove_all_children();
+    destroyAllChildren() {
+        this._removeAllFileItems();
+        this.actor.destroy_all_children();
+    }
 
+    reset() {
+        this._removeAllFileItems();
+        this._grid.remove_all_children();
         this._fillPlaceholders();
+    }
+
+    _removeAllFileItems() {
+        for (let [fileItem, [selectedId, renameId, placeholder]] of this._fileItemHandlers) {
+            fileItem.disconnect(selectedId);
+            fileItem.disconnect(renameId);
+            placeholder.child = null;
+        }
+        this._fileItemHandlers = new Map();
+        this._fileItems = [];
     }
 
     _onStageMotion(actor, event) {
@@ -521,34 +538,6 @@ var DesktopGrid = class {
         let [gridX, gridY] = this.actor.get_transformed_position();
         let [absoluteX, absoluteY] = [x + gridX, y + gridY];
         return Extension.desktopManager.acceptDrop(absoluteX, absoluteY);
-    }
-
-    _getPosOfFileItem(itemToFind) {
-        if (itemToFind == null)
-            throw new Error('Error at _getPosOfFileItem: child cannot be null');
-
-        let found = false;
-        let maxColumns = this._getMaxColumns();
-        let maxRows = this._getMaxRows();
-        let column = 0;
-        let row = 0;
-        for (column = 0; column < maxColumns; column++) {
-            for (row = 0; row < maxRows; row++) {
-                let item = this.layout.get_child_at(column, row);
-                if (item.child && item.child._delegate.file.equal(itemToFind.file)) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (found)
-                break;
-        }
-
-        if (!found)
-            throw new Error('Position of file item was not found');
-
-        return [column, row];
     }
 
     _onFileItemSelected(fileItem, keepCurrentSelection, addToSelection) {
