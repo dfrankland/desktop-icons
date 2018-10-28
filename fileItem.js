@@ -63,11 +63,12 @@ var FileItem = class {
         this._loadThumbnailDataCancellable = null;
         this._thumbnailScriptWatch = 0;
         this._setMetadataCancellable = null;
+        this._queryFileInfoCancellable = null;
+        this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
 
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
         this._file = file;
-        this._fileInfo = fileInfo;
         let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
         if (savedCoordinates != null)
@@ -75,18 +76,9 @@ var FileItem = class {
         else
             this._savedCoordinates = null;
 
-        this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
-        this._fileType = fileInfo.get_file_type();
-        this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
-        this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
-        this._attributeContentType = fileInfo.get_content_type();
-        this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
-        this._isSymlink = fileInfo.get_is_symlink();
-        this._fileUri = this._file.get_uri();
-        this._filePath = this._file.get_path();
-        this._modifiedTime = this._fileInfo.get_attribute_uint64('time::modified');
+        this._updateMetadataFromFileInfo(fileInfo);
+
         this._state = State.NORMAL;
-        this._displayName = fileInfo.get_attribute_as_string('standard::display-name');
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
@@ -168,6 +160,8 @@ var FileItem = class {
         /* Regular file data */
         if (this._setMetadataCancellable)
             this._setMetadataCancellable.cancel();
+        if (this._queryFileInfoCancellable)
+            this._queryFileInfoCancellable.cancel();
 
         /* Thumbnailing */
         if (this._thumbnailScriptWatch)
@@ -184,6 +178,49 @@ var FileItem = class {
             GLib.source_remove(this._scheduleTrashRefreshId);
     }
 
+    _updateMetadataFromFileInfo(fileInfo) {
+        this._fileInfo = fileInfo;
+        this._displayName = fileInfo.get_attribute_as_string('standard::display-name');
+        this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
+        this._fileType = fileInfo.get_file_type();
+        this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
+        this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
+        this._attributeContentType = fileInfo.get_content_type();
+        this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
+        this._attributeHidden = fileInfo.get_is_hidden();
+        this._isSymlink = fileInfo.get_is_symlink();
+        this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
+    }
+
+    _updateFromFileInfo(newFileInfo) {
+        let oldDisplayName = this._displayName;
+        this._updateMetadataFromFileInfo(newFileInfo);
+        if (this._displayName != oldDisplayName) {
+            this._label.text = this._displayName;
+        }
+    }
+
+    renamed(file) {
+        if (this._queryFileInfoCancellable)
+            this._queryFileInfoCancellable.cancel();
+        this._queryFileInfoCancellable = new Gio.Cancellable();
+        this._file = file;
+        file.query_info_async(DesktopIconsUtil.DEFAULT_ATTRIBUTES,
+                              Gio.FileQueryInfoFlags.NONE,
+                              GLib.PRIORITY_DEFAULT,
+                              this._queryFileInfoCancellable,
+            (source, res) => {
+                try {
+                    let newFileInfo = source.query_info_finish(res);
+                    this._queryFileInfoCancellable = null;
+                    this._updateFromFileInfo(newFileInfo);
+                } catch(error) {
+                    if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                        global.log("Error getting the file info: " + error);
+                }
+            });
+    }
+
     _updateIcon() {
         if (this._fileExtra == Prefs.FILE_TYPE.USER_DIRECTORY_TRASH) {
             this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
@@ -191,17 +228,17 @@ var FileItem = class {
         }
 
         let thumbnailFactory = GnomeDesktop.DesktopThumbnailFactory.new(GnomeDesktop.DesktopThumbnailSize.LARGE);
-        if (thumbnailFactory.can_thumbnail(this._fileUri,
+        if (thumbnailFactory.can_thumbnail(this._file.get_uri(),
                                            this._attributeContentType,
                                            this._modifiedTime)) {
-            let thumbnail = thumbnailFactory.lookup(this._fileUri, this._modifiedTime);
+            let thumbnail = thumbnailFactory.lookup(this._file.get_uri(), this._modifiedTime);
             if (thumbnail == null) {
-                if (!thumbnailFactory.has_valid_failed_thumbnail(this._fileUri,
+                if (!thumbnailFactory.has_valid_failed_thumbnail(this._file.get_uri(),
                                                                  this._modifiedTime)) {
                     let argv = [];
                     argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path,
                                                    'createThumbnail.js']));
-                    argv.push(this._filePath);
+                    argv.push(this._file.get_path());
                     let [success, pid] = GLib.spawn_async(null, argv, null,
                                                           GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
                     if (this._thumbnailScriptWatch)
@@ -300,7 +337,6 @@ var FileItem = class {
     }
 
     _createEmblemedStIcon(icon, iconName) {
-
         if (icon == null) {
             if (GLib.path_is_absolute(iconName)) {
                 let iconFile = Gio.File.new_for_commandline_arg(iconName);

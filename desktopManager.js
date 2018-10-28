@@ -61,7 +61,7 @@ var DesktopManager = class {
         this._desktopMonitorCancellable = null;
         this._desktopGrids = {};
         this._fileItemHandlers = new Map();
-        this._fileItems = [];
+        this._fileItems = new Map();
         this._dragCancelled = false;
 
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._recreateDesktopIcons());
@@ -113,7 +113,7 @@ var DesktopManager = class {
                 y1 = this._rubberBandInitialY;
                 y0 = y;
             }
-            for(let fileItem of this._fileItems) {
+            for(let [fileUri, fileItem] of this._fileItems) {
                 fileItem.emit('selected', true,
                               fileItem.intersectsWith(x0, y0, x1 - x0, y1 - y0));
             }
@@ -173,12 +173,12 @@ var DesktopManager = class {
         for (let [fileItem, id] of this._fileItemHandlers)
             fileItem.disconnect(id);
         this._fileItemHandlers = new Map();
-        this._fileItems = [];
+        this._fileItems = new Map();
 
         try {
             for (let [file, info, extra] of await this._enumerateDesktop()) {
                 let fileItem = new FileItem.FileItem(file, info, extra);
-                this._fileItems.push(fileItem);
+                this._fileItems.set(fileItem.file.get_uri(), fileItem);
                 let id = fileItem.connect('selected',
                                           this._onFileItemSelected.bind(this));
 
@@ -241,13 +241,36 @@ var DesktopManager = class {
     }
 
     _updateDesktopIfChanged (file, otherFile, eventType) {
+        let {
+            DELETED, MOVED_IN, MOVED_OUT, CREATED, RENAMED, CHANGES_DONE_HINT, ATTRIBUTE_CHANGED
+        } = Gio.FileMonitorEvent;
+
+        let fileUri = file.get_uri();
+        let fileItem = null;
+        if (this._fileItems.has(fileUri))
+            fileItem = this._fileItems.get(fileUri);
+        switch(eventType) {
+            case RENAMED:
+                this._fileItems.delete(fileUri);
+                this._fileItems.set(otherFile.get_uri(), fileItem);
+                fileItem.renamed(otherFile);
+                return;
+            case CHANGES_DONE_HINT:
+            case ATTRIBUTE_CHANGED:
+                // FIXME: ATTRIBUTE_CHANGED wasn't managed in the old code; in the future, it must be managed
+                return;
+        }
+
+        // Rate limiting isn't enough, as one action will create different events on the same file.
+        // limit by adding a timeout
+        if (this._scheduleDesktopsRefreshId) {
+            return;
+        }
+
         // Only get a subset of events we are interested in.
         // Note that CREATED will emit a CHANGES_DONE_HINT
-        let {
-            CHANGES_DONE_HINT, DELETED, RENAMED, MOVED_IN, MOVED_OUT, CREATED
-        } = Gio.FileMonitorEvent;
-        if (![CHANGES_DONE_HINT, DELETED, RENAMED,
-            MOVED_IN, MOVED_OUT, CREATED].includes(eventType))
+
+        if (![DELETED, MOVED_IN, MOVED_OUT, CREATED].includes(eventType))
             return;
 
         this._recreateDesktopIcons();
@@ -494,7 +517,7 @@ var DesktopManager = class {
          * * first pass paints those that have their coordinates defined in the metadata
          * * second pass paints those new files that still don't have their definitive coordinates
          */
-        for (let fileItem of this._fileItems) {
+        for (let [fileUri, fileItem] of this._fileItems) {
             if (fileItem.savedCoordinates == null)
                 continue;
             if (fileItem.state != FileItem.State.NORMAL)
@@ -504,7 +527,7 @@ var DesktopManager = class {
             this._addFileItemCloseTo(fileItem);
         }
 
-        for (let fileItem of this._fileItems) {
+        for (let [fileUri, fileItem] of this._fileItems) {
             if (fileItem.savedCoordinates !== null)
                 continue;
             if (fileItem.state != FileItem.State.NORMAL)
@@ -540,6 +563,7 @@ var DesktopManager = class {
     }
 
     _onFileItemSelected(fileItem, keepCurrentSelection, addToSelection) {
+
         if (!keepCurrentSelection && !this._inDrag)
             this.clearSelection();
 
@@ -548,14 +572,13 @@ var DesktopManager = class {
         else
             this._selection.delete(fileItem);
 
-        this._fileItems.forEach(f => f.isSelected = this._selection.has(f));
+        for(let [fileUri, fileItem] of this._fileItems)
+            fileItem.isSelected = this._selection.has(fileItem);
     }
 
     clearSelection() {
-        for (let fileItem of this._fileItems) {
+        for (let [fileUri, fileItem] of this._fileItems)
             fileItem.isSelected = false;
-        }
-
         this._selection = new Set();
     }
 
