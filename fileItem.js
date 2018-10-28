@@ -179,9 +179,7 @@ var FileItem = class {
 
     _updateIcon() {
         if (this._fileExtra == Prefs.FILE_TYPE.USER_DIRECTORY_TRASH) {
-            this._icon.child = new St.Icon({ gicon: this._createEmblemIcon(this._fileInfo.get_icon(), null),
-                icon_size: Prefs.get_icon_size()
-            });
+            this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
             return;
         }
 
@@ -248,9 +246,7 @@ var FileItem = class {
                         } catch (error) {
                             if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
                                 global.log("Error while loading thumbnail: " + error);
-                                this._icon.child = new St.Icon({ gicon: this._createEmblemIcon(this._fileInfo.get_icon(), null),
-                                                                 icon_size: Prefs.get_icon_size()
-                                });
+                                this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
                             }
                         }
                     }
@@ -258,16 +254,11 @@ var FileItem = class {
             }
         }
 
-        if (this._isDesktopFile && (this._desktopFile.has_key("Icon"))) {
-            this._icon.child = new St.Icon({ gicon: this._createEmblemIcon(null, this._desktopFile.get_string('Icon')),
-                                             icon_size: Prefs.get_icon_size()
-            });
-        } else {
-            this._icon.child = new St.Icon({ gicon: this._createEmblemIcon(this._fileInfo.get_icon(), null),
-                                             icon_size: Prefs.get_icon_size()
-            });
+        if (this._isDesktopFile && this._desktopFile.has_key("Icon"))
+            this._icon.child = this._createEmblemedStIcon(null, this._desktopFile.get_string('Icon'));
+        else
+            this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
         }
-    }
 
     _refreshTrashIcon() {
         if (this._queryTrashInfoCancellable)
@@ -297,21 +288,23 @@ var FileItem = class {
         return this._file;
     }
 
-    _createEmblemIcon(icon, iconName) {
-        let itemIcon = null;
+    _createEmblemedStIcon(icon, iconName) {
+
         if (icon == null) {
             if (GLib.path_is_absolute(iconName)) {
                 let iconFile = Gio.File.new_for_commandline_arg(iconName);
-                itemIcon = Gio.EmblemedIcon.new(new Gio.FileIcon({ file: iconFile }), null);
+                icon = new Gio.FileIcon({ file: iconFile });
             } else {
-                itemIcon = Gio.EmblemedIcon.new(Gio.ThemedIcon.new_with_default_fallbacks(iconName), null)
+                icon = Gio.ThemedIcon.new_with_default_fallbacks(iconName);
             }
-        } else {
-            itemIcon = Gio.EmblemedIcon.new(icon, null);
         }
+        let itemIcon = Gio.EmblemedIcon.new(icon, null);
         if (this._isSymlink)
             itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new("emblem-symbolic-link")));
-        return itemIcon;
+
+        return new St.Icon({ gicon: itemIcon,
+                             icon_size: Prefs.get_icon_size()
+        });
     }
 
     doOpen() {
