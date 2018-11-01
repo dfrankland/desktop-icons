@@ -123,6 +123,7 @@ var FileItem = class {
 
         this._container.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
         this._container.connect('motion-event', (actor, event) => this._onMotion(actor, event));
+        this._container.connect('leave-event', (actor, event) => this._onLeave(actor, event));
         this._container.connect('button-release-event', (actor, event) => this._onReleaseButton(actor, event));
 
         this._createMenu();
@@ -422,6 +423,10 @@ var FileItem = class {
         }
 
         return Clutter.EVENT_PROPAGATE;
+    }
+
+    _onLeave(actor, event) {
+        this._primaryButtonPressed = false;
     }
 
     _onMotion(actor, event) {
