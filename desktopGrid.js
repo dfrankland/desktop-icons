@@ -350,6 +350,24 @@ var DesktopGrid = class {
         this.actor._desktopBackgroundManager.ignoreRelease();
     }
 
+    _updateRubberBand(currentX, currentY) {
+        let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
+                                                    : currentX;
+        let y = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
+                                                    : currentY;
+        let width = Math.abs(this._rubberBandInitialX - currentX);
+        let height = Math.abs(this._rubberBandInitialY - currentY);
+        /* TODO: Convert to gobject.set for 3.30 */
+        this._rubberBand.set_position(x, y);
+        this._rubberBand.set_size(width, height);
+    }
+
+    _selectFromRubberband(currentX, currentY) {
+        let { x, y, width, height } = this._rubberBand;
+        for(let fileItem of this._fileItems)
+            fileItem.checkRubberbandSelection(x, y, width, height);
+    }
+
     dropItems(fileItems) {
         let reserved = {};
         for (let fileItem of fileItems) {

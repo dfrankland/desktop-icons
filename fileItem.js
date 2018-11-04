@@ -525,6 +525,12 @@ var FileItem = class {
         return intersects;
     }
 
+    checkRubberbandSelection(x, y, width, height) {
+        if (this.intersectsWith(x, y, width, height))
+            this.emit('selected', true);
+    }
+
+
     set isSelected(isSelected) {
         isSelected = !!isSelected;
         if (isSelected == this._isSelected)
