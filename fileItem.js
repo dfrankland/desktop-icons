@@ -51,6 +51,11 @@ const _ = Gettext.gettext;
 
 const DRAG_TRESHOLD = 8;
 
+var State = {
+    NORMAL: 0,
+    GONE: 1,
+};
+
 var FileItem = class {
 
     constructor(file, fileInfo, fileExtra) {
@@ -81,6 +86,7 @@ var FileItem = class {
         this._fileUri = this._file.get_uri();
         this._filePath = this._file.get_path();
         this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
+        this._state = State.NORMAL;
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
@@ -529,6 +535,17 @@ var FileItem = class {
 
     get isSpecial() {
         return this._isSpecial;
+    }
+
+    get state() {
+        return this._state;
+    }
+
+    set state(state) {
+        if (state == this._state)
+            return;
+
+        this._state = state;
     }
 
     }

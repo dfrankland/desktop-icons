@@ -397,11 +397,15 @@ var DesktopManager = class {
         for (let fileItem of this._fileItems) {
             if (fileItem.savedCoordinates == null)
                 continue;
+            if (fileItem.state != FileItem.State.NORMAL)
+                continue;
             this._addFileItemCloseTo(fileItem);
         }
 
         for (let fileItem of this._fileItems) {
             if (fileItem.savedCoordinates !== null)
+                continue;
+            if (fileItem.state != FileItem.State.NORMAL)
                 continue;
             this._addFileItemCloseTo(fileItem);
         }
