@@ -73,6 +73,7 @@ var FileItem = class {
         this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
         this._fileType = fileInfo.get_file_type();
         this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
+        this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
         this._attributeContentType = fileInfo.get_content_type();
         this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
         this._attributeHidden = fileInfo.get_is_hidden();
@@ -524,6 +525,10 @@ var FileItem = class {
 
     get isSelected() {
         return this._isSelected;
+    }
+
+    get isSpecial() {
+        return this._isSpecial;
     }
 
     }
