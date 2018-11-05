@@ -293,7 +293,7 @@ var DesktopGrid = class {
 
     _createDesktopBackgroundMenu() {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
-            0, St.Side.TOP);
+                                           0, St.Side.TOP);
         menu.addAction(_('New Folder'), () => this._omNewFolderClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._pasteMenuItem = menu.addAction(_('Paste'), () => this._onPasteClicked());
