@@ -54,7 +54,6 @@ const DRAG_TRESHOLD = 8;
 var FileItem = class {
 
     constructor(file, fileInfo, fileExtra) {
-
         this._fileExtra = fileExtra;
         this._loadThumbnailDataCancellable = null;
         this._thumbnailScriptWatch = 0;
