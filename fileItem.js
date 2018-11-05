@@ -548,6 +548,12 @@ var FileItem = class {
         this._state = state;
     }
 
+    get isDirectory() {
+        return this._isDirectory;
+    }
+
+    acceptDrop() {
+        return Extension.desktopManager.selectionDropOnFileItem(this);
     }
 };
 Signals.addSignalMethods(FileItem.prototype);
