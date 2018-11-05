@@ -211,16 +211,16 @@ var DesktopGrid = class {
                 if (!valid)
                     return;
 
-                let desktop_dir = `${DesktopIconsUtil.getDesktopDir().get_uri()}`;
+                let desktopDir = `${DesktopIconsUtil.getDesktopDir().get_uri()}`;
                 if (is_cut) {
-                    DBusUtils.NautilusFileOperationsProxy.MoveURIsRemote(files, desktop_dir,
+                    DBusUtils.NautilusFileOperationsProxy.MoveURIsRemote(files, desktopDir,
                         (result, error) => {
                             if (error)
                                 throw new Error('Error moving files: ' + error.message);
                         }
                     );
                 } else {
-                    DBusUtils.NautilusFileOperationsProxy.CopyURIsRemote(files, desktop_dir,
+                    DBusUtils.NautilusFileOperationsProxy.CopyURIsRemote(files, desktopDir,
                         (result, error) => {
                             if (error)
                                 throw new Error('Error copying files: ' + error.message);
