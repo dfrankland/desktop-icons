@@ -174,12 +174,6 @@ var DesktopManager = class {
     }
 
     _updateDesktopIfChanged (file, otherFile, eventType) {
-
-        // Rate limiting isn't enough, as one action will create different events on the same file.
-        // limit by adding a timeout
-        if (this._scheduleDesktopsRefreshId) {
-            return;
-        }
         // Only get a subset of events we are interested in.
         // Note that CREATED will emit a CHANGES_DONE_HINT
         let {
@@ -189,20 +183,7 @@ var DesktopManager = class {
             MOVED_IN, MOVED_OUT, CREATED].includes(eventType))
             return;
 
-        this._scheduleDesktopsRefreshId = Mainloop.timeout_add(500,
-            () => this._refreshDesktops(file, otherFile));
-    }
-
-    //FIXME: we don't use file/otherfile for now and stupidely refresh all desktops
-    _refreshDesktops(file, otherFile) {
-        Object.values(this._desktopGrids).forEach(grid => {
-            grid.actor.destroy_all_children();
-        });
-        this._scheduleDesktopsRefreshId = 0;
-        // TODO: handle DND, opened filecontainer menu…
-
-        this._scanFiles();
-        return false;
+        this._scheduleReLayoutChildren();
     }
 
     _getContainerWithChild(child) {
@@ -487,9 +468,6 @@ var DesktopManager = class {
         if (this._monitorDesktopDir)
             this._monitorDesktopDir.cancel();
         this._monitorDesktopDir = null;
-        if (this._scheduleDesktopsRefreshId)
-            GLib.source_remove(this._scheduleDesktopsRefreshId);
-        this._scheduleDesktopsRefreshId = 0;
 
         if (this._monitorsChangedId)
             Main.layoutManager.disconnect(this._monitorsChangedId);
