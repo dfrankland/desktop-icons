@@ -436,12 +436,12 @@ var DesktopManager = class {
             this.clearSelection();
 
         this._selection.add(fileItem);
-        this._fileItems.forEach(f => f.selected = this._selection.has(f));
+        this._fileItems.forEach(f => f.isSelected = this._selection.has(f));
     }
 
     clearSelection() {
         for (let fileItem of this._fileItems) {
-            fileItem.selected = false;
+            fileItem.isSelected = false;
         }
 
         this._selection = new Set();

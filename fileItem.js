@@ -128,7 +128,7 @@ var FileItem = class {
 
         this._createMenu();
 
-        this._selected = false;
+        this._isSelected = false;
         this._primaryButtonPressed = false;
         if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
@@ -403,7 +403,7 @@ var FileItem = class {
     _onPressButton(actor, event) {
         let button = event.get_button();
         if (button == 3) {
-            if (!this.selected)
+            if (!this.isSelected)
                 this.emit('selected', false);
             this._menu.toggle();
             return Clutter.EVENT_STOP;
@@ -415,7 +415,7 @@ var FileItem = class {
                 this._buttonPressInitialY = y;
                 let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
                 let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
-                if (!this.selected) {
+                if (!this.isSelected) {
                     this.emit('selected', shiftPressed || controlPressed);
                 }
             }
@@ -510,21 +510,23 @@ var FileItem = class {
         return intersects;
     }
 
-    set selected(selected) {
-        selected = !!selected;
-        if (selected == this._selected)
+    set isSelected(isSelected) {
+        isSelected = !!isSelected;
+        if (isSelected == this._isSelected)
             return;
 
-        if (selected)
+        if (isSelected)
             this._container.add_style_pseudo_class('selected');
         else
             this._container.remove_style_pseudo_class('selected');
 
-        this._selected = selected;
+        this._isSelected = isSelected;
     }
 
-    get selected() {
-        return this._selected;
+    get isSelected() {
+        return this._isSelected;
+    }
+
     }
 };
 Signals.addSignalMethods(FileItem.prototype);
