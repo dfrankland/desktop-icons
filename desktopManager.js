@@ -469,6 +469,10 @@ var DesktopManager = class {
             this._monitorDesktopDir.cancel();
         this._monitorDesktopDir = null;
 
+        if (this._layoutChildrenId)
+            GLib.source_remove(this._layoutChildrenId);
+        this._layoutChildrenId = 0;
+
         if (this._monitorsChangedId)
             Main.layoutManager.disconnect(this._monitorsChangedId);
         this._monitorsChangedId = 0;
