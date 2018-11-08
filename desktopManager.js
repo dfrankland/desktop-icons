@@ -30,9 +30,11 @@ const Animation = imports.ui.animation;
 const Background = imports.ui.background;
 const DND = imports.ui.dnd;
 const Main = imports.ui.main;
+const GrabHelper = imports.ui.grabHelper;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const Extension = Me.imports.extension;
 const DesktopGrid = Me.imports.desktopGrid;
 const FileItem = Me.imports.fileItem;
 const Prefs = Me.imports.prefs;
@@ -63,6 +65,10 @@ var DesktopManager = class {
         this._dragCancelled = false;
 
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._recreateDesktopIcons());
+        this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
+        this._rubberBand.hide();
+        Main.layoutManager.uiGroup.add_actor(this._rubberBand);
+        this._grabHelper = new GrabHelper.GrabHelper(global.stage);
 
         this._addDesktopIcons();
         this._monitorDesktopFolder();
@@ -73,6 +79,63 @@ var DesktopManager = class {
         this._inDrag = false;
         this._dragXStart = Number.POSITIVE_INFINITY;
         this._dragYStart = Number.POSITIVE_INFINITY;
+    }
+
+    startRubberBand(x, y) {
+        this._rubberBandInitialX = x;
+        this._rubberBandInitialY = y;
+        this._updateRubberBand(x, y);
+        this._rubberBand.show();
+        this._grabHelper.grab({ actor: global.stage });
+        Extension.lockActivitiesButton = true;
+        this._stageReleaseEventId = global.stage.connect('button-release-event', (actor, event) => {
+            this.endRubberBand();
+        });
+        this._rubberBandId = global.stage.connect('motion-event', (actor, event) => {
+            [x, y] = event.get_coords();
+            this._updateRubberBand(x, y);
+            let x0, y0, x1, y1;
+            if (x >= this._rubberBandInitialX) {
+                x0 = this._rubberBandInitialX;
+                x1 = x;
+            } else {
+                x1 = this._rubberBandInitialX;
+                x0 = x;
+            }
+            if (y >= this._rubberBandInitialY) {
+                y0 = this._rubberBandInitialY;
+                y1 = y;
+            } else {
+                y1 = this._rubberBandInitialY;
+                y0 = y;
+            }
+            for(let fileItem of this._fileItems) {
+                fileItem.emit('selected', true,
+                              fileItem.intersectsWith(x0, y0, x1 - x0, y1 - y0));
+            }
+        });
+    }
+
+    endRubberBand() {
+        this._rubberBand.hide();
+        Extension.lockActivitiesButton = false;
+        this._grabHelper.ungrab();
+        global.stage.disconnect(this._rubberBandId);
+        global.stage.disconnect(this._stageReleaseEventId);
+        this._rubberBandId = 0;
+        this._stageReleaseEventId = 0;
+    }
+
+    _updateRubberBand(currentX, currentY) {
+        let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
+                                                    : currentX;
+        let y = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
+                                                    : currentY;
+        let width = Math.abs(this._rubberBandInitialX - currentX);
+        let height = Math.abs(this._rubberBandInitialY - currentY);
+        /* TODO: Convert to gobject.set for 3.30 */
+        this._rubberBand.set_position(x, y);
+        this._rubberBand.set_size(width, height);
     }
 
     _recreateDesktopIcons() {
@@ -512,6 +575,15 @@ var DesktopManager = class {
         if (this._monitorsChangedId)
             Main.layoutManager.disconnect(this._monitorsChangedId);
         this._monitorsChangedId = 0;
+        if (this._stageReleaseEventId)
+            global.stage.disconnect(this._stageReleaseEventId);
+        this._stageReleaseEventId = 0;
+
+        if (this._rubberBandId)
+            global.stage.disconnect(this._rubberBandId);
+        this._rubberBandId = 0;
+
+        this._rubberBand.destroy();
 
         Object.values(this._desktopGrids).forEach(grid => grid.actor.destroy());
         this._desktopGrids = {}

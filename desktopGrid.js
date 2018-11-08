@@ -26,7 +26,6 @@ const Layout = imports.ui.layout;
 const Main = imports.ui.main;
 const BoxPointer = imports.ui.boxpointer;
 const PopupMenu = imports.ui.popupMenu;
-const GrabHelper = imports.ui.grabHelper;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -83,7 +82,6 @@ var DesktopGrid = class {
             can_focus: true,
             opacity: 255
         });
-        this._grabHelper = new GrabHelper.GrabHelper(global.stage);
         this.actor._delegate = this;
 
         this._bgManager._container.add_actor(this.actor);
@@ -103,9 +101,6 @@ var DesktopGrid = class {
             () => this._backgroundDestroyed());
 
         this.actor.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
-        this._stageReleaseEventId = global.stage.connect('button-release-event', (actor, event) => this._onStageReleaseButton(actor, event));
-        this._stageMotionEventId = global.stage.connect('motion-event', (actor, event) => this._onStageMotion(actor, event));
-        this.actor.connect('leave-event', (actor, event) => this._onLeave(actor, event));
         this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
@@ -170,8 +165,6 @@ var DesktopGrid = class {
     _onDestroy() {
         if (this._bgDestroyedId && this._bgManager.backgroundActor != null)
             this._bgManager.backgroundActor.disconnect(this._bgDestroyedId);
-        global.stage.disconnect(this._stageReleaseEventId);
-        global.stage.disconnect(this._stageMotionEventId);
         this._bgDestroyedId = 0;
         this._bgManager = null;
         this._rubberBand.destroy();
@@ -346,25 +339,6 @@ var DesktopGrid = class {
         this.actor._desktopBackgroundManager.ignoreRelease();
     }
 
-    _updateRubberBand(currentX, currentY) {
-        let x = this._rubberBandInitialX < currentX ? this._rubberBandInitialX
-                                                    : currentX;
-        let y = this._rubberBandInitialY < currentY ? this._rubberBandInitialY
-                                                    : currentY;
-        let width = Math.abs(this._rubberBandInitialX - currentX);
-        let height = Math.abs(this._rubberBandInitialY - currentY);
-        /* TODO: Convert to gobject.set for 3.30 */
-        this._rubberBand.set_position(x, y);
-        this._rubberBand.set_size(width, height);
-    }
-
-    _selectFromRubberband(currentX, currentY) {
-        let { x, y, width, height } = this._rubberBand;
-        this._fileItems.forEach(fileItem => {
-            fileItem.emit('selected', true, fileItem.intersectsWith(x, y, width, height));
-        });
-    }
-
     dropItems(fileItems) {
         let reserved = {};
         for (let fileItem of fileItems) {
@@ -484,23 +458,6 @@ var DesktopGrid = class {
         return Clutter.EVENT_PROPAGATE;
     }
 
-    _startRubberband(x, y) {
-        this._rubberBandInitialX = x;
-        this._rubberBandInitialY = y;
-        this._drawingRubberBand = true;
-        this._updateRubberBand(x, y);
-        this._rubberBand.show();
-        this._grabHelper.grab({ actor: global.stage });
-        Extension.lockActivitiesButton = true;
-    }
-
-    _endRubberband() {
-        Extension.lockActivitiesButton = false;
-        this._grabHelper.ungrab();
-        this._drawingRubberBand = false;
-        this._rubberBand.hide();
-    }
-
     _onPressButton(actor, event) {
         let button = event.get_button();
         let [x, y] = event.get_coords();
@@ -509,7 +466,8 @@ var DesktopGrid = class {
             let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
             if (!shiftPressed && !controlPressed)
                 Extension.desktopManager.clearSelection();
-            this._startRubberband(x, y);
+            let [gridX, gridY] = this.actor.get_transformed_position();
+            Extension.desktopManager.startRubberBand(x, y, gridX, gridY);
             return Clutter.EVENT_STOP;
         }
 
@@ -517,30 +475,6 @@ var DesktopGrid = class {
             this._openMenu(x, y);
 
             return Clutter.EVENT_STOP;
-        }
-
-        return Clutter.EVENT_PROPAGATE;
-    }
-
-    _onStageReleaseButton(actor, event) {
-
-        this.actor.grab_key_focus();
-
-        let button = event.get_button();
-        if ((button == 1) && this._drawingRubberBand) {
-            this._endRubberband();
-            return Clutter.EVENT_STOP;
-        }
-        return Clutter.EVENT_PROPAGATE;
-    }
-
-    _onLeave(actor, event) {
-        let containerMap = this._fileItems.map(function (container) { return container._container });
-        let relatedActor = event.get_related();
-
-        if (!containerMap.includes(relatedActor) && (relatedActor !== this.actor) &&
-            (relatedActor.name == 'DesktopGrid') && this._drawingRubberBand) {
-            this._endRubberband();
         }
 
         return Clutter.EVENT_PROPAGATE;

@@ -509,8 +509,8 @@ var FileItem = class {
         let [containerX, containerY] = this._container.get_transformed_position();
         let boundingBox = new Meta.Rectangle({ x: containerX,
                                                y: containerY,
-                                               width: this._container.width,
-                                               height: this._container.height });
+                                               width: this._container.allocation.x2 - this._container.allocation.x1,
+                                               height: this._container.allocation.y2 - this._container.allocation.y1 });
         let [intersects, _] = rect.intersect(boundingBox);
 
         return intersects;
