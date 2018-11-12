@@ -538,8 +538,10 @@ var DesktopGrid = class {
         let containerMap = this._fileItems.map(function (container) { return container._container });
         let relatedActor = event.get_related();
 
-        if (!containerMap.includes(relatedActor) && (relatedActor !== this.actor) && (relatedActor.name == 'DesktopGrid') && this._drawingRubberBand)
+        if (!containerMap.includes(relatedActor) && (relatedActor !== this.actor) &&
+            (relatedActor.name == 'DesktopGrid') && this._drawingRubberBand) {
             this._endRubberband();
+        }
 
         return Clutter.EVENT_PROPAGATE;
     }
