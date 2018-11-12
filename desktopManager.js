@@ -246,7 +246,7 @@ var DesktopManager = class {
             MOVED_IN, MOVED_OUT, CREATED].includes(eventType))
             return;
 
-        this._scheduleReLayoutChildren();
+        this._scanFiles();
     }
 
     _getContainerWithChild(child) {
