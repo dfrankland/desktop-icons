@@ -246,7 +246,7 @@ var DesktopManager = class {
             MOVED_IN, MOVED_OUT, CREATED].includes(eventType))
             return;
 
-        this._scanFiles();
+        this._recreateDesktopIcons();
     }
 
     _getContainerWithChild(child) {
