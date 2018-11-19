@@ -13,3 +13,18 @@ A GNOME Shell extension for providing desktop icons.
 ## Tasks & known issues
 Take a look at the proposed possible tasks and known issues for the 1.0 release
 at the [MVP issue](https://gitlab.gnome.org/World/ShellExtensions/desktop-icons/issues/1)
+
+## Built with meson
+```
+meson --prefix="${PREFIX}" "${BUILD_DIR}"
+# With custom localedir
+meson --prefix="${PREFIX}" --localedir=locale "${BUILD_DIR}"
+
+ninja -C "${BUILD_DIR}" install
+```
+### Export extension ZIP file for extensions.gnome.org
+```
+./export-zip.sh
+# creates
+./desktop-icons@csoriano.zip
+```
