@@ -87,6 +87,7 @@ var FileItem = class {
         this._filePath = this._file.get_path();
         this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
         this._state = State.NORMAL;
+        this._displayName = fileInfo.get_attribute_as_string('standard::display-name');
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
@@ -111,7 +112,7 @@ var FileItem = class {
         this._container.add_actor(this._iconContainer);
 
         this._label = new St.Label({
-            text: fileInfo.get_attribute_as_string('standard::display-name'),
+            text: this._displayName,
             style_class: 'name-label'
         });
 
