@@ -16,16 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+const Gtk = imports.gi.Gtk;
 const Clutter = imports.gi.Clutter;
 const Lang = imports.lang;
 const St = imports.gi.St;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Shell = imports.gi.Shell;
+
+const Signals = imports.signals;
 
 const Layout = imports.ui.layout;
 const Main = imports.ui.main;
 const BoxPointer = imports.ui.boxpointer;
 const PopupMenu = imports.ui.popupMenu;
+const GrabHelper = imports.ui.grabHelper;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -86,6 +91,9 @@ var DesktopGrid = class {
             opacity: 255
         });
         this.actor.add_actor(this._grid);
+
+        this._renamePopup = new RenamePopup(this);
+        this.actor.add_actor(this._renamePopup.actor);
 
         this._bgManager._container.add_actor(this.actor);
 
@@ -362,8 +370,9 @@ var DesktopGrid = class {
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = fileItem.actor;
         this._fileItems.push(fileItem);
-        let id = fileItem.connect('selected', this._onFileItemSelected.bind(this));
-        this._fileItemHandlers.set(fileItem, id);
+        let selectedId = fileItem.connect('selected', this._onFileItemSelected.bind(this));
+        let renameId = fileItem.connect('rename-clicked', this._onFileItemRenameClicked.bind(this));
+        this._fileItemHandlers.set(fileItem, [selectedId, renameId]);
         /* If this file is new in the Desktop and hasn't yet
          * fixed coordinates, store the new possition to ensure
          * that the next time it will be shown in the same possition
@@ -431,8 +440,9 @@ var DesktopGrid = class {
         let [column, row] = this._getPosOfFileItem(fileItem);
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = null;
-        let id = this._fileItemHandlers.get(fileItem);
-        fileItem.disconnect(id);
+        let [selectedId, renameId] = this._fileItemHandlers.get(fileItem);
+        fileItem.disconnect(selectedId);
+        fileItem.disconnect(renameId);
         this._fileItemHandlers.delete(fileItem);
     }
 
@@ -545,4 +555,117 @@ var DesktopGrid = class {
         this._grid.grab_key_focus();
     }
 
+    _onFileItemRenameClicked(fileItem) {
+        this._renamePopup.onFileItemRenameClicked(fileItem);
+    }
 };
+
+var RenamePopup = class {
+
+    constructor(grid) {
+        this._source = null;
+        this._isOpen = false;
+
+        this._renameEntry = new St.Entry({ hint_text: _("Enter file name…"),
+                                           can_focus: true,
+                                           x_expand: true });
+        this._renameEntry.clutter_text.connect('activate', this._onRenameAccepted.bind(this));
+        this._renameOkButton= new St.Button({ label: _("Ok"),
+                                              style_class: 'app-view-control button',
+                                              button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
+                                              reactive: true,
+                                              can_focus: true,
+                                              x_expand: true });
+        this._renameCancelButton = new St.Button({ label: _("Cancel"),
+                                                   style_class: 'app-view-control button',
+                                                   button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
+                                                   reactive: true,
+                                                   can_focus: true,
+                                                   x_expand: true });
+        this._renameCancelButton.connect('clicked', () => { this._onRenameCanceled(); });
+        this._renameOkButton.connect('clicked', () => { this._onRenameAccepted(); });
+        let renameButtonsBoxLayout = new Clutter.BoxLayout({ homogeneous: true });
+        let renameButtonsBox = new St.Widget({ layout_manager: renameButtonsBoxLayout,
+                                               x_expand: true });
+        renameButtonsBox.add_actor(this._renameCancelButton);
+        renameButtonsBox.add_actor(this._renameOkButton);
+
+        let renameContentLayout = new Clutter.BoxLayout({ spacing: 6,
+                                                          orientation: Clutter.Orientation.VERTICAL });
+        let renameContent = new St.Widget({ style_class: 'rename-popup',
+                                            layout_manager: renameContentLayout,
+                                            x_expand: true });
+        renameContent.add_actor(this._renameEntry);
+        renameContent.add_actor(renameButtonsBox);
+
+        this._boxPointer = new BoxPointer.BoxPointer(St.Side.TOP, { can_focus: false, x_expand: true });
+        this.actor = this._boxPointer.actor;
+        this.actor.style_class = 'popup-menu-boxpointer';
+        this.actor.add_style_class_name('popup-menu');
+        this.actor.visible = false;
+        this._boxPointer.bin.set_child(renameContent);
+
+        this._grabHelper = new GrabHelper.GrabHelper(grid.actor, { actionMode: Shell.ActionMode.POPUP });
+        this._grabHelper.addActor(this.actor);
+    }
+
+    _popup() {
+        if (this._isOpen)
+            return;
+
+        this._isOpen = this._grabHelper.grab({ actor: this.actor,
+                                               onUngrab: this._popdown.bind(this) });
+
+        if (!this._isOpen) {
+            this._grabHelper.ungrab({ actor: this.actor });
+            return;
+        }
+
+        this._boxPointer.setPosition(this._source.actor, 0.5);
+        this._boxPointer.show(BoxPointer.PopupAnimation.FADE |
+                              BoxPointer.PopupAnimation.SLIDE,
+                              null);
+
+        this.emit('open-state-changed', true);
+    }
+
+    _popdown() {
+        if (!this._isOpen)
+            return;
+
+        this._grabHelper.ungrab({ actor: this.actor });
+
+        this._boxPointer.hide(BoxPointer.PopupAnimation.FADE |
+                              BoxPointer.PopupAnimation.SLIDE);
+        this._isOpen = false;
+        this.emit('open-state-changed', false);
+    }
+
+    onFileItemRenameClicked(fileItem) {
+        this._source = fileItem;
+
+        this._renameEntry.text = fileItem.displayName;
+
+        this._popup();
+        this._renameEntry.grab_key_focus();
+        this._renameEntry.navigate_focus(null, Gtk.DirectionType.TAB_FORWARD, false)
+        let allChars = fileItem.displayName.length;
+        this._renameEntry.clutter_text.set_selection(0, allChars);
+    }
+
+    _onRenameAccepted() {
+        this._popdown();
+        DBusUtils.NautilusFileOperationsProxy.RenameFileRemote(this._source.file.get_uri(),
+                                                               this._renameEntry.get_text(),
+            (result, error) => {
+                if (error)
+                    throw new Error('Error renaming file: ' + error.message);
+            }
+        );
+    }
+
+    _onRenameCanceled() {
+        this._popdown();
+    }
+};
+Signals.addSignalMethods(RenamePopup.prototype);

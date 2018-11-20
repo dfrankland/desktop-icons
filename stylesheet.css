@@ -26,3 +26,8 @@
 .draggable {
     background-color: red;
 }
+
+.rename-popup {
+    min-width: 300px;
+    margin: 6px;
+}

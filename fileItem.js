@@ -315,6 +315,10 @@ var FileItem = class {
         });
     }
 
+    doRename() {
+        this.emit('rename-clicked');
+    }
+
     doOpen() {
         if (this._attributeCanExecute && !this._isDirectory) {
             if (this._isDesktopFile) {
@@ -388,6 +392,7 @@ var FileItem = class {
         case Prefs.FILE_TYPE.NONE:
             this._menu.addAction(_('Cut'), () => this._onCutClicked());
             this._menu.addAction(_('Copy'), () => this._onCopyClicked());
+            this._menu.addAction(_('Rename'), () => this.doRename());
             this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
             break;
         case Prefs.FILE_TYPE.USER_DIRECTORY_TRASH:
@@ -551,6 +556,10 @@ var FileItem = class {
 
     get isDirectory() {
         return this._isDirectory;
+    }
+
+    get displayName() {
+        return this._displayName;
     }
 
     acceptDrop() {
