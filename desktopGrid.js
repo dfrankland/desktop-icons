@@ -73,7 +73,10 @@ var DesktopGrid = class {
             row_homogeneous: true
         });
 
-        this.actor = new St.Widget({
+        this.actor = new St.Widget({ layout_manager: new Clutter.FixedLayout() });
+        this.actor._delegate = this;
+
+        this._grid = new St.Widget({
             name: 'DesktopGrid',
             layout_manager: this.layout,
             reactive: true,
@@ -82,7 +85,7 @@ var DesktopGrid = class {
             can_focus: true,
             opacity: 255
         });
-        this.actor._delegate = this;
+        this.actor.add_actor(this._grid);
 
         this._bgManager._container.add_actor(this.actor);
 
@@ -100,12 +103,12 @@ var DesktopGrid = class {
         this._bgDestroyedId = bgManager.backgroundActor.connect('destroy',
             () => this._backgroundDestroyed());
 
-        this.actor.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
+        this._grid.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
         this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
 
-        this.actor.connect('key-press-event', this._onKeyPress.bind(this));
+        this._grid.connect('key-press-event', this._onKeyPress.bind(this));
 
         this.reset();
     }
@@ -444,7 +447,7 @@ var DesktopGrid = class {
     reset() {
         for (let fileItem of this._fileItems)
             this.removeFileItem(fileItem);
-        this.actor.remove_all_children();
+        this._grid.remove_all_children();
 
         this._fillPlaceholders();
     }
@@ -539,7 +542,7 @@ var DesktopGrid = class {
     }
 
     _onFileItemSelected(fileItem, keepCurrentSelection, addToSelection) {
-        this.actor.grab_key_focus();
+        this._grid.grab_key_focus();
     }
 
 };
