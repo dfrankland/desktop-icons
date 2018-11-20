@@ -442,7 +442,7 @@ var DesktopGrid = class {
     }
 
     reset() {
-        for (let [fileItem, id] of this._fileItemHandlers)
+        for (let fileItem of this._fileItems)
             this.removeFileItem(fileItem);
         this.actor.remove_all_children();
 
