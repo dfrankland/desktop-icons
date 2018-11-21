@@ -1,5 +1,5 @@
 project('desktop-icons',
-  version: '21.11rc',
+  version: '18.11rc',
   license: 'GPL3'
 )
 
