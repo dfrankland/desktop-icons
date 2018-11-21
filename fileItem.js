@@ -112,14 +112,10 @@ var FileItem = class {
         this._container.connect('leave-event', (actor, event) => this._onLeave(actor, event));
         this._container.connect('button-release-event', (actor, event) => this._onReleaseButton(actor, event));
 
-        this._createMenu();
-
         /* Set the metadata and update relevant UI */
         this._updateMetadataFromFileInfo(fileInfo);
 
-        if (this._isDesktopFile)
-            this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
-
+        this._createMenu();
         this._updateIcon();
 
         this._isSelected = false;
@@ -176,18 +172,24 @@ var FileItem = class {
     _updateMetadataFromFileInfo(fileInfo) {
         this._fileInfo = fileInfo;
 
-        let oldDisplayName = this._displayName;
+        let oldDisplayName = this.displayName;
+
         this._displayName = fileInfo.get_attribute_as_string('standard::display-name');
-        if (this._displayName != oldDisplayName) {
-            this._label.text = this._displayName;
+        this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
+        this._trusted = fileInfo.get_attribute_as_string('metadata::trusted') == 'true';
+        this._attributeContentType = fileInfo.get_content_type();
+        this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
+
+        if (this._isDesktopFile)
+            this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
+
+        if (this.displayName != oldDisplayName) {
+            this._label.text = this.displayName;
         }
 
-        this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
         this._fileType = fileInfo.get_file_type();
         this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
         this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
-        this._attributeContentType = fileInfo.get_content_type();
-        this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
         this._attributeHidden = fileInfo.get_is_hidden();
         this._isSymlink = fileInfo.get_is_symlink();
         this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
@@ -444,7 +446,8 @@ var FileItem = class {
         case Prefs.FILE_TYPE.NONE:
             this._actionCut = this._menu.addAction(_('Cut'), () => this._onCutClicked());
             this._actionCopy = this._menu.addAction(_('Copy'), () => this._onCopyClicked());
-            this._menu.addAction(_('Rename'), () => this.doRename());
+            if (!this.trustedDesktopFile)
+                this._menu.addAction(_('Rename'), () => this.doRename());
             this._actionTrash = this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
             break;
         case Prefs.FILE_TYPE.USER_DIRECTORY_TRASH:
@@ -617,8 +620,15 @@ var FileItem = class {
         return this._isDirectory;
     }
 
+    get trustedDesktopFile() {
+        return this._isDesktopFile && this._attributeCanExecute && this._trusted;
+    }
+
     get displayName() {
-        return this._displayName;
+        if (this.trustedDesktopFile)
+            return this._desktopFile.get_name();
+
+        return this._displayName || null;
     }
 
     acceptDrop() {
