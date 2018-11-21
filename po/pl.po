@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: desktop-icons\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
 "icons/issues\n"
-"POT-Creation-Date: 2018-10-01 15:08+0000\n"
-"PO-Revision-Date: 2018-10-01 17:49+0200\n"
+"POT-Creation-Date: 2018-11-21 12:44+0000\n"
+"PO-Revision-Date: 2018-11-21 13:12+0100\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <community-poland@mozilla.org>\n"
 "Language: pl\n"
@@ -48,67 +48,83 @@ msgstr "Katalog domowy na pulpicie"
 msgid "Show the trash icon in the desktop"
 msgstr "Kosz na pulpicie"
 
-#: desktopGrid.js:178 desktopGrid.js:297
+#: desktopGrid.js:185 desktopGrid.js:304
 msgid "New Folder"
 msgstr "Nowy katalog"
 
-#: desktopGrid.js:299
+#: desktopGrid.js:306
 msgid "Paste"
 msgstr "Wklej"
 
-#: desktopGrid.js:300
+#: desktopGrid.js:307
 msgid "Undo"
 msgstr "Cofnij"
 
-#: desktopGrid.js:301
+#: desktopGrid.js:308
 msgid "Redo"
 msgstr "Ponów"
 
-#: desktopGrid.js:303
+#: desktopGrid.js:310
 msgid "Open Desktop in Files"
 msgstr "Otwórz pulpit w menedżerze plików"
 
-#: desktopGrid.js:304
+#: desktopGrid.js:311
 msgid "Open Terminal"
 msgstr "Otwórz terminal"
 
-#: desktopGrid.js:306
+#: desktopGrid.js:313
 msgid "Change Background…"
 msgstr "Zmień tło…"
 
-#: desktopGrid.js:307
+#: desktopGrid.js:314
 msgid "Display Settings"
 msgstr "Ustawienia ekranu"
 
-#: desktopGrid.js:308
+#: desktopGrid.js:315
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: fileItem.js:226
+#: desktopGrid.js:569
+msgid "Enter file name…"
+msgstr "Nazwa pliku…"
+
+#: desktopGrid.js:573
+msgid "Ok"
+msgstr "OK"
+
+#: desktopGrid.js:579
+msgid "Cancel"
+msgstr "Anuluj"
+
+#: fileItem.js:390
 msgid "Open"
 msgstr "Otwórz"
 
-#: fileItem.js:229
+#: fileItem.js:393
 msgid "Cut"
 msgstr "Wytnij"
 
-#: fileItem.js:230
+#: fileItem.js:394
 msgid "Copy"
 msgstr "Skopiuj"
 
-#: fileItem.js:231
+#: fileItem.js:395
+msgid "Rename"
+msgstr "Zmień nazwę"
+
+#: fileItem.js:396
 msgid "Move to Trash"
 msgstr "Przenieś do kosza"
 
-#: fileItem.js:235
+#: fileItem.js:400
 msgid "Empty trash"
 msgstr "Opróżnij kosz"
 
-#: fileItem.js:241
+#: fileItem.js:406
 msgid "Properties"
 msgstr "Właściwości"
 
-#: fileItem.js:243
+#: fileItem.js:408
 msgid "Show in Files"
 msgstr "Wyświetl w menedżerze plików"
 
