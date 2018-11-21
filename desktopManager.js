@@ -73,7 +73,11 @@ var DesktopManager = class {
         this._addDesktopIcons();
         this._monitorDesktopFolder();
 
-        Prefs.settings.connect('changed', () => this._recreateDesktopIcons());
+        this.settingsId = Prefs.settings.connect('changed', () => this._recreateDesktopIcons());
+        this.gtkSettingsId = Prefs.gtkSettings.connect('changed', (obj, key) => {
+            if (key == 'show-hidden')
+                this._recreateDesktopIcons();
+        });
 
         this._selection = new Set();
         this._inDrag = false;
@@ -484,6 +488,7 @@ var DesktopManager = class {
     }
 
     _layoutChildren() {
+        let showHidden = Prefs.gtkSettings.get_boolean('show-hidden');
         /*
          * Paint the icons in two passes:
          * * first pass paints those that have their coordinates defined in the metadata
@@ -494,6 +499,8 @@ var DesktopManager = class {
                 continue;
             if (fileItem.state != FileItem.State.NORMAL)
                 continue;
+            if (!showHidden && fileItem.isHidden)
+                continue;
             this._addFileItemCloseTo(fileItem);
         }
 
@@ -501,6 +508,8 @@ var DesktopManager = class {
             if (fileItem.savedCoordinates !== null)
                 continue;
             if (fileItem.state != FileItem.State.NORMAL)
+                continue;
+            if (!showHidden && fileItem.isHidden)
                 continue;
             this._addFileItemCloseTo(fileItem);
         }
@@ -571,6 +580,13 @@ var DesktopManager = class {
         if (this._monitorDesktopDir)
             this._monitorDesktopDir.cancel();
         this._monitorDesktopDir = null;
+
+        if (this.settingsId)
+            Prefs.settings.disconnect(this.settingsId);
+        this.settingsId = 0;
+        if (this.gtkSettingsId)
+            Prefs.gtkSettings.disconnect(this.gtkSettingsId);
+        this.gtkSettingsId = 0;
 
         if (this._layoutChildrenId)
             GLib.source_remove(this._layoutChildrenId);

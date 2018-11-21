@@ -81,7 +81,6 @@ var FileItem = class {
         this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
         this._attributeContentType = fileInfo.get_content_type();
         this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
-        this._attributeHidden = fileInfo.get_is_hidden();
         this._isSymlink = fileInfo.get_is_symlink();
         this._fileUri = this._file.get_uri();
         this._filePath = this._file.get_path();
@@ -294,6 +293,10 @@ var FileItem = class {
 
     get file() {
         return this._file;
+    }
+
+    get isHidden() {
+        return this._fileInfo.get_is_hidden();
     }
 
     _createEmblemedStIcon(icon, iconName) {

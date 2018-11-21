@@ -30,6 +30,7 @@ Gettext.bindtextdomain('desktop-icons', ExtensionUtils.getCurrentExtension().pat
 var _ = Gettext.gettext;
 
 const SCHEMA_NAUTILUS = 'org.gnome.nautilus.preferences';
+const SCHEMA_GTK = 'org.gtk.Settings.FileChooser';
 const SCHEMA = 'org.gnome.shell.extensions.desktop-icons';
 
 const ICON_SIZE = { 'small': 48, 'standard': 64, 'large': 96, 'huge': 128 };
@@ -43,12 +44,15 @@ var FILE_TYPE = {
 }
 
 var nautilusSettings;
+var gtkSettings;
 var settings;
 // This is already in Nautilus settings, so it should not be made tweakable here
 var CLICK_POLICY_SINGLE = false;
 
 function init() {
     let schemaSource = GioSSS.get_default();
+    let schemaGtk = schemaSource.lookup(SCHEMA_GTK, true);
+    gtkSettings = new Gio.Settings({ settings_schema: schemaGtk });
     let schemaObj = schemaSource.lookup(SCHEMA_NAUTILUS, true);
     if (!schemaObj) {
         nautilusSettings = null;
