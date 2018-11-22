@@ -2,22 +2,22 @@
 # Copyright (C) 2018 desktop-icons's COPYRIGHT HOLDER
 # This file is distributed under the same license as the desktop-icons package.
 # Enrico Nicoletto <liverig@gmail.com>, 2018.
-#
+# Rafael Fontenelle <rafaelff@gnome.org>, 2018.
 msgid ""
 msgstr ""
 "Project-Id-Version: desktop-icons master\n"
-"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
-"icons/issues\n"
-"POT-Creation-Date: 2018-10-03 21:54+0000\n"
-"PO-Revision-Date: 2018-10-03 21:48-0300\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/"
+"desktop-icons/issues\n"
+"POT-Creation-Date: 2018-11-21 12:44+0000\n"
+"PO-Revision-Date: 2018-11-22 06:43-0200\n"
+"Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Brazilian Portuguese <gnome-pt_br-list@gnome.org>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"Last-Translator: Enrico Nicoletto <liverig@gmail.com>\n"
-"X-Generator: Poedit 2.1.1\n"
+"X-Generator: Virtaal 1.0.0-beta1\n"
 
 #: prefs.js:89
 msgid "Size for the desktop icons"
@@ -47,67 +47,83 @@ msgstr "Mostrar a pasta pessoal na área de trabalho"
 msgid "Show the trash icon in the desktop"
 msgstr "Mostrar o ícone da lixeira na área de trabalho"
 
-#: desktopGrid.js:178 desktopGrid.js:297
+#: desktopGrid.js:185 desktopGrid.js:304
 msgid "New Folder"
 msgstr "Nova pasta"
 
-#: desktopGrid.js:299
+#: desktopGrid.js:306
 msgid "Paste"
 msgstr "Colar"
 
-#: desktopGrid.js:300
+#: desktopGrid.js:307
 msgid "Undo"
 msgstr "Desfazer"
 
-#: desktopGrid.js:301
+#: desktopGrid.js:308
 msgid "Redo"
 msgstr "Refazer"
 
-#: desktopGrid.js:303
+#: desktopGrid.js:310
 msgid "Open Desktop in Files"
 msgstr "Abrir área de trabalho no Arquivos"
 
-#: desktopGrid.js:304
+#: desktopGrid.js:311
 msgid "Open Terminal"
 msgstr "Abrir terminal"
 
-#: desktopGrid.js:306
+#: desktopGrid.js:313
 msgid "Change Background…"
 msgstr "Alterar plano de fundo…"
 
-#: desktopGrid.js:307
+#: desktopGrid.js:314
 msgid "Display Settings"
 msgstr "Configurações de exibição"
 
-#: desktopGrid.js:308
+#: desktopGrid.js:315
 msgid "Settings"
 msgstr "Configurações"
 
-#: fileItem.js:226
+#: desktopGrid.js:569
+msgid "Enter file name…"
+msgstr "Insira um nome de arquivo…"
+
+#: desktopGrid.js:573
+msgid "Ok"
+msgstr "Ok"
+
+#: desktopGrid.js:579
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: fileItem.js:390
 msgid "Open"
 msgstr "Abrir"
 
-#: fileItem.js:229
+#: fileItem.js:393
 msgid "Cut"
 msgstr "Recortar"
 
-#: fileItem.js:230
+#: fileItem.js:394
 msgid "Copy"
 msgstr "Copiar"
 
-#: fileItem.js:231
+#: fileItem.js:395
+msgid "Rename"
+msgstr "Renomear"
+
+#: fileItem.js:396
 msgid "Move to Trash"
 msgstr "Mover para a lixeira"
 
-#: fileItem.js:235
+#: fileItem.js:400
 msgid "Empty trash"
 msgstr "Esvaziar lixeira"
 
-#: fileItem.js:241
+#: fileItem.js:406
 msgid "Properties"
 msgstr "Propriedades"
 
-#: fileItem.js:243
+#: fileItem.js:408
 msgid "Show in Files"
 msgstr "Mostrar no Arquivos"
 
