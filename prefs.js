@@ -24,22 +24,22 @@ const GioSSS = Gio.SettingsSchemaSource;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Gettext = imports.gettext;
 
-Gettext.textdomain("desktop-icons");
-Gettext.bindtextdomain("desktop-icons", ExtensionUtils.getCurrentExtension().path + "/locale");
+Gettext.textdomain('desktop-icons');
+Gettext.bindtextdomain('desktop-icons', ExtensionUtils.getCurrentExtension().path + '/locale');
 
 var _ = Gettext.gettext;
 
-const SCHEMA_NAUTILUS = "org.gnome.nautilus.preferences";
+const SCHEMA_NAUTILUS = 'org.gnome.nautilus.preferences';
 const SCHEMA = 'org.gnome.shell.extensions.desktop-icons';
 
-const ICON_SIZE = { "small": 48, "standard": 64, "large": 96, "huge": 128 };
-const ICON_WIDTH = { "small": 120, "standard": 128, "large": 128, "huge": 140 };
-const ICON_HEIGHT = { "small": 98, "standard": 114, "large": 146, "huge": 178 };
+const ICON_SIZE = { 'small': 48, 'standard': 64, 'large': 96, 'huge': 128 };
+const ICON_WIDTH = { 'small': 120, 'standard': 128, 'large': 128, 'huge': 140 };
+const ICON_HEIGHT = { 'small': 98, 'standard': 114, 'large': 146, 'huge': 178 };
 
 var FILE_TYPE = {
     NONE: null,
-    USER_DIRECTORY_HOME: "show-home",
-    USER_DIRECTORY_TRASH: "show-trash",
+    USER_DIRECTORY_HOME: 'show-home',
+    USER_DIRECTORY_TRASH: 'show-trash',
 }
 
 var nautilusSettings;
@@ -86,7 +86,7 @@ function buildPrefsWidget() {
 
     let frame = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, border_width: 10, spacing: 10 });
 
-    frame.add(buildSelector('icon-size', _("Size for the desktop icons"), { "small": _("Small"), "standard": _("Standard"), "large": _("Large"), "huge": _("Huge")}));
+    frame.add(buildSelector('icon-size', _("Size for the desktop icons"), { 'small': _("Small"), 'standard': _("Standard"), 'large': _("Large"), 'huge': _("Huge")}));
     frame.add(buildSwitcher('show-home', _("Show the personal folder in the desktop")));
     frame.add(buildSwitcher('show-trash', _("Show the trash icon in the desktop")));
     frame.show_all();
@@ -120,7 +120,7 @@ function buildSelector(key, labelText, elements) {
     let combo = new Gtk.ComboBox({model: listStore});
     let rendererText = new Gtk.CellRendererText();
     combo.pack_start (rendererText, false);
-    combo.add_attribute (rendererText, "text", 0);
+    combo.add_attribute (rendererText, 'text', 0);
     combo.set_id_column(1);
     settings.bind(key, combo, 'active-id', 3);
     hbox.pack_start(label, true, true, 0);
@@ -129,18 +129,18 @@ function buildSelector(key, labelText, elements) {
 }
 
 function _onNautilusSettingsChanged() {
-    CLICK_POLICY_SINGLE = nautilusSettings.get_string("click-policy") == "single";
+    CLICK_POLICY_SINGLE = nautilusSettings.get_string('click-policy') == 'single';
 }
 
 function get_icon_size() {
     // this one doesn't need scaling because Gnome Shell automagically scales the icons
-    return ICON_SIZE[settings.get_string("icon-size")];
+    return ICON_SIZE[settings.get_string('icon-size')];
 }
 
 function get_desired_width(scale_factor) {
-    return ICON_WIDTH[settings.get_string("icon-size")] * scale_factor;
+    return ICON_WIDTH[settings.get_string('icon-size')] * scale_factor;
 }
 
 function get_desired_height(scale_factor) {
-    return ICON_HEIGHT[settings.get_string("icon-size")] * scale_factor;
+    return ICON_HEIGHT[settings.get_string('icon-size')] * scale_factor;
 }

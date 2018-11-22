@@ -73,7 +73,7 @@ var DesktopManager = class {
         this._addDesktopIcons();
         this._monitorDesktopFolder();
 
-        Prefs.settings.connect("changed", () => this._recreateDesktopIcons());
+        Prefs.settings.connect('changed', () => this._recreateDesktopIcons());
 
         this._selection = new Set();
         this._inDrag = false;
@@ -146,7 +146,7 @@ var DesktopManager = class {
     _addDesktopIcons() {
         forEachBackgroundManager(bgManager => {
             let newGrid = new DesktopGrid.DesktopGrid(bgManager);
-            newGrid.actor.connect("destroy", (actor) => {
+            newGrid.actor.connect('destroy', (actor) => {
                 // if a grid loses its actor, remove it from the grid list
                 for(let grid in this._desktopGrids)
                     if (this._desktopGrids[grid].actor == actor) {
@@ -257,7 +257,7 @@ var DesktopManager = class {
         if (children.some(x => x.child == child))
             return desktopGrid;
         else
-            throw new Error("Missmatch between expected items in a desktop grid not found");
+            throw new Error('Missmatch between expected items in a desktop grid not found');
     }
 
     _setupDnD() {

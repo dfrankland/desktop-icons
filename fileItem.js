@@ -44,8 +44,8 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 
 const Gettext = imports.gettext;
 
-Gettext.textdomain("desktop-icons");
-Gettext.bindtextdomain("desktop-icons", ExtensionUtils.getCurrentExtension().path + "/locale");
+Gettext.textdomain('desktop-icons');
+Gettext.bindtextdomain('desktop-icons', ExtensionUtils.getCurrentExtension().path + '/locale');
 
 const _ = Gettext.gettext;
 
@@ -85,7 +85,7 @@ var FileItem = class {
         this._isSymlink = fileInfo.get_is_symlink();
         this._fileUri = this._file.get_uri();
         this._filePath = this._file.get_path();
-        this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
+        this._modifiedTime = this._fileInfo.get_attribute_uint64('time::modified');
         this._state = State.NORMAL;
         this._displayName = fileInfo.get_attribute_as_string('standard::display-name');
 
@@ -162,7 +162,7 @@ var FileItem = class {
                 }
             });
         }
-        this.actor.connect("destroy", () => this._onDestroy());
+        this.actor.connect('destroy', () => this._onDestroy());
     }
 
     _onDestroy() {
@@ -201,7 +201,7 @@ var FileItem = class {
                                                                  this._modifiedTime)) {
                     let argv = [];
                     argv.push(GLib.build_filenamev([ExtensionUtils.getCurrentExtension().path,
-                                                   "createThumbnail.js"]));
+                                                   'createThumbnail.js']));
                     argv.push(this._filePath);
                     let [success, pid] = GLib.spawn_async(null, argv, null,
                                                           GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
@@ -213,7 +213,7 @@ var FileItem = class {
                             if (exitCode == 0)
                                 this._updateIcon();
                             else
-                                global.log("Failed to generate thumbnail for " + this._filePath);
+                                global.log('Failed to generate thumbnail for ' + this._filePath);
                             GLib.spawn_close_pid(pid);
                             return false;
                         }
@@ -253,7 +253,7 @@ var FileItem = class {
                             }
                         } catch (error) {
                             if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
-                                global.log("Error while loading thumbnail: " + error);
+                                global.log('Error while loading thumbnail: ' + error);
                                 this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
                             }
                         }
@@ -262,7 +262,7 @@ var FileItem = class {
             }
         }
 
-        if (this._isDesktopFile && this._desktopFile.has_key("Icon"))
+        if (this._isDesktopFile && this._desktopFile.has_key('Icon'))
             this._icon.child = this._createEmblemedStIcon(null, this._desktopFile.get_string('Icon'));
         else
             this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
@@ -284,7 +284,7 @@ var FileItem = class {
                     this._updateIcon();
                 } catch(error) {
                     if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                        global.log("Error getting the number of files in the trash: " + error);
+                        global.log('Error getting the number of files in the trash: ' + error);
                 }
             });
 
@@ -308,7 +308,7 @@ var FileItem = class {
         }
         let itemIcon = Gio.EmblemedIcon.new(icon, null);
         if (this._isSymlink)
-            itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new("emblem-symbolic-link")));
+            itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new('emblem-symbolic-link')));
 
         return new St.Icon({ gicon: itemIcon,
                              icon_size: Prefs.get_icon_size()

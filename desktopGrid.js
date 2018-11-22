@@ -45,8 +45,8 @@ const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 const Gettext = imports.gettext;
 
-Gettext.textdomain("desktop-icons");
-Gettext.bindtextdomain("desktop-icons", ExtensionUtils.getCurrentExtension().path + "/locale");
+Gettext.textdomain('desktop-icons');
+Gettext.bindtextdomain('desktop-icons', ExtensionUtils.getCurrentExtension().path + '/locale');
 
 const _ = Gettext.gettext;
 
@@ -301,18 +301,18 @@ var DesktopGrid = class {
     _createDesktopBackgroundMenu() {
         let menu = new PopupMenu.PopupMenu(Main.layoutManager.dummyCursor,
                                            0, St.Side.TOP);
-        menu.addAction(_('New Folder'), () => this._omNewFolderClicked());
+        menu.addAction(_("New Folder"), () => this._omNewFolderClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._pasteMenuItem = menu.addAction(_('Paste'), () => this._onPasteClicked());
-        this._undoMenuItem = menu.addAction(_('Undo'), () => this._onUndoClicked());
-        this._redoMenuItem = menu.addAction(_('Redo'), () => this._onRedoClicked());
+        this._pasteMenuItem = menu.addAction(_("Paste"), () => this._onPasteClicked());
+        this._undoMenuItem = menu.addAction(_("Undo"), () => this._onUndoClicked());
+        this._redoMenuItem = menu.addAction(_("Redo"), () => this._onRedoClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addAction(_('Open Desktop in Files'), () => this._onOpenDesktopInFilesClicked());
-        menu.addAction(_('Open Terminal'), () => this._onOpenTerminalClicked());
+        menu.addAction(_("Open Desktop in Files"), () => this._onOpenDesktopInFilesClicked());
+        menu.addAction(_("Open Terminal"), () => this._onOpenTerminalClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        menu.addSettingsAction(_('Change Background…'), 'gnome-background-panel.desktop');
-        menu.addSettingsAction(_('Display Settings'), 'gnome-display-panel.desktop');
-        menu.addSettingsAction(_('Settings'), 'gnome-control-center.desktop');
+        menu.addSettingsAction(_("Change Background…"), 'gnome-background-panel.desktop');
+        menu.addSettingsAction(_("Display Settings"), 'gnome-display-panel.desktop');
+        menu.addSettingsAction(_("Settings"), 'gnome-control-center.desktop');
 
         menu.actor.add_style_class_name('background-menu');
 
