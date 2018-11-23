@@ -402,16 +402,14 @@ var FileItem = class {
             return;
         }
 
-        if (this._attributeCanExecute && !this._isDirectory) {
-            if (this._isDesktopFile) {
-                this._desktopFile.launch_uris_as_manager([], null, GLib.SpawnFlags.SEARCH_PATH, null, null);
-                return;
-            }
+        if (this.trustedDesktopFile) {
+            this._desktopFile.launch_uris_as_manager([], null, GLib.SpawnFlags.SEARCH_PATH, null, null);
+            return;
+        }
 
-            if (!this._execLine)
-                return;
-
-            Util.spawnCommandLine(this._execLine);
+        if (this._attributeCanExecute && !this._isDirectory && !this._isDesktopFile) {
+            if (this._execLine)
+                Util.spawnCommandLine(this._execLine);
             return;
         }
 
