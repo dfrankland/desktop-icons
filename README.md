@@ -7,14 +7,11 @@ A GNOME Shell extension for providing desktop icons.
 * Nautilus >= 3.30
 
 ## How to contribute?
-* Download the code at ~/.local/share/gnome-shell/extensions
+* Download the code
+* Build with Meson (see at the next section)
 * Activate the extension in GNOME Tweaks
 
-## Tasks & known issues
-Take a look at the proposed possible tasks and known issues for the 1.0 release
-at the [MVP issue](https://gitlab.gnome.org/World/ShellExtensions/desktop-icons/issues/1)
-
-## Built with meson
+## Build with meson
 ```
 meson --prefix="${PREFIX}" "${BUILD_DIR}"
 # With custom localedir
@@ -22,6 +19,8 @@ meson --prefix="${PREFIX}" --localedir=locale "${BUILD_DIR}"
 
 ninja -C "${BUILD_DIR}" install
 ```
+The usual prefix to make it work locally would be ~/.local/share/gnome-shell/extensions/desktop-icons@csoriano
+
 ### Export extension ZIP file for extensions.gnome.org
 ```
 ./export-zip.sh
