@@ -115,6 +115,19 @@ var FileItem = class {
         /* Set the metadata and update relevant UI */
         this._updateMetadataFromFileInfo(fileInfo);
 
+        if (this._isDesktopFile) {
+            /* watch for the executable bit being removed or added */
+            this._monitorDesktopFile = this._file.monitor_file(Gio.FileMonitorFlags.NONE, null);
+            this._monitorDesktopFileId = this._monitorDesktopFile.connect('changed',
+                (obj, file, otherFile, eventType) => {
+                    switch(eventType) {
+                        case Gio.FileMonitorEvent.ATTRIBUTE_CHANGED:
+                            this._refreshMetadataAsync(true);
+                            break;
+                    }
+                });
+        }
+
         this._createMenu();
         this._updateIcon();
 
@@ -160,6 +173,10 @@ var FileItem = class {
         if (this._loadThumbnailDataCancellable)
             this._loadThumbnailDataCancellable.cancel();
 
+        /* Desktop file */
+        if (this._monitorDesktopFileId)
+            this._monitorDesktopFile.disconnect(this._monitorDesktopFileId);
+
         /* Trash */
         if (this._monitorTrashDir)
             this._monitorTrashDir.disconnect(this._monitorTrashId);
@@ -167,6 +184,30 @@ var FileItem = class {
             this._queryTrashInfoCancellable.cancel();
         if (this._scheduleTrashRefreshId)
             GLib.source_remove(this._scheduleTrashRefreshId);
+    }
+
+    _refreshMetadataAsync(rebuild) {
+        if (this._queryFileInfoCancellable)
+            this._queryFileInfoCancellable.cancel();
+        this._queryFileInfoCancellable = new Gio.Cancellable();
+        this._file.query_info_async(DesktopIconsUtil.DEFAULT_ATTRIBUTES,
+                                    Gio.FileQueryInfoFlags.NONE,
+                                    GLib.PRIORITY_DEFAULT,
+                                    this._queryFileInfoCancellable,
+            (source, res) => {
+                try {
+                    let newFileInfo = source.query_info_finish(res);
+                    this._queryFileInfoCancellable = null;
+                    this._updateMetadataFromFileInfo(newFileInfo);
+                    if (rebuild) {
+                        this._createMenu();
+                        this._updateIcon();
+                    }
+                } catch(error) {
+                    if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                        global.log("Error getting the file info: " + error);
+                }
+            });
     }
 
     _updateMetadataFromFileInfo(fileInfo) {
@@ -203,24 +244,8 @@ var FileItem = class {
     }
 
     onFileRenamed(file) {
-        if (this._queryFileInfoCancellable)
-            this._queryFileInfoCancellable.cancel();
-        this._queryFileInfoCancellable = new Gio.Cancellable();
         this._file = file;
-        file.query_info_async(DesktopIconsUtil.DEFAULT_ATTRIBUTES,
-                              Gio.FileQueryInfoFlags.NONE,
-                              GLib.PRIORITY_DEFAULT,
-                              this._queryFileInfoCancellable,
-            (source, res) => {
-                try {
-                    let newFileInfo = source.query_info_finish(res);
-                    this._queryFileInfoCancellable = null;
-                    this._updateMetadataFromFileInfo(newFileInfo);
-                } catch(error) {
-                    if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
-                        global.log("Error getting the file info: " + error);
-                }
-            });
+        this._refreshMetadataAsync(false);
     }
 
     _updateIcon() {
