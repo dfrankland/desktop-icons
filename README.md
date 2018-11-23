@@ -20,7 +20,7 @@ It's possible to read more information in the Meson docs to tweak the configurat
 For a regular use and local development these are the steps to build the
 project and install it:
 ```
-meson --prefix=~/.local/share/gnome-shell/extensions/desktop-icons@csoriano .build
+meson --prefix=~/.local/ .build
 ninja -C .build install
 ```
 

@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
-'''
-Meson custom install script
-'''
+#!/usr/bin/python3
 
 import os
-from subprocess import call
+import subprocess
 
-PREFIX = os.environ.get('MESON_INSTALL_PREFIX', os.getcwd())
+prefix = os.environ['MESON_INSTALL_DESTDIR_PREFIX']
+schemadir = os.path.join(prefix, 'share', 'glib-2.0', 'schemas')
 
-print("Installing new Schemas")
-call(['glib-compile-schemas', os.path.join(PREFIX, 'schemas/')])
+# Packaging tools define DESTDIR and this isn't needed for them
+if 'DESTDIR' not in os.environ:
+    print('Compiling GSettings schemas...')
+    subprocess.call(['glib-compile-schemas', schemadir])

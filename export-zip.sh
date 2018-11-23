@@ -6,12 +6,14 @@
 # Usage:
 # ./export-zip.sh - builds extension & create zip inside repository
 
+set -e
 
 REPO_DIR="$(pwd)"
 BUILD_DIR="${REPO_DIR}/builddir"
 UUID="desktop-icons@csoriano"
 LOCAL_PREFIX="${REPO_DIR}/${UUID}"
-
+EXTENSIONS_DIR="${LOCAL_PREFIX}/share/gnome-shell/extensions/${UUID}"
+SCHEMADIR="${LOCAL_PREFIX}/share/glib-2.0/schemas"
 
 # Check old builddir
 if [ -d "${PWD}/${BUILD_DIR}" ]; then
@@ -42,6 +44,10 @@ echo "# Create extension ZIP file"
 echo "# --------------------------"
 rm -rf "${REPO_DIR}/${UUID}.zip" "${LOCAL_PREFIX}/${UUID}.zip"
 cd "${LOCAL_PREFIX}" || exit
+mkdir schemas
+cp "${SCHEMADIR}"/*.xml schemas/
+glib-compile-schemas schemas/
+cp -r "${EXTENSIONS_DIR}"/* .
 zip -qr "${UUID}.zip" ./*.js ./*.css ./*.json ./locale ./schemas
 mv -f "${UUID}.zip" "${REPO_DIR}/"
 cd "${REPO_DIR}" || exit

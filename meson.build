@@ -3,11 +3,14 @@ project('desktop-icons',
   license: 'GPL3'
 )
 
-prefix = get_option('prefix')
-schema_dir = join_paths(prefix, 'schemas')
-
 gnome = import ('gnome')
 i18n = import('i18n')
+
+prefix = get_option('prefix')
+datadir = join_paths (prefix, get_option('datadir'))
+schema_dir = join_paths(datadir, 'glib-2.0', 'schemas')
+
+extensions_dir = join_paths(prefix, 'share', 'gnome-shell', 'extensions', 'desktop-icons@csoriano')
 
 install_data([
     'createThumbnail.js',
@@ -21,16 +24,14 @@ install_data([
     'prefs.js',
     'stylesheet.css'
   ],
-  install_dir: prefix
-)
-
-install_data(
-  'schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml',
-  install_dir : schema_dir
+  install_dir: extensions_dir
 )
 
 subdir(
   'po'
+)
+subdir(
+  'schemas'
 )
 
 meson.add_install_script('meson_post_install.py')
