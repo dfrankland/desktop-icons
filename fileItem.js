@@ -48,6 +48,8 @@ const _ = Gettext.gettext;
 
 const DRAG_TRESHOLD = 8;
 
+var S_IXUSR = 0o00100;
+
 var State = {
     NORMAL: 0,
     GONE: 1,
@@ -217,6 +219,7 @@ var FileItem = class {
 
         this._displayName = fileInfo.get_attribute_as_string('standard::display-name');
         this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
+        this._unixmode = fileInfo.get_attribute_uint32('unix::mode')
         this._trusted = fileInfo.get_attribute_as_string('metadata::trusted') == 'true';
         this._attributeContentType = fileInfo.get_content_type();
         this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
@@ -461,6 +464,67 @@ var FileItem = class {
         Extension.desktopManager.doEmptyTrash();
     }
 
+    get _allowLaunchingText() {
+        if (this.trustedDesktopFile)
+            return _("Don't Allow Launching");
+
+        return _("Allow Launching");
+    }
+
+    get metadataTrusted() {
+        return this._trusted;
+    }
+
+    set metadataTrusted(value) {
+        this._trusted = value;
+
+        let info = new Gio.FileInfo();
+        info.set_attribute_string('metadata::trusted',
+                                  value ? 'true' : 'false');
+        this._file.set_attributes_async(info,
+                                        Gio.FileQueryInfoFlags.NONE,
+                                        GLib.PRIORITY_LOW,
+                                        null,
+            (source, res) => {
+                try {
+                    source.set_attributes_finish(res);
+                    this._refreshMetadataAsync(true);
+                } catch(e) {
+                    log(`Failed to set metadata::trusted: ${e.message}`);
+                }
+        });
+    }
+
+    _onAllowDisallowLaunchingClicked() {
+        this.metadataTrusted = !this.trustedDesktopFile;
+
+        /*
+         * we're marking as trusted, make the file executable too. note that we
+         * do not ever remove the executable bit, since we don't know who set
+         * it.
+         */
+        if (this.metadataTrusted && !this._attributeCanExecute) {
+            let info = new Gio.FileInfo();
+            let newUnixMode = this._unixmode | S_IXUSR;
+            info.set_attribute_uint32(Gio.FILE_ATTRIBUTE_UNIX_MODE, newUnixMode);
+            this._file.set_attributes_async(info,
+                                            Gio.FileQueryInfoFlags.NONE,
+                                            GLib.PRIORITY_LOW,
+                                            null,
+                (source, res) => {
+                    try {
+                        source.set_attributes_finish (res);
+                    } catch(e) {
+                        log(`Failed to set unix mode: ${e.message}`);
+                    }
+            });
+            this._file.set_attributes_from_info(info,
+                                                Gio.FileQueryInfoFlags.NONE,
+                                                GLib.PRIORITY_LOW,
+                                                null);
+        }
+    }
+
     _createMenu() {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
         let side = St.Side.LEFT;
@@ -475,6 +539,12 @@ var FileItem = class {
             if (!this.trustedDesktopFile)
                 this._menu.addAction(_('Rename'), () => this.doRename());
             this._actionTrash = this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
+            if (this._isDesktopFile) {
+                this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+                this._allowLaunchingMenuItem = this._menu.addAction(this._allowLaunchingText,
+                                                                    () => this._onAllowDisallowLaunchingClicked());
+
+            }
             break;
         case Prefs.FILE_TYPE.USER_DIRECTORY_TRASH:
             this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
