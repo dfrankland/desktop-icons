@@ -377,11 +377,14 @@ var FileItem = class {
             }
         }
         let itemIcon = Gio.EmblemedIcon.new(icon, null);
+
         if (this._isSymlink) {
             if (this._isBrokenSymlink)
                 itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new('emblem-unreadable')));
             else
                 itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new('emblem-symbolic-link')));
+        } else if (this.trustedDesktopFile) {
+            itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new('emblem-symbolic-link')));
         }
 
         return new St.Icon({ gicon: itemIcon,
@@ -646,7 +649,7 @@ var FileItem = class {
     }
 
     get trustedDesktopFile() {
-        return this._isDesktopFile && this._attributeCanExecute && this._trusted;
+        return this._isDesktopFile && this._attributeCanExecute && this.metadataTrusted;
     }
 
     get displayName() {
