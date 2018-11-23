@@ -424,30 +424,34 @@ var DesktopManager = class {
         return true;
     }
 
-    selectionDropOnFileItem (fileItem) {
-        if (!fileItem.isDirectory)
+    selectionDropOnFileItem (fileItemDestination) {
+        if (!fileItemDestination.isDirectory)
             return false;
 
         let droppedUris = [];
         for (let fileItem of this._selection) {
             if (fileItem.isSpecial)
                 return false;
+            if (fileItemDestination.file.get_uri() == fileItem.file.get_uri())
+                continue;
             droppedUris.push(fileItem.file.get_uri());
         }
 
+        if (droppedUris.length == 0)
+            return true;
+
         DBusUtils.NautilusFileOperationsProxy.MoveURIsRemote(droppedUris,
-                                                             fileItem.file.get_uri(),
+                                                             fileItemDestination.file.get_uri(),
             (result, error) => {
                 if (error)
                     throw new Error('Error moving files: ' + error.message);
             }
         );
-
         for (let fileItem of this._selection) {
             fileItem.state = FileItem.State.GONE;
         }
 
-        this._scheduleReLayoutChildren();
+        this._recreateDesktopIcons();
 
         return true;
     }
