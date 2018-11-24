@@ -15,9 +15,10 @@ A GNOME Shell extension for providing desktop icons.
 The project uses a build system called [Meson](https://mesonbuild.com/). You can install
 in most Linux distributions as "meson".
 
-Feel free to read more information there tweaking the configuration is needed.
-For the regular use and local development these are the steps to build the
-project and install:
+It's possible to read more information in the Meson docs to tweak the configuration if needed.
+
+For a regular use and local development these are the steps to build the
+project and install it:
 ```
 meson --prefix=~/.local/share/gnome-shell/extensions/desktop-icons@csoriano .build
 ninja -C .build install
