@@ -55,6 +55,11 @@ var UndoStatus = {
     REDO: 2,
 };
 
+var StoredCoordinates = {
+    PRESERVE: 0,
+    OVERWRITE:1,
+};
+
 class Placeholder extends St.Bin {
     constructor() {
         super();
@@ -350,31 +355,33 @@ var DesktopGrid = class {
     dropItems(fileItems) {
         let reserved = {};
         for (let fileItem of fileItems) {
-            let [dropX, dropY] = (fileItem.savedCoordinates == null) ? [0, 0] : fileItem.savedCoordinates;
+            let [dropX, dropY] = fileItem.dropCoordinates;
             let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY, reserved);
             let placeholder = this.layout.get_child_at(column, row);
             let hashedPosition = `${column},${row}`;
             if (hashedPosition in reserved)
                 continue;
-
             reserved[`${column},${row}`] = fileItem;
             placeholder.child = fileItem.actor;
-            this._addFileItemTo(fileItem, column, row);
+            this._addFileItemTo(fileItem, column, row, StoredCoordinates.OVERWRITE);
         }
     }
 
-    _addFileItemTo(fileItem, column, row) {
+    _addFileItemTo(fileItem, column, row, overwriteCoordinates) {
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = fileItem.actor;
         this._fileItems.push(fileItem);
         let selectedId = fileItem.connect('selected', this._onFileItemSelected.bind(this));
         let renameId = fileItem.connect('rename-clicked', this.doRename.bind(this));
         this._fileItemHandlers.set(fileItem, [selectedId, renameId]);
+
         /* If this file is new in the Desktop and hasn't yet
          * fixed coordinates, store the new possition to ensure
-         * that the next time it will be shown in the same possition
+         * that the next time it will be shown in the same possition.
+         * Also store the new possition if it has been moved by the user,
+         * and not triggered by a screen change.
          */
-        if (fileItem.savedCoordinates == null) {
+        if ((fileItem.savedCoordinates == null) || (overwriteCoordinates == StoredCoordinates.OVERWRITE)) {
             let [fileX, fileY] = placeholder.get_transformed_position();
             fileItem.savedCoordinates = [Math.round(fileX), Math.round(fileY)];
         }
@@ -382,7 +389,7 @@ var DesktopGrid = class {
 
     addFileItemCloseTo(fileItem, x, y) {
         let [column, row] = this._getEmptyPlaceClosestTo(x, y, null);
-        this._addFileItemTo(fileItem, column, row);
+        this._addFileItemTo(fileItem, column, row, StoredCoordinates.PRESERVE);
     }
 
     _getEmptyPlaceClosestTo(x, y, reserved) {
