@@ -331,7 +331,7 @@ var FileItem = class {
         if (this._isBrokenSymlink) {
             this._icon.child = this._createEmblemedStIcon(null, 'text-x-generic');
         } else {
-            if (this._isDesktopFile && this._desktopFile.has_key('Icon'))
+            if (this.trustedDesktopFile && this._desktopFile.has_key('Icon'))
                 this._icon.child = this._createEmblemedStIcon(null, this._desktopFile.get_string('Icon'));
             else
                 this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
