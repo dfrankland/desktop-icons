@@ -191,6 +191,13 @@ var FileItem = class {
         this._attributeHidden = fileInfo.get_is_hidden();
         this._isSymlink = fileInfo.get_is_symlink();
         this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
+        /*
+         * This is a glib trick to detect broken symlinks. If a file is a symlink, the filetype
+         * points to the final file, unless it is broken; thus if the file type is SYMBOLIC_LINK,
+         * it must be a broken link.
+         * https://developer.gnome.org/gio/stable/GFile.html#g-file-query-info
+         */
+        this._isBrokenSymlink = this._isSymlink && this._fileType == Gio.FileType.SYMBOLIC_LINK
     }
 
     onFileRenamed(file) {
@@ -291,11 +298,15 @@ var FileItem = class {
             }
         }
 
-        if (this._isDesktopFile && this._desktopFile.has_key('Icon'))
-            this._icon.child = this._createEmblemedStIcon(null, this._desktopFile.get_string('Icon'));
-        else
-            this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
+        if (this._isBrokenSymlink) {
+            this._icon.child = this._createEmblemedStIcon(null, 'text-x-generic');
+        } else {
+            if (this._isDesktopFile && this._desktopFile.has_key('Icon'))
+                this._icon.child = this._createEmblemedStIcon(null, this._desktopFile.get_string('Icon'));
+            else
+                this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
         }
+    }
 
     _refreshTrashIcon() {
         if (this._queryTrashInfoCancellable)
@@ -339,8 +350,12 @@ var FileItem = class {
             }
         }
         let itemIcon = Gio.EmblemedIcon.new(icon, null);
-        if (this._isSymlink)
-            itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new('emblem-symbolic-link')));
+        if (this._isSymlink) {
+            if (this._isBrokenSymlink)
+                itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new('emblem-unreadable')));
+            else
+                itemIcon.add_emblem(Gio.Emblem.new(Gio.ThemedIcon.new('emblem-symbolic-link')));
+        }
 
         return new St.Icon({ gicon: itemIcon,
                              icon_size: Prefs.get_icon_size()
@@ -352,6 +367,11 @@ var FileItem = class {
     }
 
     doOpen() {
+        if (this._isBrokenSymlink) {
+            log(`Error: Can\'t open ${this.file.get_uri()} because it is a broken symlink.`);
+            return;
+        }
+
         if (this._attributeCanExecute && !this._isDirectory) {
             if (this._isDesktopFile) {
                 this._desktopFile.launch_uris_as_manager([], null, GLib.SpawnFlags.SEARCH_PATH, null, null);
