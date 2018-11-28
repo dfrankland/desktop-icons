@@ -156,7 +156,7 @@ var FileItem = class {
                                 GLib.source_remove(this._scheduleTrashRefreshId);
                             this._scheduleTrashRefreshId = Mainloop.timeout_add(200, () => this._refreshTrashIcon());
                         } else {
-                            this._refreshTrashIcon()
+                            this._refreshTrashIcon();
                         }
                     break;
                 }
