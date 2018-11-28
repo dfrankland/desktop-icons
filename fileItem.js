@@ -177,7 +177,7 @@ var FileItem = class {
             this._loadThumbnailDataCancellable.cancel();
 
         /* Trash */
-        if (this._monitorTrashDirId)
+        if (this._monitorTrashDir)
             this._monitorTrashDir.disconnect(this._monitorTrashId);
         if (this._queryTrashInfoCancellable)
             this._queryTrashInfoCancellable.cancel();
