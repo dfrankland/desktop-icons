@@ -118,6 +118,10 @@ var DesktopGrid = class {
         this.reset();
     }
 
+    grabFocus() {
+        this._grid.grab_key_focus();
+    }
+
     _onKeyPress(actor, event) {
         if (global.stage.get_key_focus() != actor)
             return Clutter.EVENT_PROPAGATE;
