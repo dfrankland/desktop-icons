@@ -400,7 +400,7 @@ var FileItem = class {
             break;
         case Prefs.FILE_TYPE.USER_DIRECTORY_TRASH:
             this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            this._menu.addAction(_('Empty trash'), () => this._onEmptyTrashClicked());
+            this._menu.addAction(_('Empty Trash'), () => this._onEmptyTrashClicked());
             break;
         default:
             break;
