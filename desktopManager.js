@@ -240,6 +240,14 @@ var DesktopManager = class {
         this._monitorDesktopDir.connect('changed', (obj, file, otherFile, eventType) => this._updateDesktopIfChanged(file, otherFile, eventType));
     }
 
+    checkIfSpecialFilesAreSelected() {
+        for(let fileItem of this._selection) {
+            if (fileItem.isSpecial)
+                return true;
+        }
+        return false;
+    }
+
     _updateDesktopIfChanged (file, otherFile, eventType) {
         let {
             DELETED, MOVED_IN, MOVED_OUT, CREATED, RENAMED, CHANGES_DONE_HINT, ATTRIBUTE_CHANGED

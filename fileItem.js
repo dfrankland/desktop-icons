@@ -442,10 +442,10 @@ var FileItem = class {
         this._menu.addAction(_('Open'), () => this.doOpen());
         switch (this._fileExtra) {
         case Prefs.FILE_TYPE.NONE:
-            this._menu.addAction(_('Cut'), () => this._onCutClicked());
-            this._menu.addAction(_('Copy'), () => this._onCopyClicked());
+            this._actionCut = this._menu.addAction(_('Cut'), () => this._onCutClicked());
+            this._actionCopy = this._menu.addAction(_('Copy'), () => this._onCopyClicked());
             this._menu.addAction(_('Rename'), () => this.doRename());
-            this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
+            this._actionTrash = this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
             break;
         case Prefs.FILE_TYPE.USER_DIRECTORY_TRASH:
             this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -470,6 +470,13 @@ var FileItem = class {
             if (!this.isSelected)
                 this.emit('selected', false, true);
             this._menu.toggle();
+            let specialFilesSelected = Extension.desktopManager.checkIfSpecialFilesAreSelected();
+            if (this._actionCut)
+                this._actionCut.setSensitive(!specialFilesSelected);
+            if (this._actionCopy)
+                this._actionCopy.setSensitive(!specialFilesSelected);
+            if (this._actionTrash)
+                this._actionTrash.setSensitive(!specialFilesSelected);
             return Clutter.EVENT_STOP;
         } else if (button == 1) {
             if (event.get_click_count() == 1) {
