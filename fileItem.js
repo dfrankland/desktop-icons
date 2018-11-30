@@ -76,8 +76,6 @@ var FileItem = class {
         else
             this._savedCoordinates = null;
 
-        this._updateMetadataFromFileInfo(fileInfo);
-
         this._state = State.NORMAL;
 
         this.actor = new St.Bin({ visible: true });
@@ -85,6 +83,7 @@ var FileItem = class {
         this.actor.set_height(Prefs.get_desired_height(scaleFactor));
         this.actor.set_width(Prefs.get_desired_width(scaleFactor));
         this.actor._delegate = this;
+        this.actor.connect('destroy', () => this._onDestroy());
 
         this._container = new St.BoxLayout({ reactive: true,
                                              track_hover: true,
@@ -103,14 +102,8 @@ var FileItem = class {
         this._container.add_actor(this._iconContainer);
 
         this._label = new St.Label({
-            text: this._displayName,
             style_class: 'name-label'
         });
-
-        if (this._isDesktopFile)
-            this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
-
-        this._updateIcon();
 
         this._container.add_actor(this._label);
         let clutterText = this._label.get_clutter_text();
@@ -125,6 +118,14 @@ var FileItem = class {
         this._container.connect('button-release-event', (actor, event) => this._onReleaseButton(actor, event));
 
         this._createMenu();
+
+        /* Set the metadata and update relevant UI */
+        this._updateMetadataFromFileInfo(fileInfo);
+
+        if (this._isDesktopFile)
+            this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
+
+        this._updateIcon();
 
         this._isSelected = false;
         this._primaryButtonPressed = false;
@@ -153,7 +154,6 @@ var FileItem = class {
                 }
             });
         }
-        this.actor.connect('destroy', () => this._onDestroy());
     }
 
     _onDestroy() {
