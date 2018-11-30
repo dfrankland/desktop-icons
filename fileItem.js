@@ -71,6 +71,8 @@ var FileItem = class {
         let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
         if (savedCoordinates != null)
             this._savedCoordinates = savedCoordinates.split(',').map(x => Number(x));
+        else
+            this._savedCoordinates = null;
 
         this._state = State.NORMAL;
 
