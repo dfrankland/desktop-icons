@@ -66,20 +66,17 @@ var FileItem = class {
         this._queryFileInfoCancellable = null;
         this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
 
-        let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-
         this._file = file;
-        let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
 
+        let savedCoordinates = fileInfo.get_attribute_as_string('metadata::nautilus-icon-position');
         if (savedCoordinates != null)
             this._savedCoordinates = savedCoordinates.split(',').map(x => Number(x));
-        else
-            this._savedCoordinates = null;
 
         this._state = State.NORMAL;
 
         this.actor = new St.Bin({ visible: true });
         this.actor.set_fill(true, true);
+        let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         this.actor.set_height(Prefs.get_desired_height(scaleFactor));
         this.actor.set_width(Prefs.get_desired_width(scaleFactor));
         this.actor._delegate = this;
