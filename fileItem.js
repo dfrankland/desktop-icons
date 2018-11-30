@@ -180,7 +180,13 @@ var FileItem = class {
 
     _updateMetadataFromFileInfo(fileInfo) {
         this._fileInfo = fileInfo;
+
+        let oldDisplayName = this._displayName;
         this._displayName = fileInfo.get_attribute_as_string('standard::display-name');
+        if (this._displayName != oldDisplayName) {
+            this._label.text = this._displayName;
+        }
+
         this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
         this._fileType = fileInfo.get_file_type();
         this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
@@ -192,15 +198,6 @@ var FileItem = class {
         this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
     }
 
-    _updateFromFileInfo(newFileInfo) {
-        let oldDisplayName = this._displayName;
-        this._updateMetadataFromFileInfo(newFileInfo);
-        if (this._displayName != oldDisplayName) {
-            this._label.text = this._displayName;
-        }
-    }
-
-    renamed(file) {
     onFileRenamed(file) {
         if (this._queryFileInfoCancellable)
             this._queryFileInfoCancellable.cancel();
@@ -214,7 +211,7 @@ var FileItem = class {
                 try {
                     let newFileInfo = source.query_info_finish(res);
                     this._queryFileInfoCancellable = null;
-                    this._updateFromFileInfo(newFileInfo);
+                    this._updateMetadataFromFileInfo(newFileInfo);
                 } catch(error) {
                     if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                         global.log("Error getting the file info: " + error);
