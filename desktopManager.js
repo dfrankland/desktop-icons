@@ -269,7 +269,6 @@ var DesktopManager = class {
 
         // Only get a subset of events we are interested in.
         // Note that CREATED will emit a CHANGES_DONE_HINT
-
         if (![DELETED, MOVED_IN, MOVED_OUT, CREATED].includes(eventType))
             return;
 
