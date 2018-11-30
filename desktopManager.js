@@ -253,7 +253,7 @@ var DesktopManager = class {
             case RENAMED:
                 this._fileItems.delete(fileUri);
                 this._fileItems.set(otherFile.get_uri(), fileItem);
-                fileItem.renamed(otherFile);
+                fileItem.onFileRenamed(otherFile);
                 return;
             case CHANGES_DONE_HINT:
             case ATTRIBUTE_CHANGED:

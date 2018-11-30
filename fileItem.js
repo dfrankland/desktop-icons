@@ -201,6 +201,7 @@ var FileItem = class {
     }
 
     renamed(file) {
+    onFileRenamed(file) {
         if (this._queryFileInfoCancellable)
             this._queryFileInfoCancellable.cancel();
         this._queryFileInfoCancellable = new Gio.Cancellable();
