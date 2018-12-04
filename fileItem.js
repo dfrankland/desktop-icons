@@ -42,9 +42,7 @@ const Prefs = Me.imports.prefs;
 const DBusUtils = Me.imports.dbusUtils;
 const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 
-const Gettext = imports.gettext;
-
-Gettext.textdomain('desktop-icons');
+const Gettext = imports.gettext.domain('desktop-icons');
 
 const _ = Gettext.gettext;
 

@@ -26,9 +26,7 @@ const Gettext = imports.gettext;
 
 const Config = imports.misc.config;
 
-Gettext.textdomain('desktop-icons');
-
-var _ = Gettext.gettext;
+var _ = Gettext.domain('desktop-icons').gettext;
 
 const SCHEMA_NAUTILUS = 'org.gnome.nautilus.preferences';
 const SCHEMA_GTK = 'org.gtk.Settings.FileChooser';
