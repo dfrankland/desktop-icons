@@ -24,6 +24,8 @@ const GioSSS = Gio.SettingsSchemaSource;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Gettext = imports.gettext;
 
+const Config = imports.misc.config;
+
 Gettext.textdomain('desktop-icons');
 
 var _ = Gettext.gettext;
@@ -52,7 +54,10 @@ function initTranslations() {
     let extension = ExtensionUtils.getCurrentExtension();
 
     let localedir = extension.dir.get_child('locale');
-    Gettext.bindtextdomain('desktop-icons', localedir.get_path());
+    if (localedir.query_exists(null))
+        Gettext.bindtextdomain('desktop-icons', localedir.get_path());
+    else
+        Gettext.bindtextdomain('desktop-icons', Config.LOCALEDIR);
 }
 
 function init() {
