@@ -46,7 +46,6 @@ const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 const Gettext = imports.gettext;
 
 Gettext.textdomain('desktop-icons');
-Gettext.bindtextdomain('desktop-icons', ExtensionUtils.getCurrentExtension().path + '/locale');
 
 const _ = Gettext.gettext;
 

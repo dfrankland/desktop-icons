@@ -23,6 +23,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Prefs = Me.imports.prefs;
 const { DesktopManager } = Me.imports.desktopManager;
 const DBusUtils = Me.imports.dbusUtils;
+const Gettext = imports.gettext;
 
 var desktopManager = null;
 var addBackgroundMenuOrig = null;
@@ -33,6 +34,8 @@ var oldShouldToggleByCornerOrButtonFunction = null;
 
 function init() {
     addBackgroundMenuOrig = Main.layoutManager._addBackgroundMenu;
+
+    Gettext.bindtextdomain('desktop-icons', Me.dir.get_child('locale'));
 }
 
 function newShouldToggleByCornerOrButton() {
