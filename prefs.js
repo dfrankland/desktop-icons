@@ -25,7 +25,6 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Gettext = imports.gettext;
 
 Gettext.textdomain('desktop-icons');
-Gettext.bindtextdomain('desktop-icons', ExtensionUtils.getCurrentExtension().path + '/locale');
 
 var _ = Gettext.gettext;
 
@@ -48,6 +47,13 @@ var gtkSettings;
 var settings;
 // This is already in Nautilus settings, so it should not be made tweakable here
 var CLICK_POLICY_SINGLE = false;
+
+function initTranslations() {
+    let extension = ExtensionUtils.getCurrentExtension();
+
+    let localedir = extension.dir.get_child('locale');
+    Gettext.bindtextdomain('desktop-icons', localedir.get_path());
+}
 
 function init() {
     let schemaSource = GioSSS.get_default();
