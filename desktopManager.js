@@ -94,9 +94,6 @@ var DesktopManager = class {
         Extension.lockActivitiesButton = true;
         this._stageReleaseEventId = global.stage.connect('button-release-event', (actor, event) => {
             this.endRubberBand();
-            /* Since none of the keyboard operations are managed in the grid itself, but are simply
-             * redirected to desktopManager, it is fine to always give the focus to the first grid */
-            this._desktopGrids[0].grabFocus();
         });
         this._rubberBandId = global.stage.connect('motion-event', (actor, event) => {
             [x, y] = event.get_coords();
