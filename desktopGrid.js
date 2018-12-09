@@ -75,7 +75,7 @@ var DesktopGrid = class {
             row_homogeneous: true
         });
 
-        this.actor = new St.Widget({ layout_manager: new Clutter.FixedLayout() });
+        this.actor = new St.Widget();
         this.actor._delegate = this;
 
         this._grid = new St.Widget({
