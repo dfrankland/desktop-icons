@@ -49,6 +49,7 @@ const _ = Gettext.gettext;
 const DRAG_TRESHOLD = 8;
 
 var S_IXUSR = 0o00100;
+var S_IWOTH = 0o00002;
 
 var State = {
     NORMAL: 0,
@@ -160,6 +161,12 @@ var FileItem = class {
                 }
             });
         }
+
+        Extension.desktopManager.connect('notify::writable-by-others', () => {
+            if (!this._isDesktopFile)
+                return;
+            this._refreshMetadataAsync(true);
+        });
     }
 
     _onDestroy() {
@@ -215,19 +222,23 @@ var FileItem = class {
     _updateMetadataFromFileInfo(fileInfo) {
         this._fileInfo = fileInfo;
 
-        let oldDisplayName = this.displayName;
+        let oldLabelText = this._label.text;
 
         this._displayName = fileInfo.get_attribute_as_string('standard::display-name');
         this._attributeCanExecute = fileInfo.get_attribute_boolean('access::can-execute');
         this._unixmode = fileInfo.get_attribute_uint32('unix::mode')
+        this._writableByOthers = (this._unixmode & S_IWOTH) != 0;
         this._trusted = fileInfo.get_attribute_as_string('metadata::trusted') == 'true';
         this._attributeContentType = fileInfo.get_content_type();
         this._isDesktopFile = this._attributeContentType == 'application/x-desktop';
 
+        if (this._isDesktopFile && this._writableByOthers)
+            log(`desktop-icons: File ${this._displayName} is writable by others - will not allow launching`);
+
         if (this._isDesktopFile)
             this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
 
-        if (this.displayName != oldDisplayName) {
+        if (this.displayName != oldLabelText) {
             this._label.text = this.displayName;
         }
 
@@ -539,7 +550,7 @@ var FileItem = class {
             if (!this.trustedDesktopFile)
                 this._menu.addAction(_('Rename'), () => this.doRename());
             this._actionTrash = this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
-            if (this._isDesktopFile) {
+            if (this._isDesktopFile && !Extension.desktopManager.writableByOthers && !this._writableByOthers) {
                 this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
                 this._allowLaunchingMenuItem = this._menu.addAction(this._allowLaunchingText,
                                                                     () => this._onAllowDisallowLaunchingClicked());
@@ -717,7 +728,11 @@ var FileItem = class {
     }
 
     get trustedDesktopFile() {
-        return this._isDesktopFile && this._attributeCanExecute && this.metadataTrusted;
+        return this._isDesktopFile &&
+               this._attributeCanExecute &&
+               this.metadataTrusted &&
+               !Extension.desktopManager.writableByOthers &&
+               !this._writableByOthers;
     }
 
     get displayName() {

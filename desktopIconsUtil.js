@@ -25,7 +25,7 @@ const Prefs = Me.imports.prefs;
 const TERMINAL_SCHEMA = 'org.gnome.desktop.default-applications.terminal';
 const EXEC_KEY = 'exec';
 
-var DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*,time::modified';
+var DEFAULT_ATTRIBUTES = 'metadata::*,standard::*,access::*,time::modified,unix::mode';
 
 function getDesktopDir() {
     let desktopPath = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP);

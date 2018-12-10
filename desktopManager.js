@@ -17,14 +17,13 @@
  */
 
 const Clutter = imports.gi.Clutter;
+const GObject = imports.gi.GObject;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Lang = imports.lang;
 const St = imports.gi.St;
 const Mainloop = imports.mainloop;
 const Meta = imports.gi.Meta;
-
-const Signals = imports.signals;
 
 const Animation = imports.ui.animation;
 const Background = imports.ui.background;
@@ -44,6 +43,8 @@ const DesktopIconsUtil = Me.imports.desktopIconsUtil;
 const Clipboard = St.Clipboard.get_default();
 const CLIPBOARD_TYPE = St.ClipboardType.CLIPBOARD;
 
+var S_IWOTH = 0x00002;
+
 function getDpy() {
     return global.screen || global.display;
 }
@@ -53,8 +54,20 @@ function findMonitorIndexForPos(x, y) {
 }
 
 
-var DesktopManager = class {
-    constructor() {
+var DesktopManager = GObject.registerClass({
+    Properties: {
+        'writable-by-others': GObject.ParamSpec.boolean(
+            'writable-by-others',
+            'WritableByOthers',
+            'Whether the desktop\'s directory can be written by others (o+w unix permission)',
+            GObject.ParamFlags.READABLE,
+            false
+        )
+    }
+}, class DesktopManager extends GObject.Object {
+    _init(params) {
+        super._init(params);
+
         this._layoutChildrenId = 0;
         this._scheduleDesktopsRefreshId = 0;
         this._monitorDesktopDir = null;
@@ -63,12 +76,18 @@ var DesktopManager = class {
         this._fileItemHandlers = new Map();
         this._fileItems = new Map();
         this._dragCancelled = false;
+        this._queryFileInfoCancellable = null;
+        this._unixMode = null;
+        this._writableByOthers = null;
 
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._recreateDesktopIcons());
         this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
         this._rubberBand.hide();
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
         this._grabHelper = new GrabHelper.GrabHelper(global.stage);
+
+        if (this.writableByOthers)
+            log(`desktop-icons: Desktop is writable by others - will not allow launching any desktop files`);
 
         this._addDesktopIcons();
         this._monitorDesktopFolder();
@@ -175,6 +194,15 @@ var DesktopManager = class {
         this._fileItemHandlers = new Map();
         this._fileItems = new Map();
 
+        if (!this._unixMode) {
+            let desktopDir = DesktopIconsUtil.getDesktopDir();
+            let fileInfo = desktopDir.query_info(Gio.FILE_ATTRIBUTE_UNIX_MODE,
+                                                 Gio.FileQueryInfoFlags.NONE,
+                                                 null);
+            this._unixMode = fileInfo.get_attribute_uint32(Gio.FILE_ATTRIBUTE_UNIX_MODE);
+            this._setWritableByOthers((this._unixMode & S_IWOTH) != 0);
+        }
+
         try {
             for (let [file, info, extra] of await this._enumerateDesktop()) {
                 let fileItem = new FileItem.FileItem(file, info, extra);
@@ -248,6 +276,18 @@ var DesktopManager = class {
         return false;
     }
 
+    get writableByOthers() {
+        return this._writableByOthers;
+    }
+
+    _setWritableByOthers(value) {
+        if (value == this._writableByOthers)
+            return;
+
+        this._writableByOthers = value
+        this.notify('writable-by-others');
+    }
+
     _updateDesktopIfChanged (file, otherFile, eventType) {
         let {
             DELETED, MOVED_IN, MOVED_OUT, CREATED, RENAMED, CHANGES_DONE_HINT, ATTRIBUTE_CHANGED
@@ -265,7 +305,34 @@ var DesktopManager = class {
                 return;
             case CHANGES_DONE_HINT:
             case ATTRIBUTE_CHANGED:
-                // FIXME: ATTRIBUTE_CHANGED wasn't managed in the old code; in the future, it must be managed
+                /* a file changed, rather than the desktop itself */
+                let desktopDir = DesktopIconsUtil.getDesktopDir();
+                if (file.get_uri() != desktopDir.get_uri())
+                    return;
+
+                if (this._queryFileInfoCancellable)
+                    this._queryFileInfoCancellable.cancel();
+
+                file.query_info_async(Gio.FILE_ATTRIBUTE_UNIX_MODE,
+                                      Gio.FileQueryInfoFlags.NONE,
+                                      GLib.PRIORITY_DEFAULT,
+                                      this._queryFileInfoCancellable,
+                    (source, res) => {
+                        try {
+                            let info = source.query_info_finish(res);
+                            this._queryFileInfoCancellable = null;
+
+                            this._unixMode = info.get_attribute_uint32(Gio.FILE_ATTRIBUTE_UNIX_MODE);
+                            this._setWritableByOthers((this._unixMode & S_IWOTH) != 0);
+
+                            if (this.writableByOthers)
+                                log(`desktop-icons: Desktop is writable by others - will not allow launching any desktop files`);
+                        } catch(error) {
+                            if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                                global.log('Error getting desktop unix mode: ' + error);
+                        }
+                    });
+
                 return;
         }
 
@@ -635,11 +702,13 @@ var DesktopManager = class {
 
         this._rubberBand.destroy();
 
+        if (this._queryFileInfoCancellable)
+            this._queryFileInfoCancellable.cancel();
+
         Object.values(this._desktopGrids).forEach(grid => grid.actor.destroy());
         this._desktopGrids = {}
     }
-};
-Signals.addSignalMethods(DesktopManager.prototype);
+});
 
 function forEachBackgroundManager(func) {
     Main.layoutManager._bgManagers.forEach(func);
