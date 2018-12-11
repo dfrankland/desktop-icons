@@ -69,6 +69,7 @@ var DesktopManager = GObject.registerClass({
         super._init(params);
 
         this._layoutChildrenId = 0;
+        this._deleteChildrenId = 0;
         this._scheduleDesktopsRefreshId = 0;
         this._monitorDesktopDir = null;
         this._desktopMonitorCancellable = null;
@@ -553,20 +554,27 @@ var DesktopManager = GObject.registerClass({
         return true;
     }
 
-    _scheduleLayoutChildren() {
-        if (this._layoutChildrenId != 0)
-            return;
-
-        this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
-    }
-
-    scheduleReLayoutChildren() {
-        if (this._layoutChildrenId != 0)
-            return;
+    _resetGridsAndScheduleLayout() {
+        this._deleteChildrenId = 0;
 
         Object.values(this._desktopGrids).forEach((grid) => grid.reset());
 
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
+
+        return GLib.SOURCE_REMOVE;
+    }
+
+    scheduleReLayoutChildren() {
+        if (this._deleteChildrenId != 0)
+            return;
+
+        if (this._layoutChildrenId != 0) {
+            GLib.source_remove(this._layoutChildrenId);
+            this._layoutChildrenId = 0;
+        }
+
+
+        this._deleteChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._resetGridsAndScheduleLayout());
     }
 
     _addFileItemCloseTo(item) {
@@ -684,6 +692,10 @@ var DesktopManager = GObject.registerClass({
         if (this._layoutChildrenId)
             GLib.source_remove(this._layoutChildrenId);
         this._layoutChildrenId = 0;
+
+        if (this._destroyChildrenId)
+            GLib.source_remove(this._destroyChildrenId);
+        this._destroyChildrenId = 0;
 
         if (this._monitorsChangedId)
             Main.layoutManager.disconnect(this._monitorsChangedId);
