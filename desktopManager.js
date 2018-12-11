@@ -218,11 +218,7 @@ var DesktopManager = GObject.registerClass({
             return;
         }
 
-        Object.values(this._desktopGrids).forEach(grid => {
-            grid.actor.connect('allocation-changed', () => this._scheduleLayoutChildren());
-        });
-
-        this._scheduleReLayoutChildren();
+        this.scheduleReLayoutChildren();
     }
 
     _enumerateDesktop() {
@@ -564,7 +560,7 @@ var DesktopManager = GObject.registerClass({
         this._layoutChildrenId = GLib.idle_add(GLib.PRIORITY_LOW, () => this._layoutChildren());
     }
 
-    _scheduleReLayoutChildren() {
+    scheduleReLayoutChildren() {
         if (this._layoutChildrenId != 0)
             return;
 

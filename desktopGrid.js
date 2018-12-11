@@ -101,7 +101,7 @@ var DesktopGrid = class {
             index: monitorIndex,
             work_area: true
         });
-        this.actor.add_constraint(this._monitorConstraint);
+        this._grid.add_constraint(this._monitorConstraint);
 
         this._addDesktopBackgroundMenu();
 
@@ -114,6 +114,8 @@ var DesktopGrid = class {
         Main.layoutManager.uiGroup.add_actor(this._rubberBand);
 
         this._grid.connect('key-press-event', this._onKeyPress.bind(this));
+
+        this._grid.connect('allocation-changed', () => Extension.desktopManager.scheduleReLayoutChildren());
 
         this.reset();
     }
@@ -476,7 +478,7 @@ var DesktopGrid = class {
             let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
             if (!shiftPressed && !controlPressed)
                 Extension.desktopManager.clearSelection();
-            let [gridX, gridY] = this.actor.get_transformed_position();
+            let [gridX, gridY] = this._grid.get_transformed_position();
             Extension.desktopManager.startRubberBand(x, y, gridX, gridY);
             return Clutter.EVENT_STOP;
         }
@@ -515,7 +517,7 @@ var DesktopGrid = class {
     acceptDrop(source, actor, x, y, time) {
         /* Coordinates are relative to the grid, we want to transform them to
          * absolute coordinates to work across monitors */
-        let [gridX, gridY] = this.actor.get_transformed_position();
+        let [gridX, gridY] = this._grid.get_transformed_position();
         let [absoluteX, absoluteY] = [x + gridX, y + gridY];
         return Extension.desktopManager.acceptDrop(absoluteX, absoluteY);
     }
