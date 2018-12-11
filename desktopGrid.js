@@ -116,8 +116,6 @@ var DesktopGrid = class {
         this._grid.connect('key-press-event', this._onKeyPress.bind(this));
 
         this._grid.connect('allocation-changed', () => Extension.desktopManager.scheduleReLayoutChildren());
-
-        this.reset();
     }
 
     _onKeyPress(actor, event) {
