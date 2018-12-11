@@ -389,10 +389,12 @@ var DesktopGrid = class {
         let maxColumns = this._getMaxColumns();
         let maxRows = this._getMaxRows();
 
-        let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        let [actorX, actorY] = this.actor.get_transformed_position();
-        let placeX = Math.round((x - actorX) * maxColumns / workarea.width);
-        let placeY = Math.round((y - actorY) * maxRows / workarea.height);
+        let [actorX, actorY] = this._grid.get_transformed_position();
+        let actorWidth = this._grid.allocation.x2 - this._grid.allocation.x1;
+        let actorHeight = this._grid.allocation.y2 - this._grid.allocation.y1;
+        let placeX = Math.round((x - actorX) * maxColumns / actorWidth);
+        let placeY = Math.round((y - actorY) * maxRows / actorHeight);
+
         placeX = DesktopIconsUtil.clamp(placeX, 0, maxColumns - 1);
         placeY = DesktopIconsUtil.clamp(placeY, 0, maxRows - 1);
         if (this.layout.get_child_at(placeX, placeY).child == null)
@@ -503,13 +505,13 @@ var DesktopGrid = class {
     }
 
     _getMaxColumns() {
-        let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        return Math.floor(workarea.width / Prefs.get_desired_width(St.ThemeContext.get_for_stage(global.stage).scale_factor));
+        let gridWidth = this._grid.allocation.x2 - this._grid.allocation.x1;
+        return Math.floor(gridWidth / Prefs.get_desired_width(St.ThemeContext.get_for_stage(global.stage).scale_factor));
     }
 
     _getMaxRows() {
-        let workarea = Main.layoutManager.getWorkAreaForMonitor(this._monitorConstraint.index);
-        return Math.floor(workarea.height / Prefs.get_desired_height(St.ThemeContext.get_for_stage(global.stage).scale_factor));
+        let gridHeight = this._grid.allocation.y2 - this._grid.allocation.y1;
+        return Math.floor(gridHeight / Prefs.get_desired_height(St.ThemeContext.get_for_stage(global.stage).scale_factor));
     }
 
     acceptDrop(source, actor, x, y, time) {
