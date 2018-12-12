@@ -235,8 +235,13 @@ var FileItem = class {
         if (this._isDesktopFile && this._writableByOthers)
             log(`desktop-icons: File ${this._displayName} is writable by others - will not allow launching`);
 
-        if (this._isDesktopFile)
+        if (this._isDesktopFile) {
             this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
+            if (!this._desktopFile) {
+                log(`Couldn\'t parse ${this._displayName} as a desktop file, will treat it as a regular file.`);
+                this._isDesktopFile = false;
+            }
+        }
 
         if (this.displayName != oldLabelText) {
             this._label.text = this.displayName;
