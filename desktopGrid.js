@@ -569,7 +569,7 @@ var RenamePopup = class {
                                            can_focus: true,
                                            x_expand: true });
         this._renameEntry.clutter_text.connect('activate', this._onRenameAccepted.bind(this));
-        this._renameOkButton= new St.Button({ label: _("Ok"),
+        this._renameOkButton= new St.Button({ label: _("OK"),
                                               style_class: 'app-view-control button',
                                               button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
                                               reactive: true,
