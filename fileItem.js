@@ -482,7 +482,7 @@ var FileItem = class {
 
     get _allowLaunchingText() {
         if (this.trustedDesktopFile)
-            return _("Don't Allow Launching");
+            return _("Don’t Allow Launching");
 
         return _("Allow Launching");
     }
