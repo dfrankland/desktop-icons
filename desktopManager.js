@@ -84,7 +84,7 @@ var DesktopManager = GObject.registerClass({
         this._monitorsChangedId = Main.layoutManager.connect('monitors-changed', () => this._recreateDesktopIcons());
         this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
         this._rubberBand.hide();
-        Main.layoutManager.uiGroup.add_actor(this._rubberBand);
+        Main.layoutManager.uiGroup.add_child(this._rubberBand);
         this._grabHelper = new GrabHelper.GrabHelper(global.stage);
 
         if (this.writableByOthers)
@@ -398,7 +398,7 @@ var DesktopManager = GObject.registerClass({
             });
             clone.x = fileItem.actor.get_transformed_position()[0];
             clone.y = fileItem.actor.get_transformed_position()[1];
-            this._draggableContainer.add_actor(clone);
+            this._draggableContainer.add_child(clone);
         }
 
         Main.layoutManager.uiGroup.add_child(this._draggableContainer);

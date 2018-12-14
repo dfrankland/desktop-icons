@@ -91,19 +91,19 @@ var FileItem = class {
                                              y_expand: true,
                                              x_align: Clutter.ActorAlign.FILL,
                                              vertical: true });
-        this.actor.add_actor(this._container);
+        this.actor.set_child(this._container);
         this._icon = new St.Bin();
         this._icon.set_height(Prefs.get_icon_size() * scaleFactor);
 
         this._iconContainer = new St.Bin({ visible: true });
         this._iconContainer.child = this._icon;
-        this._container.add_actor(this._iconContainer);
+        this._container.add_child(this._iconContainer);
 
         this._label = new St.Label({
             style_class: 'name-label'
         });
 
-        this._container.add_actor(this._label);
+        this._container.add_child(this._label);
         let clutterText = this._label.get_clutter_text();
         /* TODO: Convert to gobject.set for 3.30 */
         clutterText.set_line_wrap(true);
@@ -575,7 +575,7 @@ var FileItem = class {
         this._menu.addAction(_('Show in Files'), () => this._onShowInFilesClicked());
         this._menuManager.addMenu(this._menu);
 
-        Main.layoutManager.uiGroup.add_actor(this._menu.actor);
+        Main.layoutManager.uiGroup.add_child(this._menu.actor);
         this._menu.actor.hide();
     }
 

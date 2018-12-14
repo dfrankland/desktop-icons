@@ -87,12 +87,12 @@ var DesktopGrid = class {
             can_focus: true,
             opacity: 255
         });
-        this.actor.add_actor(this._grid);
+        this.actor.add_child(this._grid);
 
         this._renamePopup = new RenamePopup(this);
-        this.actor.add_actor(this._renamePopup.actor);
+        this.actor.add_child(this._renamePopup.actor);
 
-        this._bgManager._container.add_actor(this.actor);
+        this._bgManager._container.add_child(this.actor);
 
         this.actor.connect('destroy', () => this._onDestroy());
 
@@ -111,7 +111,7 @@ var DesktopGrid = class {
         this._grid.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
         this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
         this._rubberBand.hide();
-        Main.layoutManager.uiGroup.add_actor(this._rubberBand);
+        Main.layoutManager.uiGroup.add_child(this._rubberBand);
 
         this._grid.connect('key-press-event', this._onKeyPress.bind(this));
 
@@ -313,7 +313,7 @@ var DesktopGrid = class {
 
         menu.actor.add_style_class_name('background-menu');
 
-        Main.layoutManager.uiGroup.add_actor(menu.actor);
+        Main.layoutManager.uiGroup.add_child(menu.actor);
         menu.actor.hide();
 
         menu._propertiesChangedId = DBusUtils.NautilusFileOperationsProxy.connect('g-properties-changed',
@@ -586,16 +586,16 @@ var RenamePopup = class {
         let renameButtonsBoxLayout = new Clutter.BoxLayout({ homogeneous: true });
         let renameButtonsBox = new St.Widget({ layout_manager: renameButtonsBoxLayout,
                                                x_expand: true });
-        renameButtonsBox.add_actor(this._renameCancelButton);
-        renameButtonsBox.add_actor(this._renameOkButton);
+        renameButtonsBox.add_child(this._renameCancelButton);
+        renameButtonsBox.add_child(this._renameOkButton);
 
         let renameContentLayout = new Clutter.BoxLayout({ spacing: 6,
                                                           orientation: Clutter.Orientation.VERTICAL });
         let renameContent = new St.Widget({ style_class: 'rename-popup',
                                             layout_manager: renameContentLayout,
                                             x_expand: true });
-        renameContent.add_actor(this._renameEntry);
-        renameContent.add_actor(renameButtonsBox);
+        renameContent.add_child(this._renameEntry);
+        renameContent.add_child(renameButtonsBox);
 
         this._boxPointer = new BoxPointer.BoxPointer(St.Side.TOP, { can_focus: false, x_expand: true });
         this.actor = this._boxPointer.actor;
