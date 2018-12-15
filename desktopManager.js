@@ -693,9 +693,9 @@ var DesktopManager = GObject.registerClass({
             GLib.source_remove(this._layoutChildrenId);
         this._layoutChildrenId = 0;
 
-        if (this._destroyChildrenId)
-            GLib.source_remove(this._destroyChildrenId);
-        this._destroyChildrenId = 0;
+        if (this._deleteChildrenId)
+            GLib.source_remove(this._deleteChildrenId);
+        this._deleteChildrenId = 0;
 
         if (this._monitorsChangedId)
             Main.layoutManager.disconnect(this._monitorsChangedId);
