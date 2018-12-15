@@ -86,9 +86,6 @@ var DesktopManager = GObject.registerClass({
         Main.layoutManager.uiGroup.add_child(this._rubberBand);
         this._grabHelper = new GrabHelper.GrabHelper(global.stage);
 
-        if (this.writableByOthers)
-            log(`desktop-icons: Desktop is writable by others - will not allow launching any desktop files`);
-
         this._addDesktopIcons();
         this._monitorDesktopFolder();
 
@@ -321,7 +318,7 @@ var DesktopManager = GObject.registerClass({
                             this._unixMode = info.get_attribute_uint32(Gio.FILE_ATTRIBUTE_UNIX_MODE);
                             this._setWritableByOthers((this._unixMode & S_IWOTH) != 0);
 
-                            if (this.writableByOthers)
+                            if (this._writableByOthers)
                                 log(`desktop-icons: Desktop is writable by others - will not allow launching any desktop files`);
                         } catch(error) {
                             if (!error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
