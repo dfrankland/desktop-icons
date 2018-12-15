@@ -70,7 +70,6 @@ var DesktopManager = GObject.registerClass({
 
         this._layoutChildrenId = 0;
         this._deleteChildrenId = 0;
-        this._scheduleDesktopsRefreshId = 0;
         this._monitorDesktopDir = null;
         this._desktopMonitorCancellable = null;
         this._desktopGrids = {};
@@ -331,12 +330,6 @@ var DesktopManager = GObject.registerClass({
                     });
 
                 return;
-        }
-
-        // Rate limiting isn't enough, as one action will create different events on the same file.
-        // limit by adding a timeout
-        if (this._scheduleDesktopsRefreshId) {
-            return;
         }
 
         // Only get a subset of events we are interested in.
