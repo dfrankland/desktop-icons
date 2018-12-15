@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: desktop-icons\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
 "icons/issues\n"
-"POT-Creation-Date: 2018-11-29 09:07+0000\n"
-"PO-Revision-Date: 2018-12-01 14:18+0100\n"
+"POT-Creation-Date: 2018-12-14 09:12+0000\n"
+"PO-Revision-Date: 2018-12-15 15:27+0100\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <community-poland@mozilla.org>\n"
 "Language: pl\n"
@@ -20,111 +20,119 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Size for the desktop icons"
 msgstr "Rozmiar ikon na pulpicie"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Small"
 msgstr "Mały"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Standard"
 msgstr "Standardowy"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Large"
 msgstr "Duży"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Huge"
 msgstr "Wielki"
 
-#: prefs.js:94
+#: prefs.js:103
 msgid "Show the personal folder in the desktop"
 msgstr "Katalog domowy na pulpicie"
 
-#: prefs.js:95
+#: prefs.js:104
 msgid "Show the trash icon in the desktop"
 msgstr "Kosz na pulpicie"
 
-#: desktopGrid.js:185 desktopGrid.js:304
+#: desktopGrid.js:182 desktopGrid.js:301
 msgid "New Folder"
 msgstr "Nowy katalog"
 
-#: desktopGrid.js:306
+#: desktopGrid.js:303
 msgid "Paste"
 msgstr "Wklej"
 
-#: desktopGrid.js:307
+#: desktopGrid.js:304
 msgid "Undo"
 msgstr "Cofnij"
 
-#: desktopGrid.js:308
+#: desktopGrid.js:305
 msgid "Redo"
 msgstr "Ponów"
 
-#: desktopGrid.js:310
+#: desktopGrid.js:307
 msgid "Open Desktop in Files"
 msgstr "Otwórz pulpit w menedżerze plików"
 
-#: desktopGrid.js:311
+#: desktopGrid.js:308
 msgid "Open Terminal"
 msgstr "Otwórz terminal"
 
-#: desktopGrid.js:313
+#: desktopGrid.js:310
 msgid "Change Background…"
 msgstr "Zmień tło…"
 
-#: desktopGrid.js:314
+#: desktopGrid.js:311
 msgid "Display Settings"
 msgstr "Ustawienia ekranu"
 
-#: desktopGrid.js:315
+#: desktopGrid.js:312
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: desktopGrid.js:569
+#: desktopGrid.js:568
 msgid "Enter file name…"
 msgstr "Nazwa pliku…"
 
-#: desktopGrid.js:573
-msgid "Ok"
+#: desktopGrid.js:572
+msgid "OK"
 msgstr "OK"
 
-#: desktopGrid.js:579
+#: desktopGrid.js:578
 msgid "Cancel"
 msgstr "Anuluj"
 
-#: fileItem.js:393
+#: fileItem.js:485
+msgid "Don’t Allow Launching"
+msgstr "Nie zezwalaj na uruchamianie"
+
+#: fileItem.js:487
+msgid "Allow Launching"
+msgstr "Zezwól na uruchamianie"
+
+#: fileItem.js:550
 msgid "Open"
 msgstr "Otwórz"
 
-#: fileItem.js:396
+#: fileItem.js:553
 msgid "Cut"
 msgstr "Wytnij"
 
-#: fileItem.js:397
+#: fileItem.js:554
 msgid "Copy"
 msgstr "Skopiuj"
 
-#: fileItem.js:398
+#: fileItem.js:556
 msgid "Rename"
 msgstr "Zmień nazwę"
 
-#: fileItem.js:399
+#: fileItem.js:557
 msgid "Move to Trash"
 msgstr "Przenieś do kosza"
 
-#: fileItem.js:403
+#: fileItem.js:567
 msgid "Empty Trash"
 msgstr "Opróżnij kosz"
 
-#: fileItem.js:409
+#: fileItem.js:573
 msgid "Properties"
 msgstr "Właściwości"
 
-#: fileItem.js:411
+#: fileItem.js:575
 msgid "Show in Files"
 msgstr "Wyświetl w menedżerze plików"
 
