@@ -109,9 +109,6 @@ var DesktopGrid = class {
             () => this._backgroundDestroyed());
 
         this._grid.connect('button-press-event', (actor, event) => this._onPressButton(actor, event));
-        this._rubberBand = new St.Widget({ style_class: 'rubber-band' });
-        this._rubberBand.hide();
-        Main.layoutManager.uiGroup.add_child(this._rubberBand);
 
         this._grid.connect('key-press-event', this._onKeyPress.bind(this));
 
@@ -175,7 +172,6 @@ var DesktopGrid = class {
             this._bgManager.backgroundActor.disconnect(this._bgDestroyedId);
         this._bgDestroyedId = 0;
         this._bgManager = null;
-        this._rubberBand.destroy();
     }
 
     _omNewFolderClicked() {
