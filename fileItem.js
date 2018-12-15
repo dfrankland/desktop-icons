@@ -238,7 +238,7 @@ var FileItem = class {
         if (this._isDesktopFile) {
             this._desktopFile = Gio.DesktopAppInfo.new_from_filename(this._file.get_path());
             if (!this._desktopFile) {
-                log(`Couldn\'t parse ${this._displayName} as a desktop file, will treat it as a regular file.`);
+                log(`Couldn’t parse ${this._displayName} as a desktop file, will treat it as a regular file.`);
                 this._isDesktopFile = false;
             }
         }
@@ -417,7 +417,7 @@ var FileItem = class {
 
     doOpen() {
         if (this._isBrokenSymlink) {
-            log(`Error: Can\'t open ${this.file.get_uri()} because it is a broken symlink.`);
+            log(`Error: Can’t open ${this.file.get_uri()} because it is a broken symlink.`);
             return;
         }
 
