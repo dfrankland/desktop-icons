@@ -337,17 +337,6 @@ var DesktopManager = GObject.registerClass({
         this._recreateDesktopIcons();
     }
 
-    _getContainerWithChild(child) {
-        let monitorIndex = Main.layoutManager.findIndexForActor(child);
-        let desktopGrid = this._desktopGrids[monitorIndex];
-        let children = desktopGrid.actor.get_children();
-
-        if (children.some(x => x.child == child))
-            return desktopGrid;
-        else
-            throw new Error('Missmatch between expected items in a desktop grid not found');
-    }
-
     _setupDnD() {
         this._draggableContainer = new St.Widget({
             visible: true,
