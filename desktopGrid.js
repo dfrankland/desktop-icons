@@ -450,7 +450,8 @@ var DesktopGrid = class {
     }
 
     reset() {
-        for (let fileItem of this._fileItems)
+        let tmpFileItemsCopy = this._fileItems.slice();
+        for (let fileItem of tmpFileItemsCopy)
             this.removeFileItem(fileItem);
         this._grid.remove_all_children();
 
