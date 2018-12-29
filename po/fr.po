@@ -2,128 +2,137 @@
 # Copyright (C) 2018 desktop-icons's COPYRIGHT HOLDER
 # This file is distributed under the same license as the desktop-icons package.
 # ghentdebian <ghent.debian@gmail.com>, 2018.
+# Charles Monzat <charles.monzat@numericable.fr>, 2018.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: desktop-icons master\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
 "icons/issues\n"
-"POT-Creation-Date: 2018-11-29 09:07+0000\n"
-"PO-Revision-Date: 2018-11-30 10:21+0100\n"
-"Last-Translator: ghentdebian <ghent.debian@gmail.com>\n"
-"Language-Team: French <gnomefr@traduc.org>\n"
+"POT-Creation-Date: 2018-12-14 09:12+0000\n"
+"PO-Revision-Date: 2018-12-16 17:47+0100\n"
+"Last-Translator: Charles Monzat <charles.monzat@numericable.fr>\n"
+"Language-Team: GNOME French Team <gnomefr@traduc.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 2.2\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"X-Generator: Gtranslator 3.30.0\n"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Size for the desktop icons"
 msgstr "Taille des icônes du bureau"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Small"
 msgstr "Petite"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Standard"
 msgstr "Normale"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Large"
 msgstr "Grande"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Huge"
 msgstr "Immense"
 
-#: prefs.js:94
+#: prefs.js:103
 msgid "Show the personal folder in the desktop"
 msgstr "Montrer le dossier personnel sur le bureau"
 
-#: prefs.js:95
+#: prefs.js:104
 msgid "Show the trash icon in the desktop"
 msgstr "Montrer la corbeille sur le bureau"
 
-#: desktopGrid.js:185 desktopGrid.js:304
+#: desktopGrid.js:182 desktopGrid.js:301
 msgid "New Folder"
 msgstr "Nouveau dossier"
 
-#: desktopGrid.js:306
+#: desktopGrid.js:303
 msgid "Paste"
 msgstr "Coller"
 
-#: desktopGrid.js:307
+#: desktopGrid.js:304
 msgid "Undo"
 msgstr "Annuler"
 
-#: desktopGrid.js:308
+#: desktopGrid.js:305
 msgid "Redo"
 msgstr "Refaire"
 
-#: desktopGrid.js:310
+#: desktopGrid.js:307
 msgid "Open Desktop in Files"
 msgstr "Ouvrir le bureau dans Fichiers"
 
-#: desktopGrid.js:311
+#: desktopGrid.js:308
 msgid "Open Terminal"
 msgstr "Ouvrir un terminal"
 
-#: desktopGrid.js:313
+#: desktopGrid.js:310
 msgid "Change Background…"
 msgstr "Changer l’arrière-plan…"
 
-#: desktopGrid.js:314
+#: desktopGrid.js:311
 msgid "Display Settings"
 msgstr "Configuration d’affichage"
 
-#: desktopGrid.js:315
+#: desktopGrid.js:312
 msgid "Settings"
 msgstr "Paramètres"
 
-#: desktopGrid.js:569
+#: desktopGrid.js:568
 msgid "Enter file name…"
 msgstr "Saisir un nom de fichier…"
 
-#: desktopGrid.js:573
-msgid "Ok"
+#: desktopGrid.js:572
+msgid "OK"
 msgstr "Valider"
 
-#: desktopGrid.js:579
+#: desktopGrid.js:578
 msgid "Cancel"
 msgstr "Annuler"
 
-#: fileItem.js:393
+#: fileItem.js:485
+msgid "Don’t Allow Launching"
+msgstr "Ne pas autoriser le lancement"
+
+#: fileItem.js:487
+msgid "Allow Launching"
+msgstr "Autoriser le lancement"
+
+#: fileItem.js:550
 msgid "Open"
 msgstr "Ouvrir"
 
-#: fileItem.js:396
+#: fileItem.js:553
 msgid "Cut"
 msgstr "Couper"
 
-#: fileItem.js:397
+#: fileItem.js:554
 msgid "Copy"
 msgstr "Copier"
 
-#: fileItem.js:398
+#: fileItem.js:556
 msgid "Rename"
 msgstr "Renommer"
 
-#: fileItem.js:399
+#: fileItem.js:557
 msgid "Move to Trash"
 msgstr "Mettre à la corbeille"
 
-#: fileItem.js:403
+#: fileItem.js:567
 msgid "Empty Trash"
 msgstr "Vider la corbeille"
 
-#: fileItem.js:409
+#: fileItem.js:573
 msgid "Properties"
 msgstr "Propriétés"
 
-#: fileItem.js:411
+#: fileItem.js:575
 msgid "Show in Files"
 msgstr "Montrer dans Fichiers"
 
@@ -150,3 +159,6 @@ msgstr "Montrer l’icône de la corbeille"
 #: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
 msgid "Show the trash icon in the desktop."
 msgstr "Montrer la corbeille sur le bureau."
+
+#~ msgid "Ok"
+#~ msgstr "Valider"
