@@ -412,6 +412,11 @@ var FileItem = class {
     }
 
     doRename() {
+        if (!this.canRename()) {
+            log (`Error: ${this.file.get_uri()} cannot be renamed`);
+            return;
+        }
+
         this.emit('rename-clicked');
     }
 
@@ -541,6 +546,10 @@ var FileItem = class {
         }
     }
 
+    canRename() {
+        return !this.trustedDesktopFile && this._fileExtra == Prefs.FILE_TYPE.NONE;
+    }
+
     _createMenu() {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
         let side = St.Side.LEFT;
@@ -552,7 +561,7 @@ var FileItem = class {
         case Prefs.FILE_TYPE.NONE:
             this._actionCut = this._menu.addAction(_('Cut'), () => this._onCutClicked());
             this._actionCopy = this._menu.addAction(_('Copy'), () => this._onCopyClicked());
-            if (!this.trustedDesktopFile)
+            if (this.canRename())
                 this._menu.addAction(_('Rename'), () => this.doRename());
             this._actionTrash = this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
             if (this._isDesktopFile && !Extension.desktopManager.writableByOthers && !this._writableByOthers) {
