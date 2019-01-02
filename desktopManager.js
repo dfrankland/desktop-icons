@@ -598,6 +598,15 @@ var DesktopManager = GObject.registerClass({
         return GLib.SOURCE_REMOVE;
     }
 
+    doRename() {
+        if (this._selection.size != 1)
+            return;
+
+        let item = [...this._selection][0];
+        if (item.canRename())
+            item.doRename();
+    }
+
     doOpen() {
         for (let fileItem of this._selection)
             fileItem.doOpen();

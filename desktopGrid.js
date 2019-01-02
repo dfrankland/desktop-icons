@@ -149,6 +149,10 @@ var DesktopGrid = class {
         else if (symbol == Clutter.Delete) {
             Extension.desktopManager.doTrash();
             return Clutter.EVENT_STOP;
+        } else if (symbol == Clutter.F2) {
+            // Support renaming other grids file items.
+            Extension.desktopManager.doRename();
+            return Clutter.EVENT_STOP;
         }
 
         return Clutter.EVENT_PROPAGATE;
@@ -364,7 +368,7 @@ var DesktopGrid = class {
         placeholder.child = fileItem.actor;
         this._fileItems.push(fileItem);
         let selectedId = fileItem.connect('selected', this._onFileItemSelected.bind(this));
-        let renameId = fileItem.connect('rename-clicked', this._onFileItemRenameClicked.bind(this));
+        let renameId = fileItem.connect('rename-clicked', this.doRename.bind(this));
         this._fileItemHandlers.set(fileItem, [selectedId, renameId]);
         /* If this file is new in the Desktop and hasn't yet
          * fixed coordinates, store the new possition to ensure
@@ -551,7 +555,7 @@ var DesktopGrid = class {
         this._grid.grab_key_focus();
     }
 
-    _onFileItemRenameClicked(fileItem) {
+    doRename(fileItem) {
         this._renamePopup.onFileItemRenameClicked(fileItem);
     }
 };
