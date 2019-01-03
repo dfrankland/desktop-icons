@@ -353,14 +353,9 @@ var DesktopGrid = class {
     }
 
     dropItems(fileItems) {
-        let reserved = {};
         for (let fileItem of fileItems) {
             let [dropX, dropY] = fileItem.dropCoordinates;
-            let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY, reserved);
-            let hashedPosition = `${column},${row}`;
-            if (hashedPosition in reserved)
-                continue;
-            reserved[`${column},${row}`] = fileItem;
+            let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY);
             this._addFileItemTo(fileItem, column, row, StoredCoordinates.OVERWRITE);
         }
     }
@@ -386,11 +381,11 @@ var DesktopGrid = class {
     }
 
     addFileItemCloseTo(fileItem, x, y) {
-        let [column, row] = this._getEmptyPlaceClosestTo(x, y, null);
+        let [column, row] = this._getEmptyPlaceClosestTo(x, y);
         this._addFileItemTo(fileItem, column, row, StoredCoordinates.PRESERVE);
     }
 
-    _getEmptyPlaceClosestTo(x, y, reserved) {
+    _getEmptyPlaceClosestTo(x, y) {
         let maxColumns = this._getMaxColumns();
         let maxRows = this._getMaxRows();
 
@@ -412,9 +407,6 @@ var DesktopGrid = class {
             for (let row = 0; row < maxRows; row++) {
                 let placeholder = this.layout.get_child_at(column, row);
                 if (placeholder.child != null)
-                    continue;
-
-                if (reserved && `${column},${row}` in reserved)
                     continue;
 
                 let [proposedX, proposedY] = placeholder.get_transformed_position();
