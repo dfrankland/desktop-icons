@@ -352,12 +352,9 @@ var DesktopGrid = class {
         this.actor._desktopBackgroundManager.ignoreRelease();
     }
 
-    dropItems(fileItems) {
-        for (let fileItem of fileItems) {
-            let [dropX, dropY] = fileItem.dropCoordinates;
-            let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY);
-            this._addFileItemTo(fileItem, column, row, StoredCoordinates.OVERWRITE);
-        }
+    dropItem(fileItem, dropX, dropY) {
+        let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY);
+        this._addFileItemTo(fileItem, column, row, StoredCoordinates.OVERWRITE);
     }
 
     _addFileItemTo(fileItem, column, row, overwriteCoordinates) {

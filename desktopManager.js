@@ -471,29 +471,21 @@ var DesktopManager = GObject.registerClass({
         /* Remove all items before dropping new ones, so we can freely reposition
          * them.
          */
+        let coordinates = {};
         for (let item of this._selection) {
             let [itemX, itemY] = item.actor.get_transformed_position();
             let monitorIndex = findMonitorIndexForPos(itemX, itemY);
             this._desktopGrids[monitorIndex].removeFileItem(item);
-            /* Set the new ideal position where the item drop should happen */
-            let newfileX = Math.round(xDiff + itemX);
-            let newfileY = Math.round(yDiff + itemY);
-            item.dropCoordinates = [newfileX, newfileY];
+            coordinates[item] = [itemX, itemY];
         }
 
-        for (let key in this._desktopGrids) {
-            /* Create list of items to drop per desktop. We want to drop them at
-             * once so calculations for the dropping per grid are smoother
-             */
-            let itemsForDropDesktop = [...this._selection].filter(
-                (x) => {
-                    let [itemX, itemY] = x.dropCoordinates;
-                    let monitorIndex = findMonitorIndexForPos(itemX, itemY);
-                    return key == monitorIndex;
-                }
-            );
-
-            this._desktopGrids[key].dropItems(itemsForDropDesktop);
+        for (let item of this._selection) {
+            let [itemX, itemY] = coordinates[item];
+            /* Set the new ideal position where the item drop should happen */
+            let newFileX = Math.round(xDiff + itemX);
+            let newFileY = Math.round(yDiff + itemY);
+            let monitorIndex = findMonitorIndexForPos(newFileX, newFileY);
+            this._desktopGrids[monitorIndex].dropItem(item, newFileX, newFileY);
         }
 
         return true;
