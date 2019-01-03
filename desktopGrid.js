@@ -352,11 +352,6 @@ var DesktopGrid = class {
         this.actor._desktopBackgroundManager.ignoreRelease();
     }
 
-    dropItem(fileItem, dropX, dropY) {
-        let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY);
-        this._addFileItemTo(fileItem, column, row, StoredCoordinates.OVERWRITE);
-    }
-
     _addFileItemTo(fileItem, column, row, overwriteCoordinates) {
         let placeholder = this.layout.get_child_at(column, row);
         placeholder.child = fileItem.actor;
@@ -377,9 +372,9 @@ var DesktopGrid = class {
         }
     }
 
-    addFileItemCloseTo(fileItem, x, y) {
+    addFileItemCloseTo(fileItem, x, y, overwriteCoordinates) {
         let [column, row] = this._getEmptyPlaceClosestTo(x, y);
-        this._addFileItemTo(fileItem, column, row, StoredCoordinates.PRESERVE);
+        this._addFileItemTo(fileItem, column, row, overwriteCoordinates);
     }
 
     _getEmptyPlaceClosestTo(x, y) {

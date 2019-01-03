@@ -467,25 +467,25 @@ var DesktopManager = GObject.registerClass({
     }
 
     acceptDrop(xEnd, yEnd) {
+        let savedCoordinates = new Map();
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
         /* Remove all items before dropping new ones, so we can freely reposition
          * them.
          */
-        let coordinates = {};
         for (let item of this._selection) {
             let [itemX, itemY] = item.actor.get_transformed_position();
             let monitorIndex = findMonitorIndexForPos(itemX, itemY);
+            savedCoordinates.set(item, [itemX, itemY]);
             this._desktopGrids[monitorIndex].removeFileItem(item);
-            coordinates[item] = [itemX, itemY];
         }
 
         for (let item of this._selection) {
-            let [itemX, itemY] = coordinates[item];
+            let [itemX, itemY] = savedCoordinates.get(item);
             /* Set the new ideal position where the item drop should happen */
             let newFileX = Math.round(xDiff + itemX);
             let newFileY = Math.round(yDiff + itemY);
             let monitorIndex = findMonitorIndexForPos(newFileX, newFileY);
-            this._desktopGrids[monitorIndex].dropItem(item, newFileX, newFileY);
+            this._desktopGrids[monitorIndex].addFileItemCloseTo(item, newFileX, newFileY, DesktopGrid.StoredCoordinates.OVERWRITE);
         }
 
         return true;
@@ -551,7 +551,7 @@ var DesktopManager = GObject.registerClass({
         let monitorIndex = findMonitorIndexForPos(x, y);
         let desktopGrid = this._desktopGrids[monitorIndex];
         try {
-            desktopGrid.addFileItemCloseTo(item, x, y);
+            desktopGrid.addFileItemCloseTo(item, x, y, DesktopGrid.StoredCoordinates.PRESERVE);
         } catch (e) {
             log(`Error adding children to desktop: ${e.message}`);
         }
