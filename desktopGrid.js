@@ -357,12 +357,10 @@ var DesktopGrid = class {
         for (let fileItem of fileItems) {
             let [dropX, dropY] = fileItem.dropCoordinates;
             let [column, row] = this._getEmptyPlaceClosestTo(dropX, dropY, reserved);
-            let placeholder = this.layout.get_child_at(column, row);
             let hashedPosition = `${column},${row}`;
             if (hashedPosition in reserved)
                 continue;
             reserved[`${column},${row}`] = fileItem;
-            placeholder.child = fileItem.actor;
             this._addFileItemTo(fileItem, column, row, StoredCoordinates.OVERWRITE);
         }
     }

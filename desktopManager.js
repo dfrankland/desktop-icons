@@ -467,7 +467,6 @@ var DesktopManager = GObject.registerClass({
     }
 
     acceptDrop(xEnd, yEnd) {
-        let savedCoordinates = new Map();
         let [xDiff, yDiff] = [xEnd - this._dragXStart, yEnd - this._dragYStart];
         /* Remove all items before dropping new ones, so we can freely reposition
          * them.
@@ -475,7 +474,6 @@ var DesktopManager = GObject.registerClass({
         for (let item of this._selection) {
             let [itemX, itemY] = item.actor.get_transformed_position();
             let monitorIndex = findMonitorIndexForPos(itemX, itemY);
-            savedCoordinates.set(item, item.actor.get_transformed_position());
             this._desktopGrids[monitorIndex].removeFileItem(item);
             /* Set the new ideal position where the item drop should happen */
             let newfileX = Math.round(xDiff + itemX);
