@@ -3,15 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # Sergio Costas <rastersoft@gmail.com>, 2018.
-# Daniel Mustieles <daniel.mustieles@gmail.com>, 2018.
+# Daniel Mustieles <daniel.mustieles@gmail.com>, 2018, 2019.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
 "icons/issues\n"
-"POT-Creation-Date: 2018-11-29 09:07+0000\n"
-"PO-Revision-Date: 2018-11-30 09:33+0100\n"
+"POT-Creation-Date: 2018-12-14 09:12+0000\n"
+"PO-Revision-Date: 2019-01-08 16:12+0100\n"
 "Last-Translator: Daniel Mustieles <daniel.mustieles@gmail.com>\n"
 "Language-Team: es <gnome-es-list@gnome.org>\n"
 "Language: es\n"
@@ -21,112 +21,119 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Size for the desktop icons"
 msgstr "Tamaño de los iconos del escritorio"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Small"
 msgstr "Pequeño"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Standard"
 msgstr "Estándar"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Large"
 msgstr "Grande"
 
-#: prefs.js:93
+#: prefs.js:102
 msgid "Huge"
 msgstr "Inmenso"
 
-#: prefs.js:94
+#: prefs.js:103
 msgid "Show the personal folder in the desktop"
 msgstr "Mostrar la carpeta personal en el escritorio"
 
-#: prefs.js:95
+#: prefs.js:104
 msgid "Show the trash icon in the desktop"
 msgstr "Mostrar la papelera en el escritorio"
 
-#: desktopGrid.js:185 desktopGrid.js:304
+#: desktopGrid.js:182 desktopGrid.js:301
 msgid "New Folder"
 msgstr "Nueva carpeta"
 
-#: desktopGrid.js:306
+#: desktopGrid.js:303
 msgid "Paste"
 msgstr "Pegar"
 
-#: desktopGrid.js:307
+#: desktopGrid.js:304
 msgid "Undo"
 msgstr "Deshacer"
 
-#: desktopGrid.js:308
+#: desktopGrid.js:305
 msgid "Redo"
 msgstr "Rehacer"
 
-#: desktopGrid.js:310
+#: desktopGrid.js:307
 msgid "Open Desktop in Files"
 msgstr "Abrir el escritorio en Files"
 
-#: desktopGrid.js:311
+#: desktopGrid.js:308
 msgid "Open Terminal"
 msgstr "Abrir un terminal"
 
-#: desktopGrid.js:313
+#: desktopGrid.js:310
 msgid "Change Background…"
 msgstr "Cambiar el fondo..."
 
-#: desktopGrid.js:314
+#: desktopGrid.js:311
 msgid "Display Settings"
 msgstr "Configuración de pantalla"
 
-#: desktopGrid.js:315
+#: desktopGrid.js:312
 msgid "Settings"
 msgstr "Configuración"
 
-#: desktopGrid.js:569
+#: desktopGrid.js:568
 msgid "Enter file name…"
 msgstr "Introduzca el nombre del archivo…"
 
-#: desktopGrid.js:573
-msgid "Ok"
+#: desktopGrid.js:572
+msgid "OK"
 msgstr "Aceptar"
 
-#: desktopGrid.js:579
+#: desktopGrid.js:578
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: fileItem.js:393
+#: fileItem.js:485
+msgid "Don’t Allow Launching"
+msgstr "No permitir lanzar"
+
+#: fileItem.js:487
+msgid "Allow Launching"
+msgstr "Permitir lanzar"
+
+#: fileItem.js:550
 msgid "Open"
 msgstr "Abrir"
 
-#: fileItem.js:396
+#: fileItem.js:553
 msgid "Cut"
 msgstr "Cortar"
 
-#: fileItem.js:397
+#: fileItem.js:554
 msgid "Copy"
 msgstr "Copiar"
 
-#: fileItem.js:398
+#: fileItem.js:556
 msgid "Rename"
 msgstr "Renombrar"
 
-#: fileItem.js:399
+#: fileItem.js:557
 msgid "Move to Trash"
 msgstr "Mover a la papelera"
 
-#: fileItem.js:403
-#| msgid "Empty trash"
+#: fileItem.js:567
 msgid "Empty Trash"
 msgstr "Vaciar la papelera"
 
-#: fileItem.js:409
+#: fileItem.js:573
 msgid "Properties"
 msgstr "Propiedades"
 
-#: fileItem.js:411
+#: fileItem.js:575
 msgid "Show in Files"
 msgstr "Mostrar en Files"
 
@@ -153,6 +160,9 @@ msgstr "Mostrar la papelera"
 #: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
 msgid "Show the trash icon in the desktop."
 msgstr "Mostrar la papelera en el escritorio."
+
+#~ msgid "Ok"
+#~ msgstr "Aceptar"
 
 #~ msgid "huge"
 #~ msgstr "inmenso"
