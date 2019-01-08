@@ -236,7 +236,7 @@ var DesktopManager = GObject.registerClass({
                         let resultGenerator = function *() {
                             let info;
                             while ((info = fileEnum.next_file(null)))
-                                yield [fileEnum.get_child(info), info, Prefs.FILE_TYPE.NONE];
+                                yield [fileEnum.get_child(info), info, Prefs.FileType.NONE];
                             for (let [newFolder, extras] of DesktopIconsUtil.getExtraFolders()) {
                                 yield [newFolder, newFolder.query_info(DesktopIconsUtil.DEFAULT_ATTRIBUTES, Gio.FileQueryInfoFlags.NONE, this._desktopEnumerateCancellable), extras];
                             }

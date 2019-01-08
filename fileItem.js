@@ -64,7 +64,7 @@ var FileItem = class {
         this._thumbnailScriptWatch = 0;
         this._setMetadataCancellable = null;
         this._queryFileInfoCancellable = null;
-        this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
+        this._isSpecial = this._fileExtra != Prefs.FileType.NONE;
 
         this._file = file;
 
@@ -138,7 +138,7 @@ var FileItem = class {
         this._primaryButtonPressed = false;
         if (this._attributeCanExecute && !this._isDesktopFile)
             this._execLine = this.file.get_path();
-        if (fileExtra == Prefs.FILE_TYPE.USER_DIRECTORY_TRASH) {
+        if (fileExtra == Prefs.FileType.USER_DIRECTORY_TRASH) {
             // if this icon is the trash, monitor the state of the directory to update the icon
             this._trashChanged = false;
             this._trashInitializeCancellable = null;
@@ -249,7 +249,7 @@ var FileItem = class {
 
         this._fileType = fileInfo.get_file_type();
         this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
-        this._isSpecial = this._fileExtra != Prefs.FILE_TYPE.NONE;
+        this._isSpecial = this._fileExtra != Prefs.FileType.NONE;
         this._attributeHidden = fileInfo.get_is_hidden();
         this._isSymlink = fileInfo.get_is_symlink();
         this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
@@ -268,7 +268,7 @@ var FileItem = class {
     }
 
     _updateIcon() {
-        if (this._fileExtra == Prefs.FILE_TYPE.USER_DIRECTORY_TRASH) {
+        if (this._fileExtra == Prefs.FileType.USER_DIRECTORY_TRASH) {
             this._icon.child = this._createEmblemedStIcon(this._fileInfo.get_icon(), null);
             return;
         }
@@ -547,7 +547,7 @@ var FileItem = class {
     }
 
     canRename() {
-        return !this.trustedDesktopFile && this._fileExtra == Prefs.FILE_TYPE.NONE;
+        return !this.trustedDesktopFile && this._fileExtra == Prefs.FileType.NONE;
     }
 
     _createMenu() {
@@ -558,7 +558,7 @@ var FileItem = class {
         this._menu = new PopupMenu.PopupMenu(this.actor, 0.5, side);
         this._menu.addAction(_('Open'), () => this.doOpen());
         switch (this._fileExtra) {
-        case Prefs.FILE_TYPE.NONE:
+        case Prefs.FileType.NONE:
             this._actionCut = this._menu.addAction(_('Cut'), () => this._onCutClicked());
             this._actionCopy = this._menu.addAction(_('Copy'), () => this._onCopyClicked());
             if (this.canRename())
@@ -571,7 +571,7 @@ var FileItem = class {
 
             }
             break;
-        case Prefs.FILE_TYPE.USER_DIRECTORY_TRASH:
+        case Prefs.FileType.USER_DIRECTORY_TRASH:
             this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
             this._menu.addAction(_('Empty Trash'), () => this._onEmptyTrashClicked());
             break;

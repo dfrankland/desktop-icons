@@ -36,7 +36,7 @@ const ICON_SIZE = { 'small': 48, 'standard': 64, 'large': 96, 'huge': 128 };
 const ICON_WIDTH = { 'small': 120, 'standard': 128, 'large': 128, 'huge': 140 };
 const ICON_HEIGHT = { 'small': 98, 'standard': 114, 'large': 146, 'huge': 178 };
 
-var FILE_TYPE = {
+var FileType = {
     NONE: null,
     USER_DIRECTORY_HOME: 'show-home',
     USER_DIRECTORY_TRASH: 'show-trash',
