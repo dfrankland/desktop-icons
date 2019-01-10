@@ -9,7 +9,7 @@ A GNOME Shell extension for providing desktop icons.
 ## How to contribute?
 * Download the code
 * Build with Meson (see at the next section)
-* Log out & log in from your user sessions. Alternatively, just restart the computer.
+* Log out & log in from your user session. Alternatively, just restart the computer.
 * Activate the extension in GNOME Tweaks
 
 ## Build with Meson
