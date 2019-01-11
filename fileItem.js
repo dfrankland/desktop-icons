@@ -562,7 +562,7 @@ var FileItem = class {
             this._actionCut = this._menu.addAction(_('Cut'), () => this._onCutClicked());
             this._actionCopy = this._menu.addAction(_('Copy'), () => this._onCopyClicked());
             if (this.canRename())
-                this._menu.addAction(_('Rename'), () => this.doRename());
+                this._menu.addAction(_('Rename…'), () => this.doRename());
             this._actionTrash = this._menu.addAction(_('Move to Trash'), () => this._onMoveToTrashClicked());
             if (this._isDesktopFile && !Extension.desktopManager.writableByOthers && !this._writableByOthers) {
                 this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
