@@ -4,7 +4,6 @@
         <value value="0" nick="small"/>
         <value value="1" nick="standard"/>
         <value value="2" nick="large"/>
-        <value value="3" nick="huge"/>
     </enum>
     <schema path="/org/gnome/shell/extensions/desktop-icons/" id="org.gnome.shell.extensions.desktop-icons">
     <key name="icon-size" enum="org.gnome.shell.extension.desktop-icons.ZoomLevel">

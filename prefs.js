@@ -32,9 +32,9 @@ const SCHEMA_NAUTILUS = 'org.gnome.nautilus.preferences';
 const SCHEMA_GTK = 'org.gtk.Settings.FileChooser';
 const SCHEMA = 'org.gnome.shell.extensions.desktop-icons';
 
-const ICON_SIZE = { 'small': 48, 'standard': 64, 'large': 96, 'huge': 128 };
-const ICON_WIDTH = { 'small': 120, 'standard': 128, 'large': 128, 'huge': 140 };
-const ICON_HEIGHT = { 'small': 98, 'standard': 114, 'large': 146, 'huge': 178 };
+const ICON_SIZE = { 'small': 48, 'standard': 64, 'large': 96 };
+const ICON_WIDTH = { 'small': 120, 'standard': 128, 'large': 128 };
+const ICON_HEIGHT = { 'small': 98, 'standard': 114, 'large': 146 };
 
 var FileType = {
     NONE: null,
@@ -99,7 +99,7 @@ function buildPrefsWidget() {
 
     let frame = new Gtk.Box({ orientation: Gtk.Orientation.VERTICAL, border_width: 10, spacing: 10 });
 
-    frame.add(buildSelector('icon-size', _("Size for the desktop icons"), { 'small': _("Small"), 'standard': _("Standard"), 'large': _("Large"), 'huge': _("Huge")}));
+    frame.add(buildSelector('icon-size', _("Size for the desktop icons"), { 'small': _("Small"), 'standard': _("Standard"), 'large': _("Large") }));
     frame.add(buildSwitcher('show-home', _("Show the personal folder in the desktop")));
     frame.add(buildSwitcher('show-trash', _("Show the trash icon in the desktop")));
     frame.show_all();
