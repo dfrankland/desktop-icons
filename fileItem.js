@@ -582,10 +582,18 @@ var FileItem = class {
         this._menu.addAction(_('Properties'), () => this._onPropertiesClicked());
         this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         this._menu.addAction(_('Show in Files'), () => this._onShowInFilesClicked());
+        if (this._isDirectory && this.file.get_path() != null)
+            this._actionOpenInTerminal = this._menu.addAction(_('Open in Terminal'), () => this._onOpenTerminalClicked());
+
         this._menuManager.addMenu(this._menu);
 
         Main.layoutManager.uiGroup.add_child(this._menu.actor);
         this._menu.actor.hide();
+    }
+
+    _onOpenTerminalClicked () {
+        let command = DesktopIconsUtil.getTerminalCommand(this.file.get_path());
+        Util.spawnCommandLine(command);
     }
 
     _onPressButton(actor, event) {
