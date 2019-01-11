@@ -310,7 +310,7 @@ var DesktopGrid = class {
         this._redoMenuItem = menu.addAction(_("Redo"), () => this._onRedoClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addAction(_("Show Desktop in Files"), () => this._onOpenDesktopInFilesClicked());
-        menu.addAction(_("Open Terminal"), () => this._onOpenTerminalClicked());
+        menu.addAction(_("Open in Terminal"), () => this._onOpenTerminalClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addSettingsAction(_("Change Background…"), 'gnome-background-panel.desktop');
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
