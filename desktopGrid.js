@@ -313,6 +313,7 @@ var DesktopGrid = class {
         menu.addAction(_("Open Terminal"), () => this._onOpenTerminalClicked());
         menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addSettingsAction(_("Change Background…"), 'gnome-background-panel.desktop');
+        menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         menu.addSettingsAction(_("Display Settings"), 'gnome-display-panel.desktop');
         menu.addSettingsAction(_("Settings"), 'gnome-control-center.desktop');
 
