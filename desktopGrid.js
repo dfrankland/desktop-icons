@@ -284,8 +284,8 @@ var DesktopGrid = class {
     }
 
     _onOpenTerminalClicked() {
-        let desktopUri = DesktopIconsUtil.getDesktopDir().get_uri();
-        let command = DesktopIconsUtil.getTerminalCommand(desktopUri);
+        let desktopPath = DesktopIconsUtil.getDesktopDir().get_path();
+        let command = DesktopIconsUtil.getTerminalCommand(desktopPath);
 
         Util.spawnCommandLine(command);
     }
