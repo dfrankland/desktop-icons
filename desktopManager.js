@@ -500,7 +500,7 @@ var DesktopManager = GObject.registerClass({
             if (fileItem.isSpecial)
                 return false;
             if (fileItemDestination.file.get_uri() == fileItem.file.get_uri())
-                continue;
+                return false;
             droppedUris.push(fileItem.file.get_uri());
         }
 
