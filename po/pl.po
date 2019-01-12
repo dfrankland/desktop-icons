@@ -1,16 +1,16 @@
 # Polish translation for desktop-icons.
-# Copyright © 2018 the desktop-icons authors.
+# Copyright © 2018-2019 the desktop-icons authors.
 # This file is distributed under the same license as the desktop-icons package.
-# Piotr Drąg <piotrdrag@gmail.com>, 2018.
-# Aviary.pl <community-poland@mozilla.org>, 2018.
+# Piotr Drąg <piotrdrag@gmail.com>, 2018-2019.
+# Aviary.pl <community-poland@mozilla.org>, 2018-2019.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: desktop-icons\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
 "icons/issues\n"
-"POT-Creation-Date: 2018-12-14 09:12+0000\n"
-"PO-Revision-Date: 2018-12-15 15:27+0100\n"
+"POT-Creation-Date: 2019-01-11 11:54+0000\n"
+"PO-Revision-Date: 2019-01-12 12:39+0100\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <community-poland@mozilla.org>\n"
 "Language: pl\n"
@@ -36,10 +36,6 @@ msgstr "Standardowy"
 msgid "Large"
 msgstr "Duży"
 
-#: prefs.js:102
-msgid "Huge"
-msgstr "Wielki"
-
 #: prefs.js:103
 msgid "Show the personal folder in the desktop"
 msgstr "Katalog domowy na pulpicie"
@@ -48,114 +44,114 @@ msgstr "Katalog domowy na pulpicie"
 msgid "Show the trash icon in the desktop"
 msgstr "Kosz na pulpicie"
 
-#: desktopGrid.js:182 desktopGrid.js:301
+#: desktopGrid.js:187 desktopGrid.js:306
 msgid "New Folder"
 msgstr "Nowy katalog"
 
-#: desktopGrid.js:303
+#: desktopGrid.js:308
 msgid "Paste"
 msgstr "Wklej"
 
-#: desktopGrid.js:304
+#: desktopGrid.js:309
 msgid "Undo"
 msgstr "Cofnij"
 
-#: desktopGrid.js:305
+#: desktopGrid.js:310
 msgid "Redo"
 msgstr "Ponów"
 
-#: desktopGrid.js:307
-msgid "Open Desktop in Files"
-msgstr "Otwórz pulpit w menedżerze plików"
+#: desktopGrid.js:312
+msgid "Show Desktop in Files"
+msgstr "Wyświetl pulpit w menedżerze plików"
 
-#: desktopGrid.js:308
+#: desktopGrid.js:313
 msgid "Open Terminal"
 msgstr "Otwórz terminal"
 
-#: desktopGrid.js:310
+#: desktopGrid.js:315
 msgid "Change Background…"
 msgstr "Zmień tło…"
 
-#: desktopGrid.js:311
+#: desktopGrid.js:317
 msgid "Display Settings"
 msgstr "Ustawienia ekranu"
 
-#: desktopGrid.js:312
+#: desktopGrid.js:318
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: desktopGrid.js:568
+#: desktopGrid.js:559
 msgid "Enter file name…"
 msgstr "Nazwa pliku…"
 
-#: desktopGrid.js:572
+#: desktopGrid.js:563
 msgid "OK"
 msgstr "OK"
 
-#: desktopGrid.js:578
+#: desktopGrid.js:569
 msgid "Cancel"
 msgstr "Anuluj"
 
-#: fileItem.js:485
+#: fileItem.js:490
 msgid "Don’t Allow Launching"
 msgstr "Nie zezwalaj na uruchamianie"
 
-#: fileItem.js:487
+#: fileItem.js:492
 msgid "Allow Launching"
 msgstr "Zezwól na uruchamianie"
 
-#: fileItem.js:550
+#: fileItem.js:559
 msgid "Open"
 msgstr "Otwórz"
 
-#: fileItem.js:553
+#: fileItem.js:562
 msgid "Cut"
 msgstr "Wytnij"
 
-#: fileItem.js:554
+#: fileItem.js:563
 msgid "Copy"
 msgstr "Skopiuj"
 
-#: fileItem.js:556
-msgid "Rename"
-msgstr "Zmień nazwę"
+#: fileItem.js:565
+msgid "Rename…"
+msgstr "Zmień nazwę…"
 
-#: fileItem.js:557
+#: fileItem.js:566
 msgid "Move to Trash"
 msgstr "Przenieś do kosza"
 
-#: fileItem.js:567
+#: fileItem.js:576
 msgid "Empty Trash"
 msgstr "Opróżnij kosz"
 
-#: fileItem.js:573
+#: fileItem.js:582
 msgid "Properties"
 msgstr "Właściwości"
 
-#: fileItem.js:575
+#: fileItem.js:584
 msgid "Show in Files"
 msgstr "Wyświetl w menedżerze plików"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:11
 msgid "Icon size"
 msgstr "Rozmiar ikon"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
 msgid "Set the size for the desktop icons."
 msgstr "Ustawia rozmiar ikon na pulpicie."
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:16
 msgid "Show personal folder"
 msgstr "Katalog domowy"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
 msgid "Show the personal folder in the desktop."
 msgstr "Wyświetla katalog domowy na pulpicie."
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:21
 msgid "Show trash icon"
 msgstr "Kosz"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
 msgid "Show the trash icon in the desktop."
 msgstr "Wyświetla kosz na pulpicie."
