@@ -464,6 +464,9 @@ var DesktopGrid = class {
     _onPressButton(actor, event) {
         let button = event.get_button();
         let [x, y] = event.get_coords();
+
+        this._grid.grab_key_focus();
+
         if (button == 1) {
             let shiftPressed = !!(event.get_state() & Clutter.ModifierType.SHIFT_MASK);
             let controlPressed = !!(event.get_state() & Clutter.ModifierType.CONTROL_MASK);
