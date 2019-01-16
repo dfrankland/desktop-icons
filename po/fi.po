@@ -8,129 +8,152 @@ msgstr ""
 "Project-Id-Version: desktop-icons master\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
 "icons/issues\n"
-"POT-Creation-Date: 2018-10-14 08:09+0000\n"
-"PO-Revision-Date: 2018-10-14 12:44+0300\n"
+"POT-Creation-Date: 2019-01-15 10:59+0000\n"
+"PO-Revision-Date: 2019-01-16 19:49+0200\n"
+"Last-Translator: Jiri Grönroos <jiri.gronroos+l10n@iki.fi>\n"
 "Language-Team: Finnish <lokalisointi-lista@googlegroups.com>\n"
 "Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Last-Translator: Jiri Grönroos <jiri.gronroos+l10n@iki.fi>\n"
 "X-Generator: Poedit 2.0.6\n"
 
-#: prefs.js:89
+#: prefs.js:102
 msgid "Size for the desktop icons"
 msgstr "Työpöytäkuvakkeiden koko"
 
-#: prefs.js:89
+#: prefs.js:102
 msgid "Small"
 msgstr "Pieni"
 
-#: prefs.js:89
+#: prefs.js:102
 msgid "Standard"
 msgstr "Normaali"
 
-#: prefs.js:89
+#: prefs.js:102
 msgid "Large"
 msgstr "Suuri"
 
-#: prefs.js:89
-msgid "Huge"
-msgstr "Valtava"
-
-#: prefs.js:90
+#: prefs.js:103
 msgid "Show the personal folder in the desktop"
 msgstr "Näytä kotikansio työpöydällä"
 
-#: prefs.js:91
+#: prefs.js:104
 msgid "Show the trash icon in the desktop"
 msgstr "Näytä roskakorin kuvake työpöydällä"
 
-#: desktopGrid.js:178 desktopGrid.js:297
+#: desktopGrid.js:187 desktopGrid.js:306
 msgid "New Folder"
 msgstr "Uusi kansio"
 
-#: desktopGrid.js:299
+#: desktopGrid.js:308
 msgid "Paste"
 msgstr "Liitä"
 
-#: desktopGrid.js:300
+#: desktopGrid.js:309
 msgid "Undo"
 msgstr "Kumoa"
 
-#: desktopGrid.js:301
+#: desktopGrid.js:310
 msgid "Redo"
 msgstr "Tee uudeleen"
 
-#: desktopGrid.js:303
-msgid "Open Desktop in Files"
-msgstr "Avaa työpöytä tiedostonhallinnassa"
+#: desktopGrid.js:312
+msgid "Show Desktop in Files"
+msgstr "Näytä työpöytä tiedostonhallinnassa"
 
-#: desktopGrid.js:304
-msgid "Open Terminal"
-msgstr "Avaa pääte"
+#: desktopGrid.js:313 fileItem.js:586
+msgid "Open in Terminal"
+msgstr "Avaa päätteessä"
 
-#: desktopGrid.js:306
+#: desktopGrid.js:315
 msgid "Change Background…"
 msgstr "Vaihda taustakuvaa…"
 
-#: desktopGrid.js:307
+#: desktopGrid.js:317
 msgid "Display Settings"
 msgstr "Näytön asetukset"
 
-#: desktopGrid.js:308
+#: desktopGrid.js:318
 msgid "Settings"
 msgstr "Asetukset"
 
-#: fileItem.js:211
+#: desktopGrid.js:559
+msgid "Enter file name…"
+msgstr "Anna tiedostonimi…"
+
+#: desktopGrid.js:563
+msgid "OK"
+msgstr "OK"
+
+#: desktopGrid.js:569
+msgid "Cancel"
+msgstr "Peru"
+
+#: fileItem.js:490
+msgid "Don’t Allow Launching"
+msgstr "Älä salli käynnistämistä"
+
+#: fileItem.js:492
+msgid "Allow Launching"
+msgstr "Salli käynnistäminen"
+
+#: fileItem.js:559
 msgid "Open"
 msgstr "Avaa"
 
-#: fileItem.js:214
+#: fileItem.js:562
 msgid "Cut"
 msgstr "Leikkaa"
 
-#: fileItem.js:215
+#: fileItem.js:563
 msgid "Copy"
 msgstr "Kopioi"
 
-#: fileItem.js:216
+#: fileItem.js:565
+msgid "Rename…"
+msgstr "Nimeä uudelleen…"
+
+#: fileItem.js:566
 msgid "Move to Trash"
 msgstr "Siirrä roskakoriin"
 
-#: fileItem.js:220
-msgid "Empty trash"
+#: fileItem.js:576
+msgid "Empty Trash"
 msgstr "Tyhjennä roskakori"
 
-#: fileItem.js:226
+#: fileItem.js:582
 msgid "Properties"
 msgstr "Ominaisuudet"
 
-#: fileItem.js:228
+#: fileItem.js:584
 msgid "Show in Files"
 msgstr "Näytä tiedostonhallinnassa"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:11
 msgid "Icon size"
 msgstr "Kuvakekoko"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
 msgid "Set the size for the desktop icons."
 msgstr "Aseta työpöytäkuvakkeiden koko."
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:16
 msgid "Show personal folder"
 msgstr "Näytä kotikansio"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
 msgid "Show the personal folder in the desktop."
 msgstr "Näytä kotikansio työpöydällä."
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:21
 msgid "Show trash icon"
 msgstr "Näytä roskakorin kuvake"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
 msgid "Show the trash icon in the desktop."
 msgstr "Näytä roskakorin kuvake työpöydällä."
+
+#~ msgid "Huge"
+#~ msgstr "Valtava"
