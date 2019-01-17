@@ -112,6 +112,11 @@ var DesktopManager = GObject.registerClass({
             this.endRubberBand();
         });
         this._rubberBandId = global.stage.connect('motion-event', (actor, event) => {
+            let button = event.get_state_full()[0];
+            if (!(button & Clutter.ModifierType.BUTTON1_MASK)) {
+                this.endRubberBand();
+                return;
+            }
             [x, y] = event.get_coords();
             this._updateRubberBand(x, y);
             let x0, y0, x1, y1;
