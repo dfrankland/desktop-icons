@@ -112,6 +112,15 @@ var DesktopManager = GObject.registerClass({
             this.endRubberBand();
         });
         this._rubberBandId = global.stage.connect('motion-event', (actor, event) => {
+            /* In some cases, when the user starts a rubberband selection and ends it
+             * (by releasing the left button) over a window instead of doing it over
+             * the desktop, the stage doesn't receive the "button-release" event.
+             * This happens currently with, at least, Dash to Dock extension, but
+             * it probably also happens with other applications or extensions.
+             * To fix this, we also end the rubberband selection if we detect mouse
+             * motion in the stage without the left button pressed during a
+             * rubberband selection.
+             *  */
             let button = event.get_state_full()[0];
             if (!(button & Clutter.ModifierType.BUTTON1_MASK)) {
                 this.endRubberBand();
