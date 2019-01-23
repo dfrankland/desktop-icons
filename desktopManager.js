@@ -121,7 +121,7 @@ var DesktopManager = GObject.registerClass({
              * motion in the stage without the left button pressed during a
              * rubberband selection.
              *  */
-            let button = event.get_state_full()[0];
+            let button = event.get_state();
             if (!(button & Clutter.ModifierType.BUTTON1_MASK)) {
                 this.endRubberBand();
                 return;
