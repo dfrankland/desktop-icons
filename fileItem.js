@@ -250,7 +250,7 @@ var FileItem = class {
         this._fileType = fileInfo.get_file_type();
         this._isDirectory = this._fileType == Gio.FileType.DIRECTORY;
         this._isSpecial = this._fileExtra != Prefs.FileType.NONE;
-        this._attributeHidden = fileInfo.get_is_hidden();
+        this._isHidden = fileInfo.get_is_hidden() | fileInfo.get_is_backup();
         this._isSymlink = fileInfo.get_is_symlink();
         this._modifiedTime = this._fileInfo.get_attribute_uint64("time::modified");
         /*
@@ -383,7 +383,7 @@ var FileItem = class {
     }
 
     get isHidden() {
-        return this._fileInfo.get_is_hidden();
+        return this._isHidden;
     }
 
     _createEmblemedStIcon(icon, iconName) {
