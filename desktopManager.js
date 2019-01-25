@@ -249,11 +249,11 @@ var DesktopManager = GObject.registerClass({
                         let fileEnum = desktopDir.enumerate_children_finish(res);
                         let resultGenerator = function *() {
                             let info;
-                            while ((info = fileEnum.next_file(null)))
-                                yield [fileEnum.get_child(info), info, Prefs.FileType.NONE];
                             for (let [newFolder, extras] of DesktopIconsUtil.getExtraFolders()) {
                                 yield [newFolder, newFolder.query_info(DesktopIconsUtil.DEFAULT_ATTRIBUTES, Gio.FileQueryInfoFlags.NONE, this._desktopEnumerateCancellable), extras];
                             }
+                            while ((info = fileEnum.next_file(null)))
+                                yield [fileEnum.get_child(info), info, Prefs.FileType.NONE];
                         }.bind(this);
                         resolve(resultGenerator());
                     } catch (e) {
