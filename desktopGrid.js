@@ -511,7 +511,7 @@ var DesktopGrid = class {
     acceptDrop(source, actor, x, y, time) {
         /* Coordinates are relative to the grid, we want to transform them to
          * absolute coordinates to work across monitors */
-        let [gridX, gridY] = this._grid.get_transformed_position();
+        let [gridX, gridY] = this.actor.get_transformed_position();
         let [absoluteX, absoluteY] = [x + gridX, y + gridY];
         return Extension.desktopManager.acceptDrop(absoluteX, absoluteY);
     }
