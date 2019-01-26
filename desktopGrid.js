@@ -80,7 +80,14 @@ var DesktopGrid = class {
             row_homogeneous: true
         });
 
-        this.actor = new St.Widget();
+        this._actorLayout = new Clutter.BinLayout({
+            x_align: Clutter.BinAlignment.FIXED,
+            y_align: Clutter.BinAlignment.FIXED
+        });
+
+        this.actor = new St.Widget({
+            layout_manager: this._actorLayout
+        });
         this.actor._delegate = this;
 
         this._grid = new St.Widget({
@@ -106,7 +113,7 @@ var DesktopGrid = class {
             index: monitorIndex,
             work_area: true
         });
-        this._grid.add_constraint(this._monitorConstraint);
+        this.actor.add_constraint(this._monitorConstraint);
 
         this._addDesktopBackgroundMenu();
 
@@ -591,7 +598,7 @@ var RenamePopup = class {
         renameContent.add_child(this._renameEntry);
         renameContent.add_child(renameButtonsBox);
 
-        this._boxPointer = new BoxPointer.BoxPointer(St.Side.TOP, { can_focus: false, x_expand: true });
+        this._boxPointer = new BoxPointer.BoxPointer(St.Side.TOP, { can_focus: false, x_expand: false });
         this.actor = this._boxPointer.actor;
         this.actor.style_class = 'popup-menu-boxpointer';
         this.actor.add_style_class_name('popup-menu');
