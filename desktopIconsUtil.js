@@ -58,3 +58,22 @@ function getExtraFolders() {
     }
     return extraFolders;
 }
+
+function getFileExtensionOffset(filename, isDirectory) {
+    let offset = filename.length;
+
+    if (!isDirectory) {
+        let doubleExtensions = ['.gz', '.bz2', '.sit', '.Z', '.bz', '.xz'];
+        for(let extension of doubleExtensions) {
+            if (filename.endsWith(extension)) {
+                offset -= extension.length;
+                filename = filename.substring(0, offset);
+                break;
+            }
+        }
+        let lastDot = filename.lastIndexOf('.');
+        if (lastDot > 0)
+            offset = lastDot;
+    }
+    return offset;
+}
