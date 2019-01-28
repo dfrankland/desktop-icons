@@ -3,15 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # Sergio Costas <rastersoft@gmail.com>, 2018.
-# Daniel Mustieles <daniel.mustieles@gmail.com>, 2018, 2019.
+# Daniel Mustieles <daniel.mustieles@gmail.com>, 2018-2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
 "icons/issues\n"
-"POT-Creation-Date: 2018-12-14 09:12+0000\n"
-"PO-Revision-Date: 2019-01-08 16:12+0100\n"
+"POT-Creation-Date: 2019-01-15 10:59+0000\n"
+"PO-Revision-Date: 2019-01-28 13:30+0100\n"
 "Last-Translator: Daniel Mustieles <daniel.mustieles@gmail.com>\n"
 "Language-Team: es <gnome-es-list@gnome.org>\n"
 "Language: es\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Gtranslator 2.91.7\n"
+"X-Generator: Gtranslator 3.31.0\n"
 
 #: prefs.js:102
 msgid "Size for the desktop icons"
@@ -37,10 +37,6 @@ msgstr "Estándar"
 msgid "Large"
 msgstr "Grande"
 
-#: prefs.js:102
-msgid "Huge"
-msgstr "Inmenso"
-
 #: prefs.js:103
 msgid "Show the personal folder in the desktop"
 msgstr "Mostrar la carpeta personal en el escritorio"
@@ -49,117 +45,123 @@ msgstr "Mostrar la carpeta personal en el escritorio"
 msgid "Show the trash icon in the desktop"
 msgstr "Mostrar la papelera en el escritorio"
 
-#: desktopGrid.js:182 desktopGrid.js:301
+#: desktopGrid.js:187 desktopGrid.js:306
 msgid "New Folder"
 msgstr "Nueva carpeta"
 
-#: desktopGrid.js:303
+#: desktopGrid.js:308
 msgid "Paste"
 msgstr "Pegar"
 
-#: desktopGrid.js:304
+#: desktopGrid.js:309
 msgid "Undo"
 msgstr "Deshacer"
 
-#: desktopGrid.js:305
+#: desktopGrid.js:310
 msgid "Redo"
 msgstr "Rehacer"
 
-#: desktopGrid.js:307
-msgid "Open Desktop in Files"
-msgstr "Abrir el escritorio en Files"
+#: desktopGrid.js:312
+#| msgid "Open Desktop in Files"
+msgid "Show Desktop in Files"
+msgstr "Mostrar el escritorio en Archivos"
 
-#: desktopGrid.js:308
-msgid "Open Terminal"
-msgstr "Abrir un terminal"
+#: desktopGrid.js:313 fileItem.js:586
+#| msgid "Open Terminal"
+msgid "Open in Terminal"
+msgstr "Abrir en una terminal"
 
-#: desktopGrid.js:310
+#: desktopGrid.js:315
 msgid "Change Background…"
 msgstr "Cambiar el fondo..."
 
-#: desktopGrid.js:311
+#: desktopGrid.js:317
 msgid "Display Settings"
 msgstr "Configuración de pantalla"
 
-#: desktopGrid.js:312
+#: desktopGrid.js:318
 msgid "Settings"
 msgstr "Configuración"
 
-#: desktopGrid.js:568
+#: desktopGrid.js:559
 msgid "Enter file name…"
 msgstr "Introduzca el nombre del archivo…"
 
-#: desktopGrid.js:572
+#: desktopGrid.js:563
 msgid "OK"
 msgstr "Aceptar"
 
-#: desktopGrid.js:578
+#: desktopGrid.js:569
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: fileItem.js:485
+#: fileItem.js:490
 msgid "Don’t Allow Launching"
 msgstr "No permitir lanzar"
 
-#: fileItem.js:487
+#: fileItem.js:492
 msgid "Allow Launching"
 msgstr "Permitir lanzar"
 
-#: fileItem.js:550
+#: fileItem.js:559
 msgid "Open"
 msgstr "Abrir"
 
-#: fileItem.js:553
+#: fileItem.js:562
 msgid "Cut"
 msgstr "Cortar"
 
-#: fileItem.js:554
+#: fileItem.js:563
 msgid "Copy"
 msgstr "Copiar"
 
-#: fileItem.js:556
-msgid "Rename"
-msgstr "Renombrar"
+#: fileItem.js:565
+#| msgid "Rename"
+msgid "Rename…"
+msgstr "Renombrar…"
 
-#: fileItem.js:557
+#: fileItem.js:566
 msgid "Move to Trash"
 msgstr "Mover a la papelera"
 
-#: fileItem.js:567
+#: fileItem.js:576
 msgid "Empty Trash"
 msgstr "Vaciar la papelera"
 
-#: fileItem.js:573
+#: fileItem.js:582
 msgid "Properties"
 msgstr "Propiedades"
 
-#: fileItem.js:575
+#: fileItem.js:584
 msgid "Show in Files"
 msgstr "Mostrar en Files"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:11
 msgid "Icon size"
 msgstr "Tamaño de los iconos"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
 msgid "Set the size for the desktop icons."
 msgstr "Establece el tamaño de los iconos del escritorio."
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:16
 msgid "Show personal folder"
 msgstr "Mostrar la carpeta personal"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
 msgid "Show the personal folder in the desktop."
 msgstr "Mostrar la carpeta personal en el escritorio."
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:21
 msgid "Show trash icon"
 msgstr "Mostrar la papelera"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
 msgid "Show the trash icon in the desktop."
 msgstr "Mostrar la papelera en el escritorio."
+
+#~ msgid "Huge"
+#~ msgstr "Inmenso"
 
 #~ msgid "Ok"
 #~ msgstr "Aceptar"
