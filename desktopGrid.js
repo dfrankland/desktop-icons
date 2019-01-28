@@ -648,7 +648,7 @@ var RenamePopup = class {
 
         this._popup();
         this._renameEntry.grab_key_focus();
-        this._renameEntry.navigate_focus(null, Gtk.DirectionType.TAB_FORWARD, false)
+        this._renameEntry.navigate_focus(null, Gtk.DirectionType.TAB_FORWARD, false);
         let extensionOffset = DesktopIconsUtil.getFileExtensionOffset(fileItem.displayName, fileItem.isDirectory);
         this._renameEntry.clutter_text.set_selection(0, extensionOffset);
     }
