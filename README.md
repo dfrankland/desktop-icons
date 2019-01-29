@@ -1,18 +1,23 @@
 # Desktop Icons
-## What  is it?
+
+## What  is it
+
 A GNOME Shell extension for providing desktop icons.
 
-# Requirements
+## Requirements
+
 * GNOME Shell >= 3.30
 * Nautilus >= 3.30.4
 
-## How to contribute?
+## How to contribute
+
 * Download the code
 * Build with Meson (see at the next section)
 * Log out & log in from your user session. Alternatively, just restart the computer.
 * Activate the extension in GNOME Tweaks
 
 ## Build with Meson
+
 The project uses a build system called [Meson](https://mesonbuild.com/). You can install
 in most Linux distributions as "meson".
 
@@ -20,7 +25,8 @@ It's possible to read more information in the Meson docs to tweak the configurat
 
 For a regular use and local development these are the steps to build the
 project and install it:
-```
+
+```bash
 meson --prefix=$HOME/.local/ --localedir=share/gnome-shell/extensions/desktop-icons@csoriano/locale .build
 ninja -C .build install
 ```
@@ -30,7 +36,8 @@ It is strongly recommended to delete the destination folder
 data is kept.
 
 ### Export extension ZIP file for extensions.gnome.org
-```
+
+```bash
 ./export-zip.sh
 # creates
 ./desktop-icons@csoriano.zip
