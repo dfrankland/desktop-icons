@@ -25,6 +25,10 @@ meson --prefix=$HOME/.local/ --localedir=share/gnome-shell/extensions/desktop-ic
 ninja -C .build install
 ```
 
+It is strongly recommended to delete the destination folder
+($HOME/.local/share/gnome-shell/extensions/desktop-icons@csoriano) before doing this, to ensure that no old
+data is kept.
+
 ### Export extension ZIP file for extensions.gnome.org
 ```
 ./export-zip.sh
