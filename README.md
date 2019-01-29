@@ -35,10 +35,13 @@ It is strongly recommended to delete the destination folder
 ($HOME/.local/share/gnome-shell/extensions/desktop-icons@csoriano) before doing this, to ensure that no old
 data is kept.
 
-### Export extension ZIP file for extensions.gnome.org
+## Export extension ZIP file for extensions.gnome.org
+
+To create a ZIP file with the extension, just run:
 
 ```bash
 ./export-zip.sh
-# creates
-./desktop-icons@csoriano.zip
 ```
+
+This will create the file `desktop-icons@csoriano.zip` with the extension, following the rules for publishing
+at extensions.gnome.org.
