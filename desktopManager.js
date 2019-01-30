@@ -143,7 +143,7 @@ var DesktopManager = GObject.registerClass({
                 y1 = this._rubberBandInitialY;
                 y0 = y;
             }
-            for(let [fileUri, fileItem] of this._fileItems) {
+            for (let [fileUri, fileItem] of this._fileItems) {
                 fileItem.emit('selected', true,
                               fileItem.intersectsWith(x0, y0, x1 - x0, y1 - y0));
             }
@@ -182,7 +182,7 @@ var DesktopManager = GObject.registerClass({
             let newGrid = new DesktopGrid.DesktopGrid(bgManager);
             newGrid.actor.connect('destroy', (actor) => {
                 // if a grid loses its actor, remove it from the grid list
-                for(let grid in this._desktopGrids)
+                for (let grid in this._desktopGrids)
                     if (this._desktopGrids[grid].actor == actor) {
                         delete this._desktopGrids[grid];
                         break;
@@ -276,7 +276,7 @@ var DesktopManager = GObject.registerClass({
     }
 
     checkIfSpecialFilesAreSelected() {
-        for(let fileItem of this._selection) {
+        for (let fileItem of this._selection) {
             if (fileItem.isSpecial)
                 return true;
         }
@@ -642,7 +642,7 @@ var DesktopManager = GObject.registerClass({
         else
             this._selection.delete(fileItem);
 
-        for(let [fileUri, fileItem] of this._fileItems)
+        for (let [fileUri, fileItem] of this._fileItems)
             fileItem.isSelected = this._selection.has(fileItem);
     }
 
