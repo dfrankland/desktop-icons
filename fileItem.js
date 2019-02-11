@@ -203,9 +203,9 @@ var FileItem = class {
                                     Gio.FileQueryInfoFlags.NONE,
                                     GLib.PRIORITY_DEFAULT,
                                     this._queryFileInfoCancellable,
-            (source, res) => {
+            (source, result) => {
                 try {
-                    let newFileInfo = source.query_info_finish(res);
+                    let newFileInfo = source.query_info_finish(result);
                     this._queryFileInfoCancellable = null;
                     this._updateMetadataFromFileInfo(newFileInfo);
                     if (rebuild) {
@@ -307,9 +307,9 @@ var FileItem = class {
                 this._loadThumbnailDataCancellable = new Gio.Cancellable();
                 let thumbnailFile = Gio.File.new_for_path(thumbnail);
                 thumbnailFile.load_bytes_async(this._loadThumbnailDataCancellable,
-                    (obj, res) => {
+                    (source, result) => {
                         try {
-                            let [thumbnailData, etag_out] = obj.load_bytes_finish(res);
+                            let [thumbnailData, etag_out] = source.load_bytes_finish(result);
                             let thumbnailStream = Gio.MemoryInputStream.new_from_bytes(thumbnailData);
                             let thumbnailPixbuf = GdkPixbuf.Pixbuf.new_from_stream(thumbnailStream, null);
 
@@ -363,9 +363,9 @@ var FileItem = class {
                                     Gio.FileQueryInfoFlags.NONE,
                                     GLib.PRIORITY_DEFAULT,
                                     this._queryTrashInfoCancellable,
-            (source, res) => {
+            (source, result) => {
                 try {
-                    this._fileInfo = source.query_info_finish(res);
+                    this._fileInfo = source.query_info_finish(result);
                     this._queryTrashInfoCancellable = null;
                     this._updateIcon();
                 } catch(error) {
@@ -439,9 +439,9 @@ var FileItem = class {
 
         Gio.AppInfo.launch_default_for_uri_async(this.file.get_uri(),
             null, null,
-            (source, res) => {
+            (source, result) => {
                 try {
-                    Gio.AppInfo.launch_default_for_uri_finish(res);
+                    Gio.AppInfo.launch_default_for_uri_finish(result);
                 } catch (e) {
                     log('Error opening file ' + this.file.get_uri() + ': ' + e.message);
                 }
@@ -506,9 +506,9 @@ var FileItem = class {
                                         Gio.FileQueryInfoFlags.NONE,
                                         GLib.PRIORITY_LOW,
                                         null,
-            (source, res) => {
+            (source, result) => {
                 try {
-                    source.set_attributes_finish(res);
+                    source.set_attributes_finish(result);
                     this._refreshMetadataAsync(true);
                 } catch(e) {
                     log(`Failed to set metadata::trusted: ${e.message}`);
@@ -532,9 +532,9 @@ var FileItem = class {
                                             Gio.FileQueryInfoFlags.NONE,
                                             GLib.PRIORITY_LOW,
                                             null,
-                (source, res) => {
+                (source, result) => {
                     try {
-                        source.set_attributes_finish (res);
+                        source.set_attributes_finish (result);
                     } catch(e) {
                         log(`Failed to set unix mode: ${e.message}`);
                     }

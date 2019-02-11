@@ -280,9 +280,9 @@ var DesktopGrid = class {
     _onOpenDesktopInFilesClicked() {
         Gio.AppInfo.launch_default_for_uri_async(DesktopIconsUtil.getDesktopDir().get_uri(),
             null, null,
-            (source, res) => {
+            (source, result) => {
                 try {
-                    Gio.AppInfo.launch_default_for_uri_finish(res);
+                    Gio.AppInfo.launch_default_for_uri_finish(result);
                 } catch (e) {
                    log('Error opening Desktop in Files: ' + e.message);
                 }

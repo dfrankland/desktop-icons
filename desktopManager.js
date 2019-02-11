@@ -244,9 +244,9 @@ var DesktopManager = GObject.registerClass({
                 Gio.FileQueryInfoFlags.NONE,
                 GLib.PRIORITY_DEFAULT,
                 this._desktopEnumerateCancellable,
-                (o, res) => {
+                (source, result) => {
                     try {
-                        let fileEnum = desktopDir.enumerate_children_finish(res);
+                        let fileEnum = source.enumerate_children_finish(result);
                         let resultGenerator = function *() {
                             let info;
                             for (let [newFolder, extras] of DesktopIconsUtil.getExtraFolders()) {
@@ -324,9 +324,9 @@ var DesktopManager = GObject.registerClass({
                                       Gio.FileQueryInfoFlags.NONE,
                                       GLib.PRIORITY_DEFAULT,
                                       this._queryFileInfoCancellable,
-                    (source, res) => {
+                    (source, result) => {
                         try {
-                            let info = source.query_info_finish(res);
+                            let info = source.query_info_finish(result);
                             this._queryFileInfoCancellable = null;
 
                             this._unixMode = info.get_attribute_uint32(Gio.FILE_ATTRIBUTE_UNIX_MODE);
