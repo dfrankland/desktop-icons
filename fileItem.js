@@ -550,6 +550,10 @@ var FileItem = class {
         return !this.trustedDesktopFile && this._fileExtra == Prefs.FileType.NONE;
     }
 
+    _doOpenWith() {
+        DBusUtils.openFileWithOtherApplication(this.file.get_path());
+    }
+
     _createMenu() {
         this._menuManager = new PopupMenu.PopupMenuManager({ actor: this.actor });
         let side = St.Side.LEFT;
@@ -559,6 +563,9 @@ var FileItem = class {
         this._menu.addAction(_('Open'), () => this.doOpen());
         switch (this._fileExtra) {
         case Prefs.FileType.NONE:
+            if (!this._isDirectory)
+                this._menu.addAction(_('Open With Other Application'), () => this._doOpenWith());
+            this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
             this._actionCut = this._menu.addAction(_('Cut'), () => this._onCutClicked());
             this._actionCopy = this._menu.addAction(_('Copy'), () => this._onCopyClicked());
             if (this.canRename())
