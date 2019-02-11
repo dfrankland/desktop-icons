@@ -8,129 +8,152 @@ msgstr ""
 "Project-Id-Version: desktop-icons master\n"
 "Report-Msgid-Bugs-To: https://gitlab.gnome.org/World/ShellExtensions/desktop-"
 "icons/issues\n"
-"POT-Creation-Date: 2018-10-26 12:04+0000\n"
-"PO-Revision-Date: 2018-10-27 16:42+0200\n"
+"POT-Creation-Date: 2019-01-15 10:59+0000\n"
+"PO-Revision-Date: 2019-02-09 11:35+0100\n"
+"Last-Translator: Alan Mortensen <alanmortensen.am@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Last-Translator: Alan Mortensen <alanmortensen.am@gmail.com>\n"
 "X-Generator: Poedit 2.0.6\n"
 
-#: prefs.js:89
+#: prefs.js:102
 msgid "Size for the desktop icons"
 msgstr "Størrelsen på skrivebordsikoner"
 
-#: prefs.js:89
+#: prefs.js:102
 msgid "Small"
 msgstr "Små"
 
-#: prefs.js:89
+#: prefs.js:102
 msgid "Standard"
 msgstr "Standard"
 
-#: prefs.js:89
+#: prefs.js:102
 msgid "Large"
 msgstr "Store"
 
-#: prefs.js:89
-msgid "Huge"
-msgstr "Enorme"
-
-#: prefs.js:90
+#: prefs.js:103
 msgid "Show the personal folder in the desktop"
 msgstr "Vis den personlige mappe på skrivebordet"
 
-#: prefs.js:91
+#: prefs.js:104
 msgid "Show the trash icon in the desktop"
 msgstr "Vis papirkurvsikonet på skrivebordet"
 
-#: desktopGrid.js:178 desktopGrid.js:297
+#: desktopGrid.js:187 desktopGrid.js:306
 msgid "New Folder"
 msgstr "Ny mappe"
 
-#: desktopGrid.js:299
+#: desktopGrid.js:308
 msgid "Paste"
 msgstr "Indsæt"
 
-#: desktopGrid.js:300
+#: desktopGrid.js:309
 msgid "Undo"
 msgstr "Fortryd"
 
-#: desktopGrid.js:301
+#: desktopGrid.js:310
 msgid "Redo"
 msgstr "Omgør"
 
-#: desktopGrid.js:303
-msgid "Open Desktop in Files"
-msgstr "Åbn skrivebordet i Filer"
+#: desktopGrid.js:312
+msgid "Show Desktop in Files"
+msgstr "Vis skrivebordet i Filer"
 
-#: desktopGrid.js:304
-msgid "Open Terminal"
-msgstr "Åbn Terminal"
+#: desktopGrid.js:313 fileItem.js:586
+msgid "Open in Terminal"
+msgstr "Åbn i terminal"
 
-#: desktopGrid.js:306
+#: desktopGrid.js:315
 msgid "Change Background…"
 msgstr "Skift baggrund …"
 
-#: desktopGrid.js:307
+#: desktopGrid.js:317
 msgid "Display Settings"
 msgstr "Skærmindstillinger"
 
-#: desktopGrid.js:308
+#: desktopGrid.js:318
 msgid "Settings"
 msgstr "Indstillinger"
 
-#: fileItem.js:385
+#: desktopGrid.js:559
+msgid "Enter file name…"
+msgstr "Indtast filnavn …"
+
+#: desktopGrid.js:563
+msgid "OK"
+msgstr "OK"
+
+#: desktopGrid.js:569
+msgid "Cancel"
+msgstr "Annullér"
+
+#: fileItem.js:490
+msgid "Don’t Allow Launching"
+msgstr "Tillad ikke opstart"
+
+#: fileItem.js:492
+msgid "Allow Launching"
+msgstr "Tillad opstart"
+
+#: fileItem.js:559
 msgid "Open"
 msgstr "Åbn"
 
-#: fileItem.js:388
+#: fileItem.js:562
 msgid "Cut"
 msgstr "Klip"
 
-#: fileItem.js:389
+#: fileItem.js:563
 msgid "Copy"
 msgstr "Kopiér"
 
-#: fileItem.js:390
+#: fileItem.js:565
+msgid "Rename…"
+msgstr "Omdøb …"
+
+#: fileItem.js:566
 msgid "Move to Trash"
 msgstr "Flyt til papirkurven"
 
-#: fileItem.js:394
-msgid "Empty trash"
+#: fileItem.js:576
+msgid "Empty Trash"
 msgstr "Tøm papirkurven"
 
-#: fileItem.js:400
+#: fileItem.js:582
 msgid "Properties"
 msgstr "Egenskaber"
 
-#: fileItem.js:402
+#: fileItem.js:584
 msgid "Show in Files"
 msgstr "Vis i Filer"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:11
 msgid "Icon size"
 msgstr "Ikonstørrelse"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:13
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:12
 msgid "Set the size for the desktop icons."
 msgstr "Angiv størrelsen på skrivebordsikoner."
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:16
 msgid "Show personal folder"
 msgstr "Vis personlig mappe"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:18
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:17
 msgid "Show the personal folder in the desktop."
 msgstr "Vis den personlige mappe på skrivebordet."
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:21
 msgid "Show trash icon"
 msgstr "Vis papirkurvsikon"
 
-#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:23
+#: schemas/org.gnome.shell.extensions.desktop-icons.gschema.xml:22
 msgid "Show the trash icon in the desktop."
 msgstr "Vis papirkurvsikonet på skrivebordet."
+
+#~ msgid "Huge"
+#~ msgstr "Enorme"
