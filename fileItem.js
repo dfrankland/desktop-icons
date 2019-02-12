@@ -564,7 +564,9 @@ var FileItem = class {
         switch (this._fileExtra) {
         case Prefs.FileType.NONE:
             if (!this._isDirectory)
-                this._menu.addAction(_('Open With Other Application'), () => this._doOpenWith());
+                this._actionOpenWith = this._menu.addAction(_('Open With Other Application'), () => this._doOpenWith());
+            else
+                this._actionOpenWith = null;
             this._menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
             this._actionCut = this._menu.addAction(_('Cut'), () => this._onCutClicked());
             this._actionCopy = this._menu.addAction(_('Copy'), () => this._onCopyClicked());
@@ -609,6 +611,10 @@ var FileItem = class {
             if (!this.isSelected)
                 this.emit('selected', false, true);
             this._menu.toggle();
+            if (this._actionOpenWith) {
+                let allowOpenWith = (Extension.desktopManager.getNumberOfSelectedItems() == 1);
+                this._actionOpenWith.setSensitive(allowOpenWith);
+            }
             let specialFilesSelected = Extension.desktopManager.checkIfSpecialFilesAreSelected();
             if (this._actionCut)
                 this._actionCut.setSensitive(!specialFilesSelected);

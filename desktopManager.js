@@ -283,6 +283,10 @@ var DesktopManager = GObject.registerClass({
         return false;
     }
 
+    getNumberOfSelectedItems() {
+        return this._selection.size;
+    }
+
     get writableByOthers() {
         return this._writableByOthers;
     }
